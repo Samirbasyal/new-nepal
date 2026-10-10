@@ -1,0 +1,41 @@
+<!--
+  ========================================
+  ORGANIZATION LOGO (PLACEHOLDER)
+  ========================================
+  This is a TEMPORARY placeholder mark created for this project.
+  It is NOT any real organization's logo.
+
+  HOW TO REPLACE IT
+    1. Put your own logo in this folder (public/branding/), e.g. logo.png
+    2. Open config/site.ts and change:
+         src: '/branding/logo.svg'   ->   src: '/branding/logo.png'
+
+  The mark below: a rounded shield holding two figures (community) under a
+  rising sun, drawn in the organization's brand colours.
+  ========================================
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Janakalyan Samataa Yuwa Club logo">
+  <defs>
+    <linearGradient id="jsycBrand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#239382"/>
+      <stop offset="100%" stop-color="#115C53"/>
+    </linearGradient>
+    <linearGradient id="jsycSun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F8BE52"/>
+      <stop offset="100%" stop-color="#E4880B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded shield background -->
+  <path d="M32 3 L56 12 V31 C56 45 45.5 55.5 32 61 C18.5 55.5 8 45 8 31 V12 Z" fill="url(#jsycBrand)"/>
+
+  <!-- Rising sun -->
+  <circle cx="32" cy="24" r="7" fill="url(#jsycSun)"/>
+
+  <!-- Two figures standing together (community) -->
+  <circle cx="25" cy="38" r="4" fill="#FFFFFF" fill-opacity="0.95"/>
+  <path d="M18 52 C18 45.5 21 42.5 25 42.5 C29 42.5 32 45.5 32 52 Z" fill="#FFFFFF" fill-opacity="0.95"/>
+
+  <circle cx="39" cy="38" r="4" fill="#FFFFFF" fill-opacity="0.8"/>
+  <path d="M32 52 C32 45.5 35 42.5 39 42.5 C43 42.5 46 45.5 46 52 Z" fill="#FFFFFF" fill-opacity="0.8"/>
+</svg>

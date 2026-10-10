@@ -1,0 +1,13 @@
+<!--
+  ========================================
+  PERSON PHOTO PLACEHOLDER
+  ========================================
+  Used in the Members / Leadership section and in the Member Panel when a
+  person has no photo yet.
+  ========================================
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <rect width="200" height="200" fill="#E2E8F0"/>
+  <circle cx="100" cy="78" r="30" fill="#94A3B8"/>
+  <path d="M40 176 C40 133 66 116 100 116 C134 116 160 133 160 176 Z" fill="#94A3B8"/>
+</svg>

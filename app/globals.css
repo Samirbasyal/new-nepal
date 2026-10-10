@@ -1,0 +1,296 @@
+/* ========================================
+   GLOBAL STYLESHEET
+   ========================================
+   This file is loaded on EVERY page of the website.
+
+   WHERE ARE THE COLOURS?
+   The colours are NOT written here. They live in ONE file:
+
+        config/theme.ts
+
+   That file feeds tailwind.config.ts, which creates the classes we use
+   everywhere (bg-brand-600, text-accent-500, ...).
+   So: to change the website colours, open config/theme.ts.
+
+   THIS FILE CONTAINS
+   1. Tailwind itself
+   2. Base element styling (body, headings, focus outlines)
+   3. Reusable component classes (.btn, .card, .input, ...)
+   4. Accessibility helpers (skip link, screen-reader-only text)
+   ======================================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   COLORS / THEME - FONT VARIABLES
+   The two font families are declared here so Tailwind can use them.
+   The actual fonts are loaded from Google Fonts in app/layout.tsx.
+   ======================================== */
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-display: 'Lora', Georgia, Cambria, serif;
+
+  /* Layout measurements used in several places */
+  --page-max-width: 76rem;
+  --page-padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-padding: 1.5rem;
+  }
+}
+
+/* ========================================
+   BASE ELEMENT STYLING
+   ======================================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Stop iOS from enlarging text when the phone is turned sideways. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-ink-800 font-sans antialiased;
+    /* Prevent horizontal scrolling on small phones. */
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-ink-900;
+    text-wrap: balance;
+  }
+
+  /* A visible outline for keyboard users (accessibility requirement). */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white;
+  }
+
+  /* Images never overflow their container. */
+  img,
+  video {
+    @apply max-w-full h-auto;
+  }
+
+  /* Nicer default link colour. */
+  a {
+    @apply text-brand-700;
+  }
+}
+
+/* ========================================
+   REUSABLE COMPONENT CLASSES
+   ======================================== */
+@layer components {
+  /* ---------- Page width container ---------- */
+  .container-page {
+    width: 100%;
+    max-width: var(--page-max-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--page-padding);
+    padding-right: var(--page-padding);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-btn px-5 py-2.5
+           text-sm font-semibold transition-all duration-200
+           disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap;
+  }
+
+  /* Main button (brand colour) */
+  .btn-primary {
+    @apply bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800;
+  }
+
+  /* Call-to-action button (accent colour - used for Donate) */
+  .btn-accent {
+    @apply bg-accent-500 text-white shadow-sm hover:bg-accent-600 active:bg-accent-700;
+  }
+
+  /* Outlined button */
+  .btn-outline {
+    @apply border border-ink-300 bg-white text-ink-800 hover:border-brand-500 hover:text-brand-700;
+  }
+
+  /* Outlined button for dark backgrounds (footer, hero) */
+  .btn-outline-light {
+    @apply border border-white/40 bg-transparent text-white hover:bg-white/10 hover:border-white;
+  }
+
+  /* Quiet button without a border */
+  .btn-ghost {
+    @apply text-ink-700 hover:bg-ink-100;
+  }
+
+  /* A small red button used in admin tables for delete */
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  /* ---------- Cards ---------- */
+  .card {
+    @apply rounded-card border border-ink-200 bg-white shadow-card;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover hover:border-brand-200;
+  }
+
+  /* ---------- Form fields ---------- */
+  .label {
+    @apply block text-sm font-medium text-ink-800 mb-1.5;
+  }
+
+  .input {
+    @apply w-full rounded-btn border border-ink-300 bg-white px-3.5 py-2.5 text-sm
+           text-ink-900 placeholder:text-ink-400
+           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/25
+           disabled:bg-ink-50 disabled:text-ink-500;
+  }
+
+  .input-error {
+    @apply border-red-400 focus:border-red-500 focus:ring-red-500/25;
+  }
+
+  .field-help {
+    @apply mt-1 text-xs text-ink-500;
+  }
+
+  .field-error {
+    @apply mt-1 text-xs font-medium text-red-600;
+  }
+
+  /* ---------- Section spacing ---------- */
+  .section {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  .section-tight {
+    @apply py-8 sm:py-10 lg:py-12;
+  }
+
+  /* A small coloured line above section headings. */
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-600;
+  }
+
+  /* ---------- Long text content (news articles, program details) ---------- */
+  .prose-content {
+    @apply text-ink-700 leading-relaxed;
+  }
+  .prose-content p {
+    @apply mb-4;
+  }
+  .prose-content h2 {
+    @apply mt-8 mb-3 text-xl font-bold text-ink-900;
+  }
+  .prose-content h3 {
+    @apply mt-6 mb-2 text-lg font-semibold text-ink-900;
+  }
+  .prose-content ul {
+    @apply mb-4 list-disc pl-6 space-y-1;
+  }
+  .prose-content ol {
+    @apply mb-4 list-decimal pl-6 space-y-1;
+  }
+  .prose-content a {
+    @apply font-medium text-brand-700 underline underline-offset-2;
+  }
+
+  /* ---------- Admin panel table ---------- */
+  .admin-table {
+    @apply w-full text-left text-sm;
+  }
+  .admin-table thead th {
+    @apply whitespace-nowrap bg-ink-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-ink-600;
+  }
+  .admin-table tbody td {
+    @apply border-t border-ink-100 px-4 py-3 align-top text-ink-700;
+  }
+  .admin-table tbody tr:hover {
+    @apply bg-ink-50/60;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY HELPERS
+   ======================================== */
+
+/* Visible only for screen readers. */
+.sr-only-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* The "Skip to main content" link for keyboard users.
+   It is invisible until it receives focus. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+}
+
+/* ========================================
+   SCROLLBAR (small visual improvement)
+   ======================================== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ========================================
+   REDUCED MOTION
+   Some people prefer no animation. Respect that setting.
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

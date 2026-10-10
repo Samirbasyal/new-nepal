@@ -1,0 +1,23 @@
+<!--
+  ========================================
+  IMAGE PLACEHOLDER
+  ========================================
+  Shown automatically whenever a program, project, event, news article or
+  gallery photo has no picture yet. It keeps the layout tidy and avoids
+  broken-image icons.
+
+  Once real photos are uploaded through the Admin Panel this file is no
+  longer used - there is no need to delete it.
+  ========================================
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+  <rect width="640" height="400" fill="#F1F5F9"/>
+  <g stroke="#CBD5E1" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="215" y="140" width="210" height="140" rx="12"/>
+    <circle cx="265" cy="185" r="14"/>
+    <path d="M225 265 L285 210 L325 245 L365 205 L415 265"/>
+  </g>
+  <text x="320" y="330" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#94A3B8">
+    Image not added yet
+  </text>
+</svg>

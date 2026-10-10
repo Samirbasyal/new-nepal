@@ -1,0 +1,23 @@
+<!--
+  ========================================
+  BROWSER TAB ICON (FAVICON)
+  ========================================
+  The small picture shown on the browser tab next to the page title.
+  Replace this file with your own, or change the path in config/site.ts
+  (logo.favicon).
+  ========================================
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="favBrand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#239382"/>
+      <stop offset="100%" stop-color="#115C53"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#favBrand)"/>
+  <circle cx="32" cy="24" r="7" fill="#F5A524"/>
+  <circle cx="25" cy="39" r="4.5" fill="#FFFFFF"/>
+  <path d="M17 53 C17 45.5 20.5 42 25 42 C29.5 42 33 45.5 33 53 Z" fill="#FFFFFF"/>
+  <circle cx="40" cy="39" r="4.5" fill="#FFFFFF" fill-opacity="0.8"/>
+  <path d="M32 53 C32 45.5 35.5 42 40 42 C44.5 42 48 45.5 48 53 Z" fill="#FFFFFF" fill-opacity="0.8"/>
+</svg>
