@@ -50,11 +50,11 @@
 //   That script changes the line below to "sqlite" for you.
 //   Run:   npm run db:use:postgres   to switch back.
 // ========================================
+
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 // ========================================
 // PRISMA CLIENT
 // This generates the code we use to talk to the database
