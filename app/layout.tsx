@@ -18,6 +18,8 @@
 import type { Metadata, Viewport } from 'next';
 import { logo, organization, seo } from '@/config/site';
 import './globals.css';
+// Shows the "Please wait..." bar while a page or a form is loading.
+import { BusyIndicator } from '@/components/ui/BusyIndicator';
 
 // ========================================
 // SEO - PAGE TITLES AND PREVIEW CARDS
@@ -129,6 +131,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             }),
           }}
         />
+
+        {/* Appears while a page or a form is loading, on every page. */}
+        <BusyIndicator />
 
         {children}
       </body>

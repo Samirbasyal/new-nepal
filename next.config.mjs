@@ -30,6 +30,32 @@ const nextConfig = {
   },
 
   // ========================================
+  // PICTURES THAT LIVE IN THE BLOB STORE
+  // ========================================
+  // A picture uploaded through the Admin Panel is kept in the Vercel Blob
+  // store, not inside this project - Vercel's disk cannot keep files.
+  //
+  // The database still remembers it as /uploads/2026/10/img-123-a1b2.jpg, so
+  // the browser asks the website for that address.
+  //
+  // "afterFiles" means: first look in this project's own public/ folder (where
+  // the original pictures live, and they must keep working), and only if the
+  // file is NOT there, hand the request to /api/public-files/... which fetches
+  // it from the Blob store.
+  //
+  // Do not change "afterFiles" to "beforeFiles": that would send every picture
+  // request through the route, stop the project's own pictures from being
+  // served directly, and make the website slower.
+  // ========================================
+  async rewrites() {
+    return {
+      afterFiles: [
+        { source: '/uploads/:path*', destination: '/api/public-files/:path*' },
+      ],
+    };
+  },
+
+  // ========================================
   // BUILD SETTINGS
   // The ESLint check is run separately with "npm run lint" so that a lint
   // warning never blocks a deployment on Vercel.

@@ -244,7 +244,25 @@ export async function storeImage(
     });
 
     return {
-      url: urlForKey(key),
+      // The address the browser must use, and the one saved in the database.
+      //
+      // THE FIX
+      //   put() uploads the picture and hands back its real, permanent web
+      //   address, for example
+      //     https://xxxx.public.blob.vercel-storage.com/public/uploads/2026/10/img-123-a1b2.jpg
+      //   A PUBLIC picture has to be saved with that address.
+      //
+      //   Before this fix the address was built as "/uploads/2026/10/....jpg".
+      //   That is correct when the file sits inside this project's own public/
+      //   folder, which is where a local computer keeps it. On Vercel the file
+      //   is in the Blob store instead, so the browser asked the website for a
+      //   picture that was never there and the Admin Panel showed a broken
+      //   image next to "Preview".
+      //
+      //   A PRIVATE file is the exact opposite: its Blob address cannot be
+      //   opened without the secret token, so it must keep going through the
+      //   guarded /api/files/... route.
+      url: visibility === 'private' ? urlForKey(key) : result.url || urlForKey(key),
       key,
       size: file.size,
       type: file.type,
