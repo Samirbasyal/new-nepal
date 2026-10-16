@@ -95,9 +95,28 @@ export type StoredFileResult = {
   visibility: 'public' | 'private';
 };
 
-/** True when Vercel Blob has been connected (a token is present). */
+/**
+ * True when Vercel Blob has been connected.
+ *
+ * VERCEL CAN CONNECT A BLOB STORE IN TWO WAYS, and both must count:
+ *
+ *   1. BLOB_READ_WRITE_TOKEN - an older, fixed key for the store. It can be
+ *      copied and used from anywhere, including your own computer.
+ *
+ *   2. BLOB_STORE_ID - the modern way. Vercel adds this when a store is
+ *      connected, and the actual permission comes from VERCEL_OIDC_TOKEN, which
+ *      Vercel puts into every deployment by itself. Nothing has to be copied by
+ *      hand and nothing can go stale.
+ *
+ * Checking only the first one would switch Blob OFF for a project that connected
+ * its store the modern way, and uploads would be refused with "no storage
+ * service is connected" even though everything was set up correctly.
+ *
+ * Which credential to use is worked out by the @vercel/blob SDK itself, so
+ * nothing needs to be passed to put().
+ */
 export function isPersistentStorageConfigured(): boolean {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 }
 
 /**
@@ -124,9 +143,10 @@ export function storageDescription(): string {
  */
 export const STORAGE_NOT_CONFIGURED_MESSAGE =
   'Pictures cannot be saved permanently yet, because no storage service is connected. ' +
-  'To switch uploads on, create a Blob store in your Vercel project and put its token in the ' +
-  'BLOB_READ_WRITE_TOKEN environment variable. Until then you can paste a link to a picture ' +
-  'that is already online.';
+  'To switch uploads on, open your Vercel project, go to Storage, create a Blob store and ' +
+  'connect it to this project - Vercel then adds BLOB_STORE_ID (or BLOB_READ_WRITE_TOKEN) ' +
+  'by itself. After that, redeploy, because a running deployment does not pick up new ' +
+  'settings. Until then you can paste a link to a picture that is already online.';
 
 /**
  * Thrown when the picture itself is fine but there is nowhere permanent to put it.
