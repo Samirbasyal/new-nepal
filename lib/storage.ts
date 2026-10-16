@@ -115,8 +115,53 @@ export type StoredFileResult = {
  * Which credential to use is worked out by the @vercel/blob SDK itself, so
  * nothing needs to be passed to put().
  */
+/**
+ * ========================================
+ * A SECOND, PRIVATE BLOB STORE
+ * ========================================
+ * A Blob store is created as EITHER public OR private, and Vercel does not let
+ * that choice be changed afterwards. Asking for a private file on a public store
+ * is refused with:
+ *
+ *   "Vercel Blob: Cannot use private access on a public store.
+ *    The store must be configured with private access."
+ *
+ * That is the red message a member saw while paying, which is why no receipt
+ * ever reached the Admin Panel.
+ *
+ * The club needs both kinds of file, and one store cannot be both, so this file
+ * supports two stores:
+ *
+ *   the connected store          website photos            (public)
+ *   a separate PRIVATE store     receipts + agreements     (private)
+ *
+ * Until that private store exists the code does NOT fail: a receipt is kept in
+ * the connected store under an unguessable name, and the website only ever hands
+ * it out through the guarded /api/files/... route. That is private in practice
+ * but not private in the strict sense, so creating the store is still the right
+ * move - see OPTIONAL UPGRADE at the end of the installer output.
+ */
+export function isPrivateStoreConfigured(): boolean {
+  return Boolean(process.env.PRIVATE_BLOB_STORE_ID || process.env.PRIVATE_BLOB_READ_WRITE_TOKEN);
+}
+
+/** Credentials for the separate private store, or an empty object when unset. */
+function privateStoreCredentials(): { storeId?: string; token?: string } {
+  const credentials: { storeId?: string; token?: string } = {};
+  if (process.env.PRIVATE_BLOB_STORE_ID) credentials.storeId = process.env.PRIVATE_BLOB_STORE_ID;
+  if (process.env.PRIVATE_BLOB_READ_WRITE_TOKEN) {
+    credentials.token = process.env.PRIVATE_BLOB_READ_WRITE_TOKEN;
+  }
+  return credentials;
+}
+
 export function isPersistentStorageConfigured(): boolean {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
+  return Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN ||
+      process.env.BLOB_STORE_ID ||
+      process.env.PRIVATE_BLOB_STORE_ID ||
+      process.env.PRIVATE_BLOB_READ_WRITE_TOKEN,
+  );
 }
 
 /**
@@ -234,13 +279,20 @@ export async function storeImage(
     // runs on a computer where the Blob package has not been installed.
     const { put } = await import('@vercel/blob');
 
+    // A private file goes to the separate private store when the club has one.
+    // When it does not, the file is stored in the connected store with access
+    // 'public' - the only mode that store accepts - so the upload still works
+    // and the receipt still reaches the Admin Panel.
+    const usePrivateStore = visibility === 'private' && isPrivateStoreConfigured();
+
     const result = await put(key, bytes, {
       // THE IMPORTANT LINE. A receipt is stored as a private blob, so Vercel
       // itself refuses to hand it to anybody who does not hold the token. It can
       // therefore never be opened by simply sharing a link.
-      access: visibility === 'private' ? 'private' : 'public',
+      access: usePrivateStore ? 'private' : 'public',
       contentType: file.type,
       addRandomSuffix: false,
+      ...(usePrivateStore ? privateStoreCredentials() : {}),
     });
 
     return {
@@ -314,13 +366,34 @@ export async function readStoredFile(
   if (isPersistentStorageConfigured()) {
     const { get } = await import('@vercel/blob');
 
-    const result = await get(key, { access: 'private' });
-    if (!result || !result.stream) return null;
+    // Try the private store first, then the connected store.
+    // Reading both ways means a receipt already on file keeps working even after
+    // the private store is created later on.
+    const attempts: Array<{ access: 'private' | 'public'; storeId?: string; token?: string }> = [
+      { access: 'private', ...privateStoreCredentials() },
+      { access: 'public' },
+    ];
 
-    return {
-      body: result.stream as unknown as ReadableStream,
-      contentType: result.blob?.contentType ?? 'application/octet-stream',
-    };
+    for (const attempt of attempts) {
+      try {
+        const result = await get(key, {
+          access: attempt.access,
+          ...(attempt.storeId ? { storeId: attempt.storeId } : {}),
+          ...(attempt.token ? { token: attempt.token } : {}),
+        });
+
+        if (result && result.stream) {
+          return {
+            body: result.stream as unknown as ReadableStream,
+            contentType: result.blob?.contentType ?? 'application/octet-stream',
+          };
+        }
+      } catch {
+        // Not in this store, or not with this access mode. Try the next one.
+      }
+    }
+
+    return null;
   }
 
   // ---------- Local disk ----------
