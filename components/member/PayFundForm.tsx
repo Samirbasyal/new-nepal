@@ -105,6 +105,9 @@ export function PayFundForm({
     try {
       const formData = new FormData();
       formData.append('file', file);
+      // A payment receipt is stored PRIVATELY: only the member who sent it
+      // and an administrator may open it.
+      formData.append('purpose', 'receipt');
 
       const response = await fetch('/api/upload', { method: 'POST', body: formData });
       const json = await response.json().catch(() => null);

@@ -1,121 +1,133 @@
 // ========================================
-// API - IMAGE UPLOAD (ADMIN ONLY)
+// API - IMAGE UPLOAD
 // ========================================
 // Address: POST /api/upload
 //
-// Lets an administrator upload a picture instead of pasting a link.
+// WHO MAY UPLOAD
+//   Any SIGNED-IN person. That is deliberate and it is the important change:
 //
-// HOW IT WORKS
-//   - While developing on your own computer, files are saved into
-//     public/uploads/  and the returned address looks like
-//     /uploads/2026/05/photo-3f9a2c.jpg
+//     * Administrators upload website pictures, member photos, Karya Samiti
+//       photos and loan agreements.
+//     * MEMBERS upload the screenshot of their payment receipt when they pay
+//       their monthly contribution.
 //
-//   - On Vercel the file system is READ-ONLY, so uploading a file there is
-//     not possible with this simple approach. In that case the endpoint
-//     answers with a clear explanation and the administrator can simply paste
-//     a link to an image that is already online.
+//   Until this was corrected the endpoint was administrators-only, so a member's
+//   receipt was refused with "Forbidden". Because a receipt is required, the
+//   member could never finish a payment, which is why nothing ever appeared in
+//   the admin approval queue. One permission, two broken features.
 //
-//     WANT UPLOADS ON VERCEL TOO? The easiest options are:
-//       * Vercel Blob  (https://vercel.com/docs/storage/vercel-blob)
-//       * Supabase Storage
-//     Add your storage provider in the marked place below and keep the same
-//     answer shape, so no other file has to change.
+//   Anonymous visitors still cannot upload, and a member whose email address is
+//   not yet verified still cannot (both are enforced by requireMemberApi).
 //
-// SECURITY
-//   - Only administrators may upload (requireAdminApi).
-//   - Only real image types are accepted.
-//   - The file size is limited.
-//   - The file name is regenerated, so a hostile file name cannot do harm.
+// WHERE THE PICTURE GOES
+//   Decided in lib/storage.ts, never here: Vercel Blob when a token is
+//   configured (permanent), otherwise the local disk while developing. See that
+//   file for the full explanation.
+//
+// SECURITY (all checked on the server, never in the browser)
+//   - The uploader must be signed in.
+//   - Only real image types are accepted (MIME type allow-list).
+//   - The size is limited to 4 MB.
+//   - The file name is regenerated, so a hostile name cannot do any harm.
+//   - The storage token is read from the environment and never leaves the server.
 // ========================================
 
-import { randomBytes } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import { fail, ok } from '@/lib/api/http';
-import { requireAdminApi } from '@/lib/api/guard';
+import { requireMemberApi } from '@/lib/api/guard';
+import {
+  storeImage,
+  storageDescription,
+  StorageUnavailableError,
+  isPersistentStorageConfigured,
+  parsePurpose,
+} from '@/lib/storage';
 
-// 4 MB is plenty for a website photo and keeps the site fast.
-const MAX_BYTES = 4 * 1024 * 1024;
+export const dynamic = 'force-dynamic';
 
-// Only these picture types are accepted.
-const ALLOWED_TYPES: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/gif': 'gif',
-  'image/svg+xml': 'svg',
-};
+// A receipt photographed on a phone can take a moment to travel. Give the
+// upload more room than the default before the platform cuts it off.
+export const maxDuration = 30;
 
 export async function POST(request: Request) {
-  // ---------- Authorization: administrators only ----------
-  const auth = await requireAdminApi(request);
+  // ---------- Who is asking? ----------
+  // Any signed-in member or administrator. Anonymous is refused.
+  const auth = await requireMemberApi(request);
   if (!auth.ok) return auth.response;
 
-  // ---------- Read the uploaded file ----------
+  // ---------- Read the uploaded picture ----------
   let form: FormData;
   try {
     form = await request.formData();
   } catch {
-    return fail('No file was received.', 400);
+    return fail('No picture was received. Please choose the file again.', 400);
   }
 
   const file = form.get('file');
   if (!(file instanceof File)) {
-    return fail('Please choose a file to upload.', 400);
+    return fail('Please choose a picture to upload.', 400);
   }
 
-  const extension = ALLOWED_TYPES[file.type];
-  if (!extension) {
-    return fail('Only JPG, PNG, WEBP, GIF or SVG images can be uploaded.', 415);
-  }
+  // ---------- What is it for? ----------
+  // The purpose decides whether the file is PUBLIC or PRIVATE, and it is decided
+  // from this whitelist rather than trusted blindly. A payment receipt ('receipt')
+  // and a loan agreement ('agreement') are stored privately so they cannot be
+  // opened by whoever happens to hold the link; website photos stay public.
+  const purpose = parsePurpose(form.get('purpose'));
 
-  if (file.size > MAX_BYTES) {
-    return fail('That image is larger than 4 MB. Please use a smaller picture.', 413);
-  }
-
-  // ========================================
-  // BUILD A SAFE FILE NAME
-  // ========================================
-  // We ignore the original name completely and generate our own, so a
-  // malicious file name cannot escape the uploads folder.
-  const now = new Date();
-  const year = String(now.getFullYear());
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const safeName = `img-${Date.now()}-${randomBytes(4).toString('hex')}.${extension}`;
-
-  // ========================================
-  // SAVE THE FILE (local development)
-  // ========================================
-  const folder = path.join(process.cwd(), 'public', 'uploads', year, month);
-  const publicUrl = `/uploads/${year}/${month}/${safeName}`;
-
+  // ---------- Save it (validation happens inside storeImage) ----------
   try {
-    await mkdir(folder, { recursive: true });
-    const bytes = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(folder, safeName), bytes);
+    const stored = await storeImage(file, purpose);
 
     return ok(
       {
-        url: publicUrl,
-        size: file.size,
-        type: file.type,
+        url: stored.url,
+        size: stored.size,
+        type: stored.type,
+        provider: stored.provider,
+        // 'private' means the address above goes through the guarded route and
+        // only the owner and an administrator can open it.
+        visibility: stored.visibility,
+        // True when the picture is on permanent storage. The browser shows a
+        // warning when it is not, so nobody is surprised later.
+        permanent: stored.provider === 'vercel-blob',
       },
       201,
-      'Image uploaded. Remember to save the form to keep the change.',
+      stored.provider === 'vercel-blob'
+        ? 'Picture uploaded and stored permanently.'
+        : 'Picture uploaded to this computer only. It will not survive a redeploy - connect Vercel Blob before going live.',
     );
   } catch (error) {
-    console.error('[upload] could not write the file:', error);
+    // ---------- Nowhere permanent to put it ----------
+    // 501 means "this server cannot do that yet", which is very different from
+    // "your request was wrong". The message tells the owner exactly what to set.
+    if (error instanceof StorageUnavailableError) {
+      console.error('[upload] no storage configured:', storageDescription());
+      return fail(error.message, 501);
+    }
 
-    // ========================================
-    // PRODUCTION MESSAGE (for example on Vercel)
-    // ========================================
-    // When the file system is read-only we explain the alternatives instead
-    // of showing a confusing error.
-    return fail(
-      'Uploading files is not possible on this hosting plan. ' +
-        'Please paste a link to an image that is already online, or connect a storage ' +
-        'service such as Vercel Blob or Supabase Storage (see the notes in app/api/upload/route.ts).',
-      501,
-    );
+    // ---------- The picture itself was not acceptable ----------
+    if (error instanceof Error && error.message) {
+      return fail(error.message, 400);
+    }
+
+    console.error('[upload] unexpected failure:', error);
+    return fail('The picture could not be uploaded. Please try again.', 500);
   }
+}
+
+/**
+ * Lets a screen ask "can uploads be kept permanently on this server?" without
+ * having to send a picture to find out.
+ *
+ * Handy for the Admin Panel, which can warn before somebody fills in a whole
+ * form and only then discovers that the picture cannot be stored.
+ */
+export async function GET(request: Request) {
+  const auth = await requireMemberApi(request);
+  if (!auth.ok) return auth.response;
+
+  return ok({
+    persistent: isPersistentStorageConfigured(),
+    storage: storageDescription(),
+  });
 }
