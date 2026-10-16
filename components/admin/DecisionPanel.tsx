@@ -13,6 +13,16 @@
 //   The member sees the reason in their notification and in their payment
 //   history, so it must be filled in. The server refuses an empty reason too.
 //
+// WHY APPROVING CAN ASK FOR CONFIRMATION (confirmApprove)
+//   Approving is the one click on this website that moves real money: it takes
+//   a payment out of the waiting queue and adds it to the organization's
+//   collected total. A single misplaced click used to be enough to do that.
+//   When confirmApprove is set, the button asks one short question first and
+//   nothing is sent to the server until the administrator answers it.
+//
+//   It is OFF by default, so the screens that do not ask for it (expenses,
+//   re-deciding a record) behave exactly as they did before.
+//
 // EXPENSE APPROVAL IS SUPER-ADMIN ONLY
 //   When "requireSuperAdmin" is true the buttons are shown as disabled with an
 //   explanation, and the server independently refuses the request. The
@@ -35,6 +45,7 @@ export function DecisionPanel({
   needsSuperAdmin = false,
   isSuperAdmin = false,
   compact = false,
+  confirmApprove = false,
 }: {
   recordId: string;
   type: 'payment' | 'expense';
@@ -48,6 +59,11 @@ export function DecisionPanel({
   isSuperAdmin?: boolean;
   /** Compact mode hides the extra spacing (used inside tables). */
   compact?: boolean;
+  /**
+   * Ask "are you sure?" before approving. Set this where a wrong approval
+   * would move money (the payment verification queue).
+   */
+  confirmApprove?: boolean;
 }) {
   const router = useRouter();
 
@@ -55,6 +71,7 @@ export function DecisionPanel({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [note, setNote] = useState('');
 
   const blocked = needsSuperAdmin && !isSuperAdmin;
@@ -86,6 +103,7 @@ export function DecisionPanel({
 
       setSuccess(json.message ?? 'Done.');
       setRejecting(false);
+      setConfirming(false);
       setNote('');
 
       // Refresh the server data so the tables and totals update immediately.
@@ -160,6 +178,40 @@ export function DecisionPanel({
             </Button>
           </div>
         </div>
+      ) : confirming ? (
+        // ---------- The approval question ----------
+        // Nothing has been sent to the server at this point. This is the last
+        // chance to notice that the wrong row was clicked.
+        <div className="space-y-2 rounded-btn border border-brand-200 bg-brand-50 p-3">
+          <p className="text-sm font-semibold text-ink-900">
+            Approve {recordLabel}?
+          </p>
+          <p className="text-xs text-ink-600">
+            It will leave this queue and be added to the collected fund total. This is recorded in
+            the activity log.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              disabled={busy}
+              onClick={() => decide('approve')}
+            >
+              <Icon name="check" className="h-4 w-4" />
+              {busy ? 'Saving…' : 'Yes, approve'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={busy}
+              onClick={() => setConfirming(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
       ) : (
         <div className="flex flex-wrap gap-2">
           <Button
@@ -167,7 +219,7 @@ export function DecisionPanel({
             variant="primary"
             size="sm"
             disabled={busy}
-            onClick={() => decide('approve')}
+            onClick={() => (confirmApprove ? setConfirming(true) : decide('approve'))}
           >
             <Icon name="check" className="h-4 w-4" />
             {busy ? 'Saving…' : 'Approve'}

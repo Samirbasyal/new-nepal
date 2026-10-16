@@ -20,11 +20,24 @@
 // these checks happen on the server and are what actually protect the pages.
 // ========================================
 
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { getSession, type SessionUser } from '@/lib/auth/session';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
 import { isAdminRole, isSuperAdminRole, canRecordExpenseRole } from '@/lib/constants';
 
+// ========================================
+// WHY cache() IS USED BELOW (PERFORMANCE)
+// ========================================
+// React's cache() remembers the RESULT of a function for the duration of ONE
+// request. The admin and member layouts ask "who is signed in?" and so does
+// every page inside them, which meant the SAME database lookup ran 2-3 times on
+// a single page load. With cache() it runs once and the answer is reused.
+//
+// Nothing about the security changes: the checks below still run, the cookie is
+// still verified, and the account is still re-read from the database - just not
+// repeatedly within the same request.
+// ========================================
 /**
  * Who is logged in right now? Returns null for visitors, or the fresh
  * database record for a logged-in, active user.
@@ -35,7 +48,7 @@ import { isAdminRole, isSuperAdminRole, canRecordExpenseRole } from '@/lib/const
  *   3. the session counter still matches  (a password change ends old sessions)
  *   4. the membership is not suspended
  */
-export async function getCurrentUser(): Promise<SessionUser | null> {
+export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const session = await getSession();
   if (!session) return null;
 
@@ -93,7 +106,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   } catch {
     return null;
   }
-}
+});
 
 // ========================================
 // ADMIN GUARD

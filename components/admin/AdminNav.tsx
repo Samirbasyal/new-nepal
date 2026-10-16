@@ -9,6 +9,18 @@
 //   3. add one line to ADMIN_LINKS below
 //
 // The links are grouped so the menu stays readable.
+//
+// ========================================
+// THE "WAITING" BADGE
+// ========================================
+// Payment verification is the one screen where somebody has to act: a member has
+// paid money and is waiting to be told it was accepted. Nothing used to say so -
+// the administrator had to remember to open the queue and look.
+//
+// The layout counts the waiting payments and passes the number here, and the
+// "Payment verification" link shows it. It is only a signpost: the count comes
+// from the same query the queue itself uses, and the real decision is still made
+// on that page, on the server.
 // ========================================
 
 'use client';
@@ -31,6 +43,9 @@ type NavGroup = {
    */
   superAdminOnly?: boolean;
 };
+
+/** The link that carries the "payments waiting" badge. */
+const VERIFY_HREF = '/admin/fund/pending';
 
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -99,7 +114,7 @@ const NAV_GROUPS: NavGroup[] = [
       // The name matches the page and the guide, so "Monthly fund records" can
       // be found by searching for the words on the screen.
       { label: 'Monthly fund records', href: '/admin/fund/collections', icon: 'banknote' },
-      { label: 'Payment verification', href: '/admin/fund/pending', icon: 'check-circle' },
+      { label: 'Payment verification', href: VERIFY_HREF, icon: 'check-circle' },
       { label: 'Monthly tracking', href: '/admin/fund/contributions', icon: 'calendar' },
       { label: 'Expenses', href: '/admin/fund/expenses', icon: 'briefcase' },
       // The words "QR" and "eSewa / Khalti" are in the label on purpose: this is
@@ -158,7 +173,35 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export function AdminNav({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
+/**
+ * The small counter shown next to a link.
+ *
+ * Two tones, picked from the same palette as the link itself, so the number is
+ * readable whether the link is the highlighted one or not.
+ */
+function CountBadge({ count, active }: { count: number; active: boolean }) {
+  if (count <= 0) return null;
+
+  return (
+    <span
+      className={cn(
+        'ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums',
+        active ? 'bg-white text-brand-700' : 'bg-amber-500 text-white',
+      )}
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+
+export function AdminNav({
+  isSuperAdmin = false,
+  pendingCount = 0,
+}: {
+  isSuperAdmin?: boolean;
+  /** How many payments are waiting for verification. 0 hides the badge. */
+  pendingCount?: number;
+}) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -178,23 +221,32 @@ export function AdminNav({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
           </p>
 
           <ul className="space-y-0.5">
-            {group.links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  aria-current={isActive(link.href) ? 'page' : undefined}
-                  className={cn(
-                    'flex items-center gap-3 rounded-btn px-3 py-2 text-sm font-medium transition-colors',
-                    isActive(link.href)
-                      ? 'bg-brand-600 text-white'
-                      : 'text-ink-700 hover:bg-ink-100',
-                  )}
-                >
-                  <Icon name={link.icon} className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{link.label}</span>
-                </Link>
-              </li>
-            ))}
+            {group.links.map((link) => {
+              const active = isActive(link.href);
+              const badge = link.href === VERIFY_HREF ? pendingCount : 0;
+
+              return (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    aria-current={active ? 'page' : undefined}
+                    // A screen reader hears the number too, because the badge is
+                    // only a coloured circle otherwise.
+                    aria-label={
+                      badge > 0 ? `${link.label}, ${badge} waiting` : undefined
+                    }
+                    className={cn(
+                      'flex items-center gap-3 rounded-btn px-3 py-2 text-sm font-medium transition-colors',
+                      active ? 'bg-brand-600 text-white' : 'text-ink-700 hover:bg-ink-100',
+                    )}
+                  >
+                    <Icon name={link.icon} className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{link.label}</span>
+                    <CountBadge count={badge} active={active} />
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}
@@ -207,11 +259,21 @@ export function AdminNav({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
 // A horizontal row of the most used sections, shown above the content on
 // small screens. It can be scrolled sideways.
 // ========================================
-export function AdminMobileNav({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
+export function AdminMobileNav({
+  isSuperAdmin = false,
+  pendingCount = 0,
+}: {
+  isSuperAdmin?: boolean;
+  pendingCount?: number;
+}) {
   const pathname = usePathname();
 
   const QUICK_LINKS = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: 'grid' as const },
+    // Payment verification belongs here: on a phone it is the screen an
+    // administrator is most likely to open, and the badge saves them from
+    // opening it just to count.
+    { label: 'Verify', href: VERIFY_HREF, icon: 'check-circle' as const },
     { label: 'Programs', href: '/admin/programs', icon: 'layers' as const },
     { label: 'Projects', href: '/admin/projects', icon: 'briefcase' as const },
     { label: 'Events', href: '/admin/events', icon: 'calendar' as const },
@@ -234,6 +296,8 @@ export function AdminMobileNav({ isSuperAdmin = false }: { isSuperAdmin?: boolea
     >
       {QUICK_LINKS.map((link) => {
         const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
+        const badge = link.href === VERIFY_HREF ? pendingCount : 0;
+
         return (
           <Link
             key={link.href}
@@ -247,6 +311,16 @@ export function AdminMobileNav({ isSuperAdmin = false }: { isSuperAdmin?: boolea
           >
             <Icon name={link.icon} className="h-3.5 w-3.5" />
             {link.label}
+            {badge > 0 ? (
+              <span
+                className={cn(
+                  'rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums',
+                  active ? 'bg-white text-brand-700' : 'bg-amber-500 text-white',
+                )}
+              >
+                {badge > 99 ? '99+' : badge}
+              </span>
+            ) : null}
           </Link>
         );
       })}

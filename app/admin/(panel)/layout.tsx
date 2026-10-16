@@ -20,8 +20,10 @@
 // what protects the panel.
 // ========================================
 
+import { cache } from 'react';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth/guards';
+import { prisma, isDatabaseConfigured } from '@/lib/prisma';
 import { AdminMobileNav, AdminNav } from '@/components/admin/AdminNav';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { LogoMark } from '@/components/layout/Logo';
@@ -32,12 +34,42 @@ import { organization } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * How many payments are waiting to be verified - the number shown as a badge
+ * next to "Payment verification" in the menu.
+ *
+ * WHY IT IS WRAPPED IN cache()
+ *   cache() remembers the answer for the duration of ONE request. Without it
+ *   the count would be asked again for every component that wanted it in the
+ *   same page load. It is still exactly one COUNT query per page, which is the
+ *   cheapest kind there is.
+ *
+ * WHY IT FAILS QUIETLY
+ *   This is a signpost, not a feature. If the database is not reachable or not
+ *   configured yet, the count is simply 0 and the menu still works - an admin
+ *   panel that refuses to load because a badge could not be counted would be a
+ *   far worse problem than a missing badge.
+ */
+const countPendingPayments = cache(async (): Promise<number> => {
+  if (!isDatabaseConfigured()) return 0;
+
+  try {
+    return await prisma.fundPayment.count({
+      where: { status: 'PENDING', isDeleted: false },
+    });
+  } catch {
+    return 0;
+  }
+});
+
 export default async function AdminPanelLayout({ children }: { children: React.ReactNode }) {
   // ---------- SERVER-SIDE AUTHORIZATION ----------
   // Not signed in        -> redirected to /admin/login
   // Signed in as MEMBER  -> redirected to /unauthorized
   // Only ADMIN continues past this line.
   const user = await requireAdmin();
+
+  const pendingCount = await countPendingPayments();
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
@@ -96,14 +128,20 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                 {/* The Super Admin only sections (Loan management) are left out
                     of the menu for everybody else. The pages themselves check
                     the role again on the server. */}
-                <AdminNav isSuperAdmin={isSuperAdminRole(user.role)} />
+                <AdminNav
+                  isSuperAdmin={isSuperAdminRole(user.role)}
+                  pendingCount={pendingCount}
+                />
               </div>
             </aside>
 
             <div className="min-w-0 lg:col-span-9">
               {/* Quick menu (mobile only) */}
               <div className="mb-6">
-                <AdminMobileNav isSuperAdmin={isSuperAdminRole(user.role)} />
+                <AdminMobileNav
+                  isSuperAdmin={isSuperAdminRole(user.role)}
+                  pendingCount={pendingCount}
+                />
               </div>
 
               {children}
