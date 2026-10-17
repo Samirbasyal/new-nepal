@@ -3,6 +3,12 @@
 // ========================================
 // Address: /donor/register
 //
+// ONE JOB: THE FORM
+//   The page is deliberately just the form and nothing else. Long explanations
+//   beside a sign-up box are read by nobody, and they pushed the fields below the
+//   fold on a phone. What a donor account is (and is not) is answered where it
+//   matters: on the sign-in page, and by the account itself once they are in.
+//
 // WHAT IT GIVES THE DONOR
 //   A username (their email address) and a password, so they can sign in later
 //   and see every donation they made from then on.
@@ -11,12 +17,12 @@
 //   No access to the member panel, the fund, the loans or the admin panel. A
 //   donor account is a receipt book, not a membership.
 //
-// WHY NO EMAIL CONFIRMATION STEP
-//   The website sends mail only when SMTP has been configured (lib/email/mailer).
+// WHY NO EMAIL CONFIRMATION STEP HERE
+//   The site sends mail only when SMTP has been configured (lib/email/mailer).
 //   Promising "check your inbox" on a site that cannot send mail would lock
 //   people out of an account they just created. The account therefore works
-//   immediately, and it holds no information that somebody who knows only the
-//   email address could use.
+//   immediately when no mail server exists, and asks for a six-digit code when
+//   one does.
 // ========================================
 
 import type { Metadata } from 'next';
@@ -33,12 +39,6 @@ export const metadata: Metadata = {
   title: 'Create a donor account',
   robots: { index: false, follow: false },
 };
-
-const POINTS = [
-  'See every donation you made from now on, in one place.',
-  'Know at a glance which payments the office has confirmed.',
-  'Your donation form is filled in for you next time.',
-];
 
 export default async function DonorRegisterPage({
   searchParams,
@@ -63,44 +63,13 @@ export default async function DonorRegisterPage({
       />
 
       <Section>
-        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="mx-auto max-w-lg">
           <div className="card p-6">
             <DonorAuthForm mode="register" next={next} />
           </div>
-
-          <aside className="space-y-4">
-            <div className="card p-5">
-              <h2 className="text-sm font-bold text-ink-900">What you get</h2>
-              <ul className="mt-3 space-y-2.5 text-sm text-ink-600">
-                {POINTS.map((point) => (
-                  <li key={point} className="flex items-start gap-2">
-                    <Icon name="check-circle" className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="card p-5">
-              <h2 className="text-sm font-bold text-ink-900">What it is not</h2>
-              <p className="mt-2 text-xs leading-relaxed text-ink-600">
-                A donor account is not a membership. It does not enrol you in the monthly NPR 20 fund,
-                it gives no access to member or administrator pages, and it changes nothing about how
-                donations are recorded or confirmed.
-              </p>
-            </div>
-
-            <div className="rounded-card border border-ink-200 bg-ink-50/60 p-4">
-              <p className="text-xs leading-relaxed text-ink-600">
-                Only donations made while you are signed in are added to your history. An earlier gift
-                given without an account stays anonymous - an email typed into a form does not prove who
-                owns it - so ask the office to help if you need an old one linked.
-              </p>
-            </div>
-          </aside>
         </div>
 
-        <div className="mx-auto mt-6 max-w-4xl">
+        <div className="mx-auto mt-6 max-w-lg">
           <Link
             href="/donate"
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-700"

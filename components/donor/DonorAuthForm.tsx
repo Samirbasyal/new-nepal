@@ -23,6 +23,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { HoneypotField, TextField } from '@/components/forms/Field';
+import { PasswordField } from '@/components/forms/PasswordField';
 
 type Mode = 'login' | 'register';
 type Errors = Record<string, string>;
@@ -195,10 +196,9 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
       ) : null}
 
       <div>
-        <TextField
+        <PasswordField
           name="password"
           label="Password"
-          type="password"
           required
           autoComplete={isRegister ? 'new-password' : 'current-password'}
           placeholder={isRegister ? 'At least 8 characters' : 'Your password'}
@@ -222,10 +222,9 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
       </div>
 
       {isRegister ? (
-        <TextField
+        <PasswordField
           name="confirmPassword"
           label="Type the password again"
-          type="password"
           required
           autoComplete="new-password"
           value={confirmPassword}

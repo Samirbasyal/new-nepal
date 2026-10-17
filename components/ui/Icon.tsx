@@ -52,6 +52,9 @@ const ICON_PATHS = {
   logout: 'M15 17l5-5-5-5M20 12H9M12 4H6a2 2 0 00-2 2v12a2 2 0 002 2h6',
   lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 117 0v3',
   eye: 'M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6zM12 15a3 3 0 100-6 3 3 0 000 6z',
+  // The crossed-out eye shown while a password is hidden.
+  'eye-off':
+    'M3 3l18 18M10.6 10.7a2 2 0 002.7 2.7M6.6 6.7A16.5 16.5 0 002 12s3.6 6 10 6a9.7 9.7 0 004.1-.9M9.9 5.2A9.6 9.6 0 0112 5c6.4 0 10 7 10 7a17.4 17.4 0 01-3.4 4.1',
   'log-in': 'M10 17l5-5-5-5M15 12H3M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4',
 
   // --- Content / sections ---

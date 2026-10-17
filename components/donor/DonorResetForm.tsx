@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { TextField } from '@/components/forms/Field';
+import { PasswordField } from '@/components/forms/PasswordField';
 
 export function DonorResetForm({ token }: { token: string }) {
   const router = useRouter();
@@ -90,10 +90,9 @@ export function DonorResetForm({ token }: { token: string }) {
     <form onSubmit={submit} className="space-y-4">
       {error ? <Alert tone="error">{error}</Alert> : null}
 
-      <TextField
+      <PasswordField
         name="password"
         label="New password"
-        type="password"
         required
         autoComplete="new-password"
         value={password}
@@ -101,10 +100,9 @@ export function DonorResetForm({ token }: { token: string }) {
         hint="At least 8 characters, including a letter and a number."
       />
 
-      <TextField
+      <PasswordField
         name="confirmPassword"
         label="Type the new password again"
-        type="password"
         required
         autoComplete="new-password"
         value={confirmPassword}
