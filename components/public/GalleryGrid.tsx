@@ -3,11 +3,20 @@
 // This code controls the Gallery grid and the photo viewer (lightbox).
 // ========================================
 // HOW IT WORKS
-//   - Every photo is shown in a responsive grid.
-//   - Clicking a photo opens it larger in a simple viewer.
-//   - Press ESC or click the dark background to close it.
+//   - Every photo is shown as an equal SQUARE thumbnail, in a neat grid.
+//   - Cover-fit keeps the square filled without stretching or squashing the
+//     picture (object-cover crops instead of distorting).
+//   - Clicking a photo opens it larger. The viewer shows ONLY the photo, at its
+//     own shape, sized to fit the screen - never wider or taller than the
+//     window, so it never looks unbalanced and never scrolls sideways.
+//   - Close with the X button, by clicking the dark background, or with ESC.
 //   - Arrow buttons move to the previous / next photo.
-//   - Captions come from the Admin Panel (Gallery -> caption field).
+//
+// WHY THE VIEWER NO LONGER HAS A FIXED 4:3 FRAME
+//   The old viewer put every photo inside a 4:3 box with object-contain. A tall
+//   photo therefore appeared small, with empty bars either side, and a wide
+//   photo was pushed into a shape it did not have. The photo now keeps its own
+//   proportions and is limited only by the height and width of the screen.
 // ========================================
 
 'use client';
@@ -15,7 +24,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { cn, formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 export type GalleryPhoto = {
   id: string;
@@ -61,8 +70,11 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
 
   return (
     <>
-      {/* ---------- THE PHOTO GRID ---------- */}
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {/* ---------- THE PHOTO GRID ----------
+          Two columns on a phone, three from 640px up. Staying at three on a
+          large screen keeps every square bigger and easier to see than the old
+          four-across layout, which made them small. */}
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-5">
         {photos.map((photo, index) => (
           <li key={photo.id}>
             <button
@@ -71,12 +83,13 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
               className="group relative block w-full overflow-hidden rounded-card bg-ink-100 ring-1 ring-ink-200 transition-shadow hover:shadow-card-hover"
               aria-label={`Open photo: ${photo.title || 'Gallery photo'}`}
             >
+              {/* aspect-square = a true 1:1 (2:2) square tile */}
               <div className="relative aspect-square w-full">
                 <Image
                   src={photo.imageUrl}
                   alt={photo.title || 'Gallery photo'}
                   fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  sizes="(max-width: 640px) 50vw, 33vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   unoptimized={photo.imageUrl.endsWith('.svg')}
                 />
@@ -96,83 +109,67 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
       {/* ---------- THE PHOTO VIEWER (LIGHTBOX) ---------- */}
       {open && current ? (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 p-4 animate-fade-in"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 p-4 animate-fade-in sm:p-8"
           role="dialog"
           aria-modal="true"
           aria-label="Photo viewer"
           onClick={() => setOpenIndex(-1)}
         >
-          <div
-            className="relative w-full max-w-5xl"
-            // Clicks inside the picture must not close the viewer.
-            onClick={(event) => event.stopPropagation()}
+          {/* Close button sits on the viewer itself, so it stays reachable even
+              when the picture fills the screen on a phone. */}
+          <button
+            type="button"
+            onClick={() => setOpenIndex(-1)}
+            className="absolute right-3 top-3 z-10 rounded-full bg-black/55 p-2.5 text-white ring-1 ring-white/20 hover:bg-black/75 sm:right-5 sm:top-5"
+            aria-label="Close photo viewer"
           >
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-card bg-black">
-              <Image
-                src={current.imageUrl}
-                alt={current.title || 'Gallery photo'}
-                fill
-                sizes="100vw"
-                className="object-contain"
-                unoptimized={current.imageUrl.endsWith('.svg')}
-              />
-            </div>
+            <Icon name="close" className="h-5 w-5" />
+          </button>
 
-            {/* Caption + date + album */}
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-white">
-              <div>
-                {current.title ? <p className="font-semibold">{current.title}</p> : null}
-                <p className="text-xs text-white/70">
-                  {[current.album?.title, current.category, formatDate(current.takenOn)]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </div>
+          {/* Only the picture. It keeps its own shape, is never stretched, and
+              is capped by the viewport so nothing overflows or scrolls. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={current.imageUrl}
+            alt={current.title || 'Gallery photo'}
+            onClick={(event) => event.stopPropagation()}
+            className="h-auto max-h-[80vh] w-auto max-w-[92vw] rounded-lg object-contain shadow-2xl sm:max-h-[84vh]"
+          />
 
-              <p className="text-xs text-white/70">
-                {openIndex + 1} / {photos.length}
-              </p>
-            </div>
+          {/* Previous / next buttons */}
+          {photos.length > 1 ? (
+            <>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setOpenIndex((index) => (index - 1 + photos.length) % photos.length);
+                }}
+                className={cn(
+                  'absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/55 p-2.5 text-white ring-1 ring-white/20',
+                  'hover:bg-black/75 sm:left-4',
+                )}
+                aria-label="Previous photo"
+              >
+                <Icon name="chevron-left" className="h-5 w-5" />
+              </button>
 
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={() => setOpenIndex(-1)}
-              className="absolute -top-2 right-0 -translate-y-full rounded-full bg-white/15 p-2 text-white hover:bg-white/25"
-              aria-label="Close photo viewer"
-            >
-              <Icon name="close" className="h-5 w-5" />
-            </button>
-
-            {/* Previous / next buttons */}
-            {photos.length > 1 ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setOpenIndex((index) => (index - 1 + photos.length) % photos.length)}
-                  className={cn(
-                    'absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2.5 text-white',
-                    'hover:bg-black/70',
-                  )}
-                  aria-label="Previous photo"
-                >
-                  <Icon name="chevron-left" className="h-5 w-5" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setOpenIndex((index) => (index + 1) % photos.length)}
-                  className={cn(
-                    'absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2.5 text-white',
-                    'hover:bg-black/70',
-                  )}
-                  aria-label="Next photo"
-                >
-                  <Icon name="chevron-right" className="h-5 w-5" />
-                </button>
-              </>
-            ) : null}
-          </div>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setOpenIndex((index) => (index + 1) % photos.length);
+                }}
+                className={cn(
+                  'absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/55 p-2.5 text-white ring-1 ring-white/20',
+                  'hover:bg-black/75 sm:right-4',
+                )}
+                aria-label="Next photo"
+              >
+                <Icon name="chevron-right" className="h-5 w-5" />
+              </button>
+            </>
+          ) : null}
         </div>
       ) : null}
     </>
