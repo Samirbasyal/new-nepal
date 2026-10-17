@@ -682,6 +682,7 @@ export default async function AdminDonationsPage({
                     reference: donation.reference,
                     remarks: donation.remarks,
                     receivedOn: donation.receivedOn.toISOString(),
+                    hasReceipt: Boolean(donation.receiptUrl),
                   }}
                 />
               </li>
@@ -785,6 +786,7 @@ export default async function AdminDonationsPage({
                     reference: donation.reference,
                     remarks: donation.remarks,
                     receivedOn: donation.receivedOn.toISOString(),
+                    hasReceipt: Boolean(donation.receiptUrl),
                   }}
                 />
               </li>

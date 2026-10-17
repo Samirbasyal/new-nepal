@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { TextField, TextareaField, SelectField } from '@/components/forms/Field';
 import { DONATION_METHOD_OPTIONS } from '@/lib/donation/schemas';
+import { DonationPermanentDelete } from '@/components/admin/DonationPermanentDelete';
 
 export type EditableDonation = {
   id: string;
@@ -47,6 +48,8 @@ export type EditableDonation = {
   remarks: string | null;
   /** ISO date, so it can travel from a server component to the browser. */
   receivedOn: string;
+  /** True when a receipt picture is attached - the delete dialog says so. */
+  hasReceipt?: boolean;
 };
 
 export function DonationQuickActions({ donation }: { donation: EditableDonation }) {
@@ -175,6 +178,7 @@ export function DonationQuickActions({ donation }: { donation: EditableDonation 
           onClick={() => void remove()}
           disabled={deleting}
           className="btn btn-outline btn-sm text-red-700"
+          title="Hides the donation. It can be restored from the Removed screen."
         >
           {deleting ? (
             <>
@@ -188,6 +192,19 @@ export function DonationQuickActions({ donation }: { donation: EditableDonation 
             </>
           )}
         </button>
+
+        {/* The strong one. It asks for the word DELETE and cannot be undone. */}
+        <DonationPermanentDelete
+          donation={{
+            id: donation.id,
+            donorName: donation.donorName,
+            amount: donation.amount,
+            purpose: donation.purpose,
+            receivedOn: donation.receivedOn,
+            status: 'RECORD',
+            hasReceipt: donation.hasReceipt ?? false,
+          }}
+        />
       </div>
 
       {/* ========================================

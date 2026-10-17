@@ -45,7 +45,7 @@
 // ========================================
 
 import { randomBytes } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 // 4 MB is plenty for a website photo or a phone screenshot, and keeps the site fast.
@@ -513,5 +513,117 @@ export async function readStoredFile(
     return { body, contentType };
   } catch {
     return null;
+  }
+}
+
+// ========================================
+// DELETE ONE STORED FILE
+// ========================================
+// Used when a donation is removed for good: its receipt picture has no other
+// owner, so leaving it behind would leave a private financial document in the
+// store with nothing pointing at it.
+//
+// WHAT IS DELETED, AND WHAT IS NOT
+//   Only files this website created - the key must contain "/uploads/". A pasted
+//   external address (a Google Drive link, say) is left completely alone: deleting
+//   somebody else's file because a form contained its address would be vandalism.
+//
+// THE PRIVATE STORE NEEDS ITS OWN TOKEN
+//   A receipt lives in the private store, and that store answers only to
+//   PRIVATE_BLOB_READ_WRITE_TOKEN. Deleting it with the public token simply fails,
+//   so both are tried in the same order the upload used.
+//
+// A FAILURE HERE MUST NOT UNDO THE DATABASE WORK
+//   The row is already gone by the time this runs. If the store refuses, the
+//   caller says so plainly ("the record is deleted, but the picture could not be
+//   removed") instead of pretending the whole thing failed.
+// ========================================
+export type StoredFileDeletion = {
+  deleted: boolean;
+  /** True when there was nothing to delete in the first place. */
+  skipped?: boolean;
+  reason?: string;
+};
+
+export async function deleteStoredFile(url: string | null | undefined): Promise<StoredFileDeletion> {
+  const address = (url ?? '').trim();
+  if (address === '') return { deleted: false, skipped: true, reason: 'There was no file to delete.' };
+
+  // ---------- work out the key inside our own storage ----------
+  let key: string | null = null;
+  let publicBlobUrl: string | null = null;
+
+  if (address.startsWith('/api/files/')) {
+    key = address.slice('/api/files/'.length);
+  } else if (address.startsWith('/uploads/')) {
+    key = 'public' + address;
+  } else if (/^https?:\/\//i.test(address)) {
+    let host = '';
+    try {
+      host = new URL(address).hostname;
+    } catch {
+      return { deleted: false, skipped: true, reason: 'That is not a valid file address.' };
+    }
+
+    if (!host.endsWith('.blob.vercel-storage.com')) {
+      return { deleted: false, skipped: true, reason: 'This file is not stored by the club.' };
+    }
+
+    publicBlobUrl = address;
+    const at = address.indexOf('/uploads/');
+    key = at >= 0 ? 'public' + address.slice(at) : null;
+  }
+
+  if (!key || !key.includes('/uploads/') || key.includes('..')) {
+    return { deleted: false, skipped: true, reason: 'This file is not stored by the club.' };
+  }
+
+  // ---------- Vercel Blob ----------
+  if (isPersistentStorageConfigured()) {
+    const { del } = await import('@vercel/blob');
+    const privateOptions = privateBlobWriteOptions();
+
+    const attempts: { url: string; token?: string; storeId?: string }[] = [];
+
+    if (publicBlobUrl) {
+      attempts.push({ url: publicBlobUrl });
+    }
+
+    // A private blob is addressed by its key inside the private store.
+    if (key.startsWith('private/')) {
+      attempts.push({ url: key, token: privateOptions.token, storeId: privateOptions.storeId });
+    }
+
+    // The connected store as a last resort.
+    attempts.push({ url: key, token: process.env.BLOB_READ_WRITE_TOKEN });
+
+    let lastError = '';
+
+    for (const attempt of attempts) {
+      try {
+        await del(attempt.url, {
+          ...(attempt.token ? { token: attempt.token } : {}),
+          ...(attempt.storeId ? { storeId: attempt.storeId } : {}),
+        });
+
+        return { deleted: true };
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : String(error);
+      }
+    }
+
+    return { deleted: false, reason: lastError || 'The storage provider refused to delete the file.' };
+  }
+
+  // ---------- Local disk ----------
+  try {
+    const absolute = path.join(process.cwd(), key);
+    await unlink(absolute);
+    return { deleted: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // Already gone is the result we wanted.
+    if (/ENOENT/.test(message)) return { deleted: true, skipped: true };
+    return { deleted: false, reason: message };
   }
 }

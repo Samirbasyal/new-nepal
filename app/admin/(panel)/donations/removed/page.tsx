@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { SectionHeading } from '@/components/ui/Section';
 import { DonationRestoreButton } from '@/components/admin/DonationRestoreButton';
+import { DonationPermanentDelete } from '@/components/admin/DonationPermanentDelete';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatMoney } from '@/lib/fund/calc';
 import { formatDate } from '@/lib/utils';
@@ -51,6 +52,7 @@ export default async function RemovedDonationsPage() {
             status: true,
             receivedOn: true,
             updatedAt: true,
+            receiptUrl: true,
           },
         })
         .catch(() => [])
@@ -106,8 +108,22 @@ export default async function RemovedDonationsPage() {
                     {formatMoney(row.amount)}
                   </p>
                   <p className="text-xs text-ink-500">was {row.status.toLowerCase()}</p>
-                  <div className="mt-2">
+                  <div className="mt-2 flex flex-wrap items-start justify-end gap-2">
                     <DonationRestoreButton donationId={row.id} donorName={row.donorName} />
+
+                    {/* A removed record can still be destroyed for good - that is
+                        how a test entry leaves the book completely. */}
+                    <DonationPermanentDelete
+                      donation={{
+                        id: row.id,
+                        donorName: row.donorName,
+                        amount: row.amount,
+                        purpose: row.purpose,
+                        receivedOn: row.receivedOn.toISOString(),
+                        status: row.status,
+                        hasReceipt: Boolean(row.receiptUrl),
+                      }}
+                    />
                   </div>
                 </div>
               </div>

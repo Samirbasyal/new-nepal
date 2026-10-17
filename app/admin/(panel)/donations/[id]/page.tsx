@@ -33,6 +33,7 @@ import { Icon } from '@/components/ui/Icon';
 import { SectionHeading } from '@/components/ui/Section';
 import { DonationDecisionPanel } from '@/components/admin/DonationDecisionPanel';
 import { DonationQuickActions } from '@/components/admin/DonationQuickActions';
+import { DonationPermanentDelete } from '@/components/admin/DonationPermanentDelete';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { DONATION_METHOD_OPTIONS, DONATION_STATUS_OPTIONS, DONATION_TYPE_OPTIONS } from '@/lib/donation/schemas';
 import { formatMoney } from '@/lib/fund/calc';
@@ -365,8 +366,36 @@ export default async function AdminDonationDetailPage({ params }: { params: Prom
             reference: donation.reference,
             remarks: donation.remarks,
             receivedOn: donation.receivedOn.toISOString(),
+            hasReceipt: Boolean(donation.receiptUrl),
           }}
         />
+      </section>
+
+      {/* ========================================
+          THE LAST RESORT
+          ======================================== */}
+      <section className="card border-red-200 p-5">
+        <h2 className="text-sm font-bold text-red-800">Delete permanently</h2>
+        <p className="mt-1 text-xs leading-relaxed text-ink-600">
+          For a test entry, a duplicate, or a donation typed by mistake. The record is destroyed, not
+          hidden - the ordinary Delete is still the right choice for anything else. The activity log
+          keeps a line saying what was removed and by whom.
+        </p>
+
+        <div className="mt-3">
+          <DonationPermanentDelete
+            variant="button"
+            donation={{
+              id: donation.id,
+              donorName: donation.donorName,
+              amount: donation.amount,
+              purpose: donation.purpose,
+              receivedOn: donation.receivedOn.toISOString(),
+              status: donation.status,
+              hasReceipt: Boolean(donation.receiptUrl),
+            }}
+          />
+        </div>
       </section>
     </div>
   );

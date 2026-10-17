@@ -472,6 +472,30 @@ export async function deleteRecord(
 
     return { ok: true, data: { id } };
   } catch (error) {
+    // ---------- an explanation written for the administrator ----------
+    // The custom delete for donations throws UserFacingError ("That donation was
+    // already removed."). Swallowing those into the generic sentence below sent
+    // people hunting for a database relationship that was never the problem - and
+    // the action had often already succeeded.
+    if (error instanceof UserFacingError) {
+      return { ok: false, status: error.status, error: error.message };
+    }
+
+    // ---------- a real foreign-key refusal ----------
+    // Prisma reports P2003 when another table still points at this row. Say so
+    // plainly, and name the action that does work.
+    const code = (error as { code?: string } | null)?.code;
+
+    if (code === 'P2003') {
+      return {
+        ok: false,
+        status: 409,
+        error:
+          'This record is still used by other records, so it cannot be removed here. ' +
+          'Remove those first, or use "Delete permanently" if this is a test entry.',
+      };
+    }
+
     console.error(`[api] delete failed for ${config.key}:`, error);
     return {
       ok: false,
