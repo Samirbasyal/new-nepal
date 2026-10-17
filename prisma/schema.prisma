@@ -491,6 +491,18 @@ model Donation {
   method      String   @default("BANK_TRANSFER")
   reference   String? // receipt number or bank reference
   receiptUrl  String? // payment screenshot, served through the guarded /api/files route
+
+  // ---------- WHICH DONOR ACCOUNT MADE THIS GIFT ----------
+  // Empty for an anonymous donation (the ordinary case: a visitor needs no
+  // account to give money). Filled in by the SERVER from the signed-in donor's
+  // cookie, never from the form - otherwise somebody could attach a gift to
+  // another person's history.
+  //
+  // Deliberately a plain column and not a relation: the history screen filters on
+  // it and nothing else joins through it, so there is no foreign key to look
+  // after. See model DonorAccount at the end of this file.
+  donorAccountId String?
+
   note        String?
   receivedOn  DateTime @default(now())
   recordedBy  String? // email of the admin who typed it in
@@ -501,7 +513,57 @@ model Donation {
 
   @@index([receivedOn])
   @@index([status, receivedOn])
+  @@index([donorAccountId, receivedOn])
   @@map("donations")
+}
+
+// ========================================
+// DONOR ACCOUNTS
+// ========================================
+// WHY THIS IS A SEPARATE TABLE
+//   A donor is NOT a member. A member pays NPR 20 a month, has a membership
+//   profile, can take a loan and appears in the member register. A donor simply
+//   gives money when they choose to.
+//
+//   Putting donors into "users" would mean every donor shows up in the member
+//   list, the monthly fund calculation and the loan screens - which is exactly
+//   the mixing this project has avoided everywhere else.
+//
+// WHAT IT IS FOR
+//   So a person can sign in and see the donations THEY made: amounts, causes,
+//   dates and whether the office has confirmed each one.
+//
+// HOW THE LINK WORKS
+//   Donation.donorAccountId is written by the server while the donor is signed
+//   in. A gift given while signed out stays anonymous and is never attached to
+//   an account afterwards, because an email address typed into a form proves
+//   nothing about who owns it.
+//
+// PASSWORDS
+//   Only a bcrypt hash is stored (lib/auth/password.ts). The plain password is
+//   never written anywhere.
+// ========================================
+model DonorAccount {
+  id    String @id @default(cuid())
+  name  String
+  email String @unique
+  phone String?
+
+  passwordHash String
+
+  // Switching this off locks the account out without deleting its history.
+  isActive Boolean @default(true)
+
+  // Bumped when the password changes, so every older cookie stops working -
+  // the same idea as User.sessionVersion.
+  sessionVersion Int @default(1)
+
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email])
+  @@map("donor_accounts")
 }
 
 // ========================================

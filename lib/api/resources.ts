@@ -613,7 +613,10 @@ export const RESOURCES: Record<string, ResourceConfig> = {
     // been checked. That was a mistake and is fixed.
     statusField: 'status',
     orderBy: { receivedOn: 'desc' },
-    include: { verifiedBy: { select: { id: true, name: true } } },
+    // NO include here. Donation keeps the administrator's id in verifiedById and
+    // has no relation named "verifiedBy", so asking Prisma to include it made the
+    // whole list request fail. The name is looked up on the single-record page
+    // (app/admin/(panel)/donations/[id]) instead, where it costs one query.
 
     custom: {
       // A donation is HIDDEN, never destroyed: the totals on the screen have to

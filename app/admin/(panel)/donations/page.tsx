@@ -356,7 +356,6 @@ export default async function AdminDonationsPage({
     { name: 'reference', label: 'Receipt no.', hideOnMobile: true },
     { name: 'remarks', label: 'Remarks', type: 'longtext', hideOnMobile: true },
     { name: 'recordedBy', label: 'Added by', hideOnMobile: true },
-    { name: 'verifiedBy.name', label: 'Verified by', hideOnMobile: true },
   ];
 
   return (
@@ -378,6 +377,11 @@ export default async function AdminDonationsPage({
           <Link href="/admin/donations/payment-details" className="btn btn-outline btn-sm">
             <Icon name="qr-code" className="h-4 w-4" />
             Bank &amp; QR details
+          </Link>
+
+          <Link href="/admin/donations/removed" className="btn btn-outline btn-sm">
+            <Icon name="trash" className="h-4 w-4" />
+            Removed
           </Link>
 
           <form method="get" className="flex items-end gap-2">
@@ -627,8 +631,16 @@ export default async function AdminDonationsPage({
                 {donation.reference ? (
                   <p className="mt-1 text-sm text-ink-600">Reference: {donation.reference}</p>
                 ) : null}
-                <p className="mt-1 text-xs text-ink-400">
-                  Donation reference <span className="font-mono">{donation.id}</span>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-400">
+                  <span>
+                    Donation reference <span className="font-mono">{donation.id}</span>
+                  </span>
+                  <Link
+                    href={`/admin/donations/${donation.id}`}
+                    className="font-semibold text-brand-700 hover:underline"
+                  >
+                    Open full record
+                  </Link>
                 </p>
 
                 {/* The picture the donor attached. It opens through the guarded
@@ -737,8 +749,16 @@ export default async function AdminDonationsPage({
                 {donation.reference ? (
                   <p className="mt-1 text-sm text-ink-600">Reference: {donation.reference}</p>
                 ) : null}
-                <p className="mt-1 text-xs text-ink-400">
-                  Donation reference <span className="font-mono">{donation.id}</span>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-400">
+                  <span>
+                    Donation reference <span className="font-mono">{donation.id}</span>
+                  </span>
+                  <Link
+                    href={`/admin/donations/${donation.id}`}
+                    className="font-semibold text-brand-700 hover:underline"
+                  >
+                    Open full record
+                  </Link>
                 </p>
 
                 {donation.receiptUrl ? (

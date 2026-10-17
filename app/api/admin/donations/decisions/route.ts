@@ -26,6 +26,9 @@ import { fail, ok, readJson, serverError, zodFieldErrors, zodMessage } from '@/l
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { donationDecisionSchema } from '@/lib/donation/schemas';
 import { writeActivity } from '@/lib/audit';
+import { buildNotificationEmail } from '@/lib/email/templates';
+import { isEmailConfigured, sendMail } from '@/lib/email/mailer';
+import { formatMoney } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,6 +114,43 @@ export async function POST(request: Request) {
       oldValue: before,
       newValue: nextStatus,
     });
+
+    // ---------- tell the donor, when the website can actually send mail ----------
+    // Only when SMTP has been configured. isEmailConfigured() is checked first so
+    // the office is never told "the donor has been emailed" on a site that has no
+    // mail server - that promise would be false, and a donor waiting for a
+    // message that never arrives would ring the office.
+    if (donation.donorEmail && nextStatus !== 'PENDING' && isEmailConfigured()) {
+      const subject =
+        nextStatus === 'VERIFIED'
+          ? `Your donation is confirmed - ${formatMoney(donation.amount)}`
+          : nextStatus === 'REJECTED'
+            ? `About your donation - ${formatMoney(donation.amount)}`
+            : `We need a little more information about your donation`;
+
+      const message =
+        nextStatus === 'VERIFIED'
+          ? `Thank you. Your donation of ${formatMoney(donation.amount)} has been verified by the office. Your kindness makes a real difference.`
+          : nextStatus === 'REJECTED'
+            ? `We could not confirm your donation of ${formatMoney(donation.amount)}. Please contact the office to sort it out.${remarks ? ` Reason given: ${remarks}` : ''}`
+            : `We need one more thing before we can confirm your donation of ${formatMoney(donation.amount)}. Please contact the office.${remarks ? ` Note: ${remarks}` : ''}`;
+
+      const mail = buildNotificationEmail({
+        memberName: donation.donorName,
+        title: subject,
+        message,
+        link: `/donate/submitted/${donation.id}`,
+        linkLabel: 'See my donation',
+      });
+
+      // Not awaited: the administrator's decision must not wait for a mail server.
+      void sendMail({
+        to: donation.donorEmail,
+        subject: mail.subject,
+        html: mail.html,
+        text: mail.text,
+      }).catch(() => undefined);
+    }
 
     return ok(
       { id: updated.id, status: updated.status },

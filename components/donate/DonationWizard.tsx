@@ -40,18 +40,37 @@ const STEP_INDEX = {
 type Step = keyof typeof STEP_INDEX;
 type Errors = Record<string, string>;
 
-export function DonationWizard() {
+/** What a signed-in donor already has on file. Every field stays editable. */
+export type DonorPrefill = {
+  name?: string;
+  email?: string;
+  /** "+977 9812345678" as stored on the account, split up again below. */
+  phone?: string;
+};
+
+/** Split "+977 9812345678" back into a country code and a number. */
+function splitPhone(value?: string): { code: string; number: string } {
+  const text = (value ?? '').trim();
+  const match = /^\+(\d{1,4})\s*(.*)$/.exec(text);
+  if (!match) return { code: '977', number: text.replace(/[^\d]/g, '') };
+  return { code: match[1], number: match[2].replace(/[^\d]/g, '') };
+}
+
+export function DonationWizard({ prefill }: { prefill?: DonorPrefill }) {
   const router = useRouter();
 
   const [step, setStep] = useState<Step>('purpose');
 
   // ---------- Answers, kept for the whole journey ----------
+  // A signed-in donor finds their own details already filled in - they can still
+  // change every one of them, because a gift is sometimes made on behalf of
+  // somebody else.
   const [purpose, setPurpose] = useState('');
   const [purposeDetail, setPurposeDetail] = useState('');
-  const [donorName, setDonorName] = useState('');
-  const [donorEmail, setDonorEmail] = useState('');
-  const [countryCode, setCountryCode] = useState('977');
-  const [phone, setPhone] = useState('');
+  const [donorName, setDonorName] = useState(prefill?.name ?? '');
+  const [donorEmail, setDonorEmail] = useState(prefill?.email ?? '');
+  const [countryCode, setCountryCode] = useState(splitPhone(prefill?.phone).code);
+  const [phone, setPhone] = useState(splitPhone(prefill?.phone).number);
   const [message, setMessage] = useState('');
   const [website, setWebsite] = useState('');
 

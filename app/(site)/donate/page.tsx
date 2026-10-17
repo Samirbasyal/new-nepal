@@ -30,6 +30,7 @@ import { Icon } from '@/components/ui/Icon';
 import { PageHero, Section, SectionHeading } from '@/components/ui/Section';
 import { organization } from '@/config/site';
 import { getSettings, setting } from '@/lib/settings';
+import { getCurrentDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -49,6 +50,7 @@ const STEPS = [
 
 export default async function DonatePage() {
   const settings = await getSettings();
+  const donor = await getCurrentDonor();
 
   const intro = setting(settings, 'donate.intro');
   const note = setting(settings, 'donate.note', '');
@@ -165,6 +167,43 @@ export default async function DonatePage() {
                 Your donation is marked successful only after the office has checked the payment.
                 Bank account details and the QR code are shown on the payment step, never before.
               </p>
+            </div>
+
+            {/* ---------- your own record of giving ---------- */}
+            <div className="card mt-5 p-6">
+              <h2 className="flex items-center gap-2 text-base font-bold text-ink-900">
+                <Icon name="file-text" className="h-5 w-5 text-brand-600" />
+                Your donation history
+              </h2>
+
+              {donor ? (
+                <>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-600">
+                    Signed in as <span className="font-semibold text-ink-800">{donor.email}</span>.
+                    Every donation you make stays in one place.
+                  </p>
+                  <ButtonLink href="/donor/donations" variant="outline" className="mt-4 w-full">
+                    <Icon name="heart" className="h-4 w-4" />
+                    See my donations
+                  </ButtonLink>
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-600">
+                    A donor account is free and optional. It keeps a record of what you gave, for which
+                    cause, and whether the office has confirmed it. Donating works without one.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <ButtonLink href="/donor/register" variant="outline" className="flex-1">
+                      <Icon name="user-plus" className="h-4 w-4" />
+                      Create an account
+                    </ButtonLink>
+                    <ButtonLink href="/donor/login" variant="ghost" className="flex-1">
+                      Sign in
+                    </ButtonLink>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="card mt-5 bg-brand-50/60 p-6">

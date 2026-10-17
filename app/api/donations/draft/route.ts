@@ -27,6 +27,7 @@ import { fail, ok, readJson, zodFieldErrors, zodMessage } from '@/lib/api/http';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { donationDraftSchema, fullPhoneNumber } from '@/lib/donation/publicSchemas';
 import { purposeForStorage } from '@/lib/donation/purposes';
+import { getCurrentDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,12 +59,30 @@ export async function POST(request: Request) {
     return fail('The form could not be sent. Please try again.', 422);
   }
 
+  // ---------- Is a donor signed in? ----------
+  // If so, this gift is attached to their account, so it appears in their own
+  // history later. The value comes from the SIGNED COOKIE and is re-checked
+  // against the database - never from the form, because a browser could claim to
+  // be anybody.
+  //
+  // A failure here must never stop a donation: an anonymous gift is still a
+  // perfectly good gift. So the lookup falls back to null.
+  let donorAccountId: string | null = null;
+
+  try {
+    const donor = await getCurrentDonor();
+    if (donor) donorAccountId = donor.id;
+  } catch {
+    donorAccountId = null;
+  }
+
   try {
     const donation = await prisma.donation.create({
       data: {
         donorName: data.donorName,
         donorEmail: data.donorEmail,
         donorPhone: fullPhoneNumber(data.countryCode, data.phone),
+        donorAccountId,
         donationType: 'ONE_TIME',
         purpose: purposeForStorage(data.purpose, data.purposeDetail),
         // INITIATED = started but no money promised yet. Only the submit step
