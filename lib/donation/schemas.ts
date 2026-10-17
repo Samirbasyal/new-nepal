@@ -151,7 +151,7 @@ export const donationDecisionSchema = z.object({
   action: z
     .string()
     .transform((value) => value.toUpperCase().replace(/[\s-]+/g, '_'))
-    .refine((value) => ['VERIFY', 'REJECT', 'PENDING'].includes(value), {
+    .refine((value) => ['VERIFY', 'REJECT', 'PENDING', 'INFO_REQUIRED'].includes(value), {
       message: 'Unknown action.',
     }),
   remarks: optionalText(1000),

@@ -105,6 +105,7 @@ export default async function AdminDonationsPage({
     donationType: string;
     purpose: string | null;
     reference: string | null;
+    receiptUrl: string | null;
     status: string;
     remarks: string | null;
     receivedOn: Date;
@@ -131,6 +132,7 @@ export default async function AdminDonationsPage({
             donationType: true,
             purpose: true,
             reference: true,
+            receiptUrl: true,
             status: true,
             remarks: true,
             receivedOn: true,
@@ -378,6 +380,22 @@ export default async function AdminDonationsPage({
                 {donation.reference ? (
                   <p className="mt-1 text-sm text-ink-600">Reference: {donation.reference}</p>
                 ) : null}
+
+                {/* The picture the donor attached. It opens through the guarded
+                    /api/files/... route, so only a signed-in administrator can
+                    read it - the file itself is never public. */}
+                {donation.receiptUrl ? (
+                  <a
+                    href={donation.receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-card border border-brand-300 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+                  >
+                    View receipt
+                  </a>
+                ) : (
+                  <p className="mt-2 text-xs text-ink-500">No receipt was attached.</p>
+                )}
 
                 <DonationDecisionPanel donationId={donation.id} donorName={donation.donorName} />
               </li>

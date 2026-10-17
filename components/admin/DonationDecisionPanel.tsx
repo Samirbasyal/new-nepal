@@ -1,20 +1,29 @@
 // ========================================
-// ADMIN PANEL - VERIFY OR REJECT A DONATION
+// ADMIN PANEL - VERIFY, REJECT OR ASK A DONATION
 // ========================================
 // One small panel per donation that is waiting. It is used on /admin/donations
-// in the "Waiting for verification" list.
+// in the "Waiting to be checked" list.
+//
+// THE THREE DECISIONS
+//   Verify            the money is in the account -> VERIFIED, counted as income
+//   Reject            it is not -> REJECTED, never counted, a reason is required
+//   Need more info    something is unclear -> stays PENDING with INFO_REQUIRED...
+//
+//   The third one is not "reject but softer". It keeps the donation in the queue
+//   so it cannot be forgotten, and it stores the question in "remarks" so the
+//   donor's own status page can show exactly what the office is asking for.
 //
 // WHY IT IS A SEPARATE COMPONENT
-//   The fund payments use a different endpoint (/api/admin/fund/decisions) and
-//   different rules (a member is notified, the monthly total is recalculated).
-//   A donation has no member behind it, so it gets its own two buttons and its
-//   own route rather than a pile of "if it is a donation" checks inside the
-//   fund panel.
+//   Fund payments use /api/admin/fund/decisions and different rules (a member is
+//   notified, the monthly total is recalculated). A donation has no member behind
+//   it, so it gets its own route rather than a pile of "if it is a donation"
+//   checks inside the fund panel.
 //
 // WAITING AND MISTAKES
-//   The button that is working is disabled and says what it is doing, so a
-//   double click cannot record the same decision twice. A rejection asks for a
-//   reason first, because the office has to be able to explain it later.
+//   The button that is working is disabled and says what it is doing, so a double
+//   click cannot record the same decision twice. Rejecting and asking for more
+//   information both require a written reason, because the office has to be able
+//   to explain the decision later.
 // ========================================
 
 'use client';
@@ -22,6 +31,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
+
+type Action = 'VERIFY' | 'REJECT' | 'INFO_REQUIRED';
+
+/** The two actions that need a written reason before they can be sent. */
+type Reasoned = 'REJECT' | 'INFO_REQUIRED';
 
 export function DonationDecisionPanel({
   donationId,
@@ -31,18 +45,31 @@ export function DonationDecisionPanel({
   donorName: string;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<'VERIFY' | 'REJECT' | null>(null);
-  const [showReject, setShowReject] = useState(false);
+  const [busy, setBusy] = useState<Action | null>(null);
+  const [reasonFor, setReasonFor] = useState<Reasoned | null>(null);
   const [reason, setReason] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
-  async function decide(action: 'VERIFY' | 'REJECT') {
+  function openReason(which: Reasoned) {
+    setReasonFor(which);
+    setReason('');
+    setProblem(null);
+    setDone(null);
+  }
+
+  async function decide(action: Action) {
     setProblem(null);
     setDone(null);
 
-    if (action === 'REJECT' && reason.trim().length < 3) {
-      setProblem('Please write why it is being rejected (at least 3 characters).');
+    const needsReason = action === 'REJECT' || action === 'INFO_REQUIRED';
+
+    if (needsReason && reason.trim().length < 3) {
+      setProblem(
+        action === 'REJECT'
+          ? 'Please write why it is being rejected (at least 3 characters).'
+          : 'Please write what you need from the donor (at least 3 characters).',
+      );
       return;
     }
 
@@ -68,7 +95,7 @@ export function DonationDecisionPanel({
       setProblem('The website could not be reached. Please try again.');
     } finally {
       setBusy(null);
-      setShowReject(false);
+      setReasonFor(null);
     }
   }
 
@@ -86,10 +113,12 @@ export function DonationDecisionPanel({
         </p>
       ) : null}
 
-      {showReject ? (
+      {reasonFor ? (
         <div>
           <label className="block text-sm font-medium text-ink-700" htmlFor={`reason-${donationId}`}>
-            Why is this donation being rejected?
+            {reasonFor === 'REJECT'
+              ? 'Why is this donation being rejected?'
+              : 'What do you need from the donor?'}
           </label>
           <textarea
             id={`reason-${donationId}`}
@@ -97,7 +126,11 @@ export function DonationDecisionPanel({
             onChange={(event) => setReason(event.target.value)}
             rows={2}
             className="input mt-1.5"
-            placeholder="For example: no such transfer was received in the bank account."
+            placeholder={
+              reasonFor === 'REJECT'
+                ? 'For example: no such transfer was received in the bank account.'
+                : 'For example: the receipt is unclear - please send a full screenshot showing the transaction ID.'
+            }
           />
         </div>
       ) : null}
@@ -123,7 +156,7 @@ export function DonationDecisionPanel({
           )}
         </button>
 
-        {showReject ? (
+        {reasonFor === 'REJECT' ? (
           <>
             <button
               type="button"
@@ -147,7 +180,7 @@ export function DonationDecisionPanel({
             <button
               type="button"
               onClick={() => {
-                setShowReject(false);
+                setReasonFor(null);
                 setProblem(null);
               }}
               disabled={busy !== null}
@@ -156,17 +189,67 @@ export function DonationDecisionPanel({
               Cancel
             </button>
           </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowReject(true)}
-            disabled={busy !== null}
-            className="btn btn-outline btn-sm"
-          >
-            <Icon name="close" className="h-4 w-4" />
-            Reject
-          </button>
-        )}
+        ) : null}
+
+        {reasonFor === 'INFO_REQUIRED' ? (
+          <>
+            <button
+              type="button"
+              onClick={() => void decide('INFO_REQUIRED')}
+              disabled={busy !== null}
+              className="btn btn-outline btn-sm"
+            >
+              {busy === 'INFO_REQUIRED' ? (
+                <>
+                  <Icon name="refresh" className="h-4 w-4 animate-spin" />
+                  Sending…
+                </>
+              ) : (
+                <>
+                  <Icon name="mail" className="h-4 w-4" />
+                  Confirm request
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setReasonFor(null);
+                setProblem(null);
+              }}
+              disabled={busy !== null}
+              className="btn btn-outline btn-sm"
+            >
+              Cancel
+            </button>
+          </>
+        ) : null}
+
+        {reasonFor === null ? (
+          <>
+            <button
+              type="button"
+              onClick={() => openReason('INFO_REQUIRED')}
+              disabled={busy !== null}
+              className="btn btn-outline btn-sm"
+              title="Keep it waiting and ask the donor for something"
+            >
+              <Icon name="mail" className="h-4 w-4" />
+              Need more info
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openReason('REJECT')}
+              disabled={busy !== null}
+              className="btn btn-outline btn-sm"
+            >
+              <Icon name="close" className="h-4 w-4" />
+              Reject
+            </button>
+          </>
+        ) : null}
       </div>
     </div>
   );

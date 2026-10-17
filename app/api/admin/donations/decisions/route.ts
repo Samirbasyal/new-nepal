@@ -58,7 +58,13 @@ export async function POST(request: Request) {
 
     // ---------- the decision ----------
     const nextStatus =
-      action === 'VERIFY' ? 'VERIFIED' : action === 'REJECT' ? 'REJECTED' : 'PENDING';
+      action === 'VERIFY'
+        ? 'VERIFIED'
+        : action === 'REJECT'
+          ? 'REJECTED'
+          : action === 'INFO_REQUIRED'
+            ? 'INFO_REQUIRED'
+            : 'PENDING';
 
     if (before === nextStatus) {
       return fail(
@@ -73,10 +79,14 @@ export async function POST(request: Request) {
 
     // A reason is required when money is being refused, so the office can always
     // explain the decision later.
-    if (nextStatus === 'REJECTED' && !remarks) {
-      return fail('Please write why the donation is being rejected.', 422, {
-        remarks: 'A reason is required.',
-      });
+    if ((nextStatus === 'REJECTED' || nextStatus === 'INFO_REQUIRED') && !remarks) {
+      return fail(
+        nextStatus === 'REJECTED'
+          ? 'Please write why the donation is being rejected.'
+          : 'Please write what you need from the donor.',
+        422,
+        { remarks: 'A reason is required.' },
+      );
     }
 
     const updated = await prisma.donation.update({
@@ -109,7 +119,9 @@ export async function POST(request: Request) {
         ? 'Donation verified.'
         : nextStatus === 'REJECTED'
           ? 'Donation rejected.'
-          : 'Donation moved back to waiting.',
+          : nextStatus === 'INFO_REQUIRED'
+            ? 'The donation is still waiting, and your question was saved for the donor.'
+            : 'Donation moved back to waiting.',
     );
   } catch (error) {
     console.error('[donations] the decision could not be saved:', error);
