@@ -38,6 +38,8 @@ import {
   storeImage,
   storageDescription,
   StorageUnavailableError,
+  UploadValidationError,
+  describeStorageFailure,
   isPersistentStorageConfigured,
   parsePurpose,
 } from '@/lib/storage';
@@ -106,12 +108,22 @@ export async function POST(request: Request) {
     }
 
     // ---------- The picture itself was not acceptable ----------
-    if (error instanceof Error && error.message) {
+    // Our OWN sentence, written for the person who chose the file, so it is safe
+    // to show exactly as it is.
+    if (error instanceof UploadValidationError) {
       return fail(error.message, 400);
     }
 
-    console.error('[upload] unexpected failure:', error);
-    return fail('The picture could not be uploaded. Please try again.', 500);
+    // ---------- The storage service refused, or is set up wrongly ----------
+    // Before this, ANY thrown error was answered with its own message and HTTP
+    // 400. That is how a member came to read
+    //   "Vercel Blob: Cannot use private access on a public store."
+    // which is written for a developer, looks like the member's own mistake, and
+    // hides the real cause from the owner. The raw text now goes to the server log
+    // and the person gets a sentence they can act on.
+    console.error('[upload] storage failure:', error);
+    const friendly = describeStorageFailure(error);
+    return fail(friendly.message, friendly.status);
   }
 }
 

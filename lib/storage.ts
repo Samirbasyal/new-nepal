@@ -155,6 +155,113 @@ function privateStoreCredentials(): { storeId?: string; token?: string } {
   return credentials;
 }
 
+/**
+ * How a file that must stay PRIVATE has to be written.
+ *
+ * A Blob store is created as either PUBLIC or PRIVATE and that choice can never
+ * be changed, so a club with a public store cannot simply ask for a private
+ * file - Vercel answers "Cannot use private access on a public store".
+ *
+ * When a separate private store is connected (isPrivateStoreConfigured) the file
+ * goes there and only this server can read it back.
+ *
+ * Otherwise the file is written into the connected store with access 'public' -
+ * the only mode that store accepts. It is still kept away from the browser: the
+ * address is never rendered, the name is unguessable, and every read goes through
+ * the guarded /api/files/... route. Private in practice, but NOT private in the
+ * strict sense, which is why connecting a private store is recommended.
+ *
+ * Both the payment receipt code AND the loan agreement code use these helpers,
+ * so the two can never drift apart again.
+ */
+export type BlobAccessOptions = { access: 'private' | 'public'; storeId?: string; token?: string };
+
+export function privateBlobWriteOptions(): BlobAccessOptions {
+  if (isPrivateStoreConfigured()) return { access: 'private', ...privateStoreCredentials() };
+  return { access: 'public' };
+}
+
+/** The ways a private file may be read back, most likely first. */
+export function privateBlobReadAttempts(): BlobAccessOptions[] {
+  return [{ access: 'private', ...privateStoreCredentials() }, { access: 'public' }];
+}
+
+/**
+ * Thrown when the uploaded file itself is not acceptable - wrong type, too big,
+ * or empty. The message is written for the person who chose the file, so the
+ * upload route is allowed to show it exactly as it is.
+ *
+ * Storage failures use a different class, so a message written for a developer
+ * can never be mistaken for one meant for a member.
+ */
+export class UploadValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UploadValidationError';
+  }
+}
+
+/**
+ * Turns a storage-provider failure into a sentence a member can act on, and
+ * picks the right HTTP status for it.
+ *
+ * WHY NOT JUST SHOW WHAT VERCEL SAID
+ *   A member once attached a payment screenshot and read:
+ *     "Vercel Blob: Cannot use private access on a public store."
+ *   That explains nothing to them, looks like their own mistake, and hides the
+ *   real cause from the club owner. The technical text belongs in the server
+ *   log, not on a member's screen.
+ */
+export function describeStorageFailure(error: unknown): { status: number; message: string } {
+  const raw = error instanceof Error ? error.message : String(error ?? '');
+
+  // The store accepts public files, but this file has to be private.
+  if (/private access on a public store/i.test(raw)) {
+    return {
+      status: 500,
+      message:
+        'This file has to be kept private, but the storage connected to the website is set up for public files only. ' +
+        'This is a set-up problem on the server, not a problem with your file. Please tell an administrator.',
+    };
+  }
+
+  // The store is private, but an ordinary website picture was sent to it.
+  if (/public access on a private store/i.test(raw)) {
+    return {
+      status: 500,
+      message:
+        'The storage connected to the website only accepts private files, so ordinary website pictures cannot be saved. ' +
+        'This is a set-up problem on the server, not a problem with your file. Please tell an administrator.',
+    };
+  }
+
+  // Bad, missing or expired credentials.
+  if (/access denied|forbidden|unauthori[sz]ed|invalid[^.]*token|missing[^.]*token|no token|401|403/i.test(raw)) {
+    return {
+      status: 500,
+      message:
+        'The website could not prove it is allowed to save files. This is a set-up problem on the server, ' +
+        'not a problem with your file. Please tell an administrator.',
+    };
+  }
+
+  // The store is full, or the account has been limited.
+  if (/quota|limit exceeded|too many requests|429|storage limit/i.test(raw)) {
+    return {
+      status: 503,
+      message:
+        'The storage is temporarily full or busy, so this file could not be saved. Please try again a little later, ' +
+        'or tell an administrator.',
+    };
+  }
+
+  return {
+    status: 500,
+    message:
+      'The file could not be saved. Please try again in a moment. If it keeps failing, please tell an administrator.',
+  };
+}
+
 export function isPersistentStorageConfigured(): boolean {
   return Boolean(
     process.env.BLOB_READ_WRITE_TOKEN ||
@@ -255,16 +362,19 @@ export async function storeImage(
   // ---------- 1. Is this really one of our allowed picture types? ----------
   const extension = ALLOWED_IMAGE_TYPES[file.type];
 
+  // UploadValidationError, not a plain Error: the upload route may show THIS
+  // message to the person because it is written for them. A storage failure
+  // never is.
   if (!extension) {
-    throw new Error('Only JPG, PNG, WEBP, GIF or SVG images can be uploaded.');
+    throw new UploadValidationError('Only JPG, PNG, WEBP, GIF or SVG images can be uploaded.');
   }
 
   if (file.size > MAX_UPLOAD_BYTES) {
-    throw new Error('That picture is larger than 4 MB. Please use a smaller one.');
+    throw new UploadValidationError('That picture is larger than 4 MB. Please use a smaller one.');
   }
 
   if (file.size === 0) {
-    throw new Error('That file is empty. Please choose the picture again.');
+    throw new UploadValidationError('That file is empty. Please choose the picture again.');
   }
 
   const visibility: 'public' | 'private' = isPrivatePurpose(purpose) ? 'private' : 'public';
@@ -283,16 +393,15 @@ export async function storeImage(
     // When it does not, the file is stored in the connected store with access
     // 'public' - the only mode that store accepts - so the upload still works
     // and the receipt still reaches the Admin Panel.
-    const usePrivateStore = visibility === 'private' && isPrivateStoreConfigured();
+    const privateWrite = privateBlobWriteOptions();
 
     const result = await put(key, bytes, {
       // THE IMPORTANT LINE. A receipt is stored as a private blob, so Vercel
       // itself refuses to hand it to anybody who does not hold the token. It can
       // therefore never be opened by simply sharing a link.
-      access: usePrivateStore ? 'private' : 'public',
+      ...(visibility === 'private' ? privateWrite : { access: 'public' as const }),
       contentType: file.type,
       addRandomSuffix: false,
-      ...(usePrivateStore ? privateStoreCredentials() : {}),
     });
 
     return {
@@ -369,10 +478,7 @@ export async function readStoredFile(
     // Try the private store first, then the connected store.
     // Reading both ways means a receipt already on file keeps working even after
     // the private store is created later on.
-    const attempts: Array<{ access: 'private' | 'public'; storeId?: string; token?: string }> = [
-      { access: 'private', ...privateStoreCredentials() },
-      { access: 'public' },
-    ];
+    const attempts = privateBlobReadAttempts();
 
     for (const attempt of attempts) {
       try {

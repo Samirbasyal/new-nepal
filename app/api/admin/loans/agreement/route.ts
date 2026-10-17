@@ -58,6 +58,9 @@ import {
   isPersistentStorageConfigured,
   storageDescription,
   StorageUnavailableError,
+  describeStorageFailure,
+  privateBlobWriteOptions,
+  privateBlobReadAttempts,
 } from '@/lib/storage';
 
 // A scanned agreement is often several pages, so this route must not be cached
@@ -155,10 +158,17 @@ export async function POST(request: Request) {
       // runs on a computer where the Blob package has not been installed.
       const { put } = await import('@vercel/blob');
 
+      // THE FIX. The access mode must match what the connected store allows. A
+      // store is created as either public or private and can never be changed, so
+      // asking a public store for a private file is refused with "Cannot use
+      // private access on a public store" - exactly what stopped payment receipts.
+      // privateBlobWriteOptions() settles this in ONE place for the whole website.
+      const writeOptions = privateBlobWriteOptions();
+
       await put(blobKeyFor(storedName), bytes, {
-        // THE IMPORTANT LINE. A private blob cannot be opened by whoever happens
-        // to hold the link - only through the GET below, which checks the role.
-        access: 'private',
+        // A private file cannot be opened by whoever happens to hold the link -
+        // only through the GET below, which checks the role again.
+        ...writeOptions,
         contentType: file.type,
         addRandomSuffix: false,
       });
@@ -209,12 +219,10 @@ export async function POST(request: Request) {
       return fail(error.message, 501);
     }
 
-    console.error('[loan-agreement] could not store the file:', error);
-    return fail(
-      'The agreement could not be saved. Please try again. If it keeps failing, ' +
-        'connect a storage service (see PROJECT_GUIDE.md -> Deploying to Vercel).',
-      500,
-    );
+    // An actionable sentence instead of the storage provider's raw text.
+    console.error('[loan-agreement] storage failure:', error);
+    const friendly = describeStorageFailure(error);
+    return fail(friendly.message, friendly.status);
   }
 }
 
@@ -254,22 +262,35 @@ export async function GET(request: Request) {
     try {
       const { get } = await import('@vercel/blob');
 
-      const result = await get(blobKeyFor(requested), { access: 'private' });
-      if (!result || !result.stream) {
-        return fail('That agreement file was not found on this server.', 404);
+      // Try the private store first, then the connected store, so an agreement
+      // already on file keeps working even if a private store is added later.
+      for (const attempt of privateBlobReadAttempts()) {
+        try {
+          const result = await get(blobKeyFor(requested), {
+            access: attempt.access,
+            ...(attempt.storeId ? { storeId: attempt.storeId } : {}),
+            ...(attempt.token ? { token: attempt.token } : {}),
+          });
+
+          if (result && result.stream) {
+            return new Response(result.stream as unknown as ReadableStream, {
+              status: 200,
+              headers: {
+                ...headers,
+                'Content-Type': result.blob?.contentType ?? contentType,
+              },
+            });
+          }
+        } catch (error) {
+          // A missing blob and a storage problem look the same to the reader, and
+          // neither should ever leak the store token or a stack trace.
+          console.error('[loan-agreement] could not read the file:', error);
+        }
       }
 
-      return new Response(result.stream as unknown as ReadableStream, {
-        status: 200,
-        headers: {
-          ...headers,
-          'Content-Type': result.blob?.contentType ?? contentType,
-        },
-      });
+      return fail('That agreement file was not found on this server.', 404);
     } catch (error) {
-      // A missing blob and a storage problem look the same to the reader, and
-      // neither should ever leak the store token or a stack trace.
-      console.error('[loan-agreement] could not read the file:', error);
+      console.error('[loan-agreement] unexpected read failure:', error);
       return fail('That agreement file was not found on this server.', 404);
     }
   }
