@@ -49,6 +49,8 @@ export function NotificationCentre() {
   const [problem, setProblem] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [busyAll, setBusyAll] = useState(false);
+  const [busyDeleteId, setBusyDeleteId] = useState<string | null>(null);
+  const [busyClear, setBusyClear] = useState(false);
   const [done, setDone] = useState<string | null>(null);
 
   // ---------- load the list ----------
@@ -136,6 +138,81 @@ export function NotificationCentre() {
     }
   };
 
+  // ---------- delete one ----------
+  // A message is not a record: once it has been read and acted on, keeping it
+  // only clutters the list. Nothing financial is lost - the donation, the
+  // payment and the activity log are all elsewhere.
+  const removeOne = async (id: string, title: string) => {
+    const sure = window.confirm(`Delete this notification?\n\n${title}\n\nThe message is removed. The donation or payment it is about is not affected.`);
+    if (!sure) return;
+
+    setBusyDeleteId(id);
+    setDone(null);
+    setProblem(null);
+
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', id }),
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok || !payload?.ok) {
+        setProblem(payload?.error ?? 'It could not be deleted. Please try again.');
+        return;
+      }
+
+      setNotifications((current) => (current ?? []).filter((item) => item.id !== id));
+      setUnread(Number(payload.data?.unread ?? unread));
+      setDone('Notification deleted.');
+    } catch {
+      setProblem('The website could not be reached. Please try again.');
+    } finally {
+      setBusyDeleteId(null);
+    }
+  };
+
+  // ---------- delete everything already read ----------
+  const clearRead = async () => {
+    const readCount = (notifications ?? []).filter((item) => item.isRead).length;
+
+    if (readCount === 0) {
+      setDone('There are no read notifications to delete.');
+      return;
+    }
+
+    const sure = window.confirm(
+      `Delete ${readCount} notification${readCount === 1 ? '' : 's'} that you have already read?\n\nUnread ones are kept.`,
+    );
+    if (!sure) return;
+
+    setBusyClear(true);
+    setDone(null);
+    setProblem(null);
+
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete-read' }),
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok || !payload?.ok) {
+        setProblem(payload?.error ?? 'They could not be deleted. Please try again.');
+        return;
+      }
+
+      await load();
+      setDone(payload.message ?? 'Read notifications deleted.');
+    } catch {
+      setProblem('The website could not be reached. Please try again.');
+    } finally {
+      setBusyClear(false);
+    }
+  };
+
   // ========================================
   // LOADING: skeleton rows, never a blank page
   // ========================================
@@ -194,6 +271,27 @@ export function NotificationCentre() {
               <>
                 <Icon name="check-circle" className="h-4 w-4" />
                 Mark all as read
+              </>
+            )}
+          </button>
+
+          {/* Clears the ones already dealt with, and leaves anything unread
+              alone. This is the tidy-up after a busy week, not a reset. */}
+          <button
+            type="button"
+            onClick={() => void clearRead()}
+            className="btn btn-outline btn-sm text-red-700"
+            disabled={busyClear || (notifications ?? []).every((item) => !item.isRead)}
+          >
+            {busyClear ? (
+              <>
+                <Icon name="refresh" className="h-4 w-4 animate-spin" />
+                Deleting…
+              </>
+            ) : (
+              <>
+                <Icon name="trash" className="h-4 w-4" />
+                Delete read
               </>
             )}
           </button>
@@ -289,6 +387,27 @@ export function NotificationCentre() {
                       )}
                     </button>
                   ) : null}
+
+                  {/* Remove this one message. The donation or payment it talks
+                      about is untouched - only the notice goes. */}
+                  <button
+                    type="button"
+                    onClick={() => void removeOne(item.id, item.title)}
+                    disabled={busyDeleteId === item.id}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 hover:text-red-800 disabled:opacity-60"
+                  >
+                    {busyDeleteId === item.id ? (
+                      <>
+                        <Icon name="refresh" className="h-4 w-4 animate-spin" />
+                        Deleting…
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="trash" className="h-4 w-4" />
+                        Delete
+                      </>
+                    )}
+                  </button>
                 </div>
               </>
             );

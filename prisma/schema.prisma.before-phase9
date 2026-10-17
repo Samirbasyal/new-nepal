@@ -1,0 +1,1391 @@
+// ========================================
+// DATABASE
+// This file defines the database structure (called the "schema").
+// Every table, column and relationship used by the website is described here.
+// ========================================
+//
+// WHAT IS THIS FILE?
+// Prisma reads this file and creates the matching tables in your database.
+// After editing this file you must run one of these commands:
+//
+//   npm run db:push      -> quickly update the database to match this file
+//   npm run db:migrate   -> create a proper saved "migration" (recommended)
+//
+// TABLE GUIDE (which table stores what)
+//   User                 -> login accounts (admins and members)
+//   MemberProfile        -> extra member information (designation, status, bio...)
+//   SiteSetting          -> editable website text: name, phone, email, bank details...
+//   ContentSection       -> long editable text blocks (About, Vision, Mission...)
+//   Program              -> Programs shown on /programs
+//   Project              -> Projects AND "Our Works" (the "kind" column decides)
+//   Event                -> Events shown on /events
+//   NewsPost             -> News, notices, press releases shown on /news
+//   GalleryAlbum         -> Albums shown on /gallery
+//   GalleryImage         -> Single photos inside an album
+//   Donor                -> Donors / supporters shown on /donors
+//   JoinApplication      -> Submissions from the "Join Community" form
+//   ContactMessage       -> Submissions from the "Contact" form
+//   Donation             -> PRIVATE record of received donations (never public)
+//   BeneficiaryCategory  -> Who we serve (Youth, Women, Children...)
+//   Task                 -> Tasks assigned to a member (shown in Member Panel)
+//   ActivityLog          -> Recent activity list + FINANCIAL AUDIT TRAIL
+//
+// FUND MANAGEMENT TABLES (Donation & Fund Management System)
+//   Bank                 -> Bank accounts + QR codes members pay into
+//   FundCategory         -> Monthly member fund, donation, event fund...
+//   FundPayment          -> One payment submitted by a member (needs approval)
+//   MonthlyContribution  -> One member's obligation for one month
+//   ExpenseCategory      -> Event, Office, Equipment, Salary...
+//   Expense              -> One amount of money spent (needs approval)
+//   Notification         -> Personal messages ("your payment was approved")
+// ========================================
+
+// ========================================
+// DATABASE CONNECTION
+// ========================================
+// "postgresql" is used for production and for Vercel deployment.
+//
+// WANT A FREE LOCAL DATABASE INSTEAD? (no internet, no account needed)
+//   Run:   npm run db:use:sqlite
+//   That script changes the line below to "sqlite" for you.
+//   Run:   npm run db:use:postgres   to switch back.
+// ========================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+// ========================================
+// PRISMA CLIENT
+// This generates the code we use to talk to the database
+// (it appears in node_modules/@prisma/client).
+// ========================================
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ========================================
+// USERS  (ADMIN + MEMBER LOGIN ACCOUNTS)
+// This table powers AUTHENTICATION and AUTHORIZATION.
+// Passwords are NEVER stored as plain text - only as a bcrypt hash.
+// "role" decides what a person is allowed to do:
+//   ADMIN  -> can open the Admin Panel
+//   MEMBER -> can only open the Member Panel
+// ========================================
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String // bcrypt hash - never the real password
+  name         String
+  phone        String?
+  role         String   @default("MEMBER") // "ADMIN" or "MEMBER"
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+
+  // ---------- EMAIL VERIFICATION (member accounts) ----------
+  // The moment the member used the link/code we emailed them.
+  // Empty (null) means "we have not proved that this email address is theirs",
+  // and the member panel stays locked until it is filled in.
+  emailVerifiedAt DateTime?
+
+  // ---------- SESSION INVALIDATION ----------
+  // Every login cookie carries this number. Changing a password (or pressing
+  // "sign out everywhere") increases it, and every cookie with an older number
+  // stops working immediately. This is what makes "the old password no longer
+  // works" true for sessions that were already open.
+  sessionVersion Int @default(1)
+
+  // ---------- WHO CREATED THIS ACCOUNT ----------
+  // Members cannot register themselves: an administrator creates the account.
+  // We remember which administrator it was, for the audit trail.
+  invitedById    String?
+  invitedBy      User?   @relation("MemberInvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+  invitedMembers User[]  @relation("MemberInvitedBy")
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // A user can have one member profile (only for role = MEMBER).
+  profile MemberProfile?
+
+  // Tasks assigned to this user (Member Panel -> Assigned tasks).
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks  Task[] @relation("TaskCreator")
+
+  // Activity log entries created by this user (Admin Dashboard -> Recent activity).
+  activityLogs ActivityLog[]
+
+  // ---------- FUND MANAGEMENT RELATIONS ----------
+  // Payments this member has submitted (Member Panel -> Monthly fund).
+  fundPayments       FundPayment[]         @relation("MemberPayments")
+  // Payments this administrator verified (approved or rejected).
+  reviewedPayments   FundPayment[]         @relation("PaymentReviewer")
+  // Month-by-month contribution record for this member.
+  monthlyContributions MonthlyContribution[]
+  // Expenses this administrator recorded.
+  expensesAdded      Expense[]             @relation("ExpenseAddedBy")
+  // Expenses this administrator approved or rejected.
+  expensesReviewed   Expense[]             @relation("ExpenseReviewedBy")
+  // Personal notifications (Member Panel + Admin Panel bell).
+  notifications      Notification[]
+
+  // ---------- EMAIL VERIFICATION / PASSWORD RESET TOKENS ----------
+  verificationTokens VerificationToken[]
+
+  // ---------- KARYA SAMITI (COMMITTEE) ----------
+  // A committee member may optionally also have a login account.
+  karyaSamiti KaryaSamitiMember?
+
+  // ---------- LOAN MANAGEMENT ----------
+  // Loans this member received.
+  borrowedLoans      Loan[]       @relation("LoanBorrower")
+  // Loans this administrator approved.
+  approvedLoans      Loan[]       @relation("LoanApprovedBy")
+  // Loans this administrator created.
+  createdLoans       Loan[]       @relation("LoanCreatedBy")
+  // Loan returns this administrator recorded.
+  recordedLoanReturns LoanReturn[] @relation("LoanReturnRecordedBy")
+
+  // ---------- DISTRICT WORK ----------
+  districtActivities DistrictActivity[]
+
+  // ---------- MEMBER <-> ADMIN MESSAGING ----------
+  sentMessages      Message[] @relation("MessageSender")
+  receivedMessages  Message[] @relation("MessageRecipient")
+
+  @@index([role])
+  @@map("users")
+}
+
+// ========================================
+// MEMBER PROFILE
+// Extra information about a member that is NOT used for login.
+// NOTE: sensitive data (citizenship number, bank details, private documents)
+// is deliberately NOT stored here, so it can never leak to the public website.
+// ========================================
+model MemberProfile {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  membershipNo String?   @unique
+  designation  String? // e.g. Chairperson, Secretary, Volunteer
+  department   String? // e.g. Education, Health, Women Empowerment
+  bio          String? // short public introduction
+  photoUrl     String?
+  // Where the member lives. Three separate columns (instead of one long
+  // address) because the district reports have to count members per district.
+  address      String? // the full address as written on paper
+  district     String?
+  municipality String? // municipality or rural municipality
+  ward         String?
+  status       String    @default("PENDING") // PENDING / ACTIVE / INACTIVE / SUSPENDED
+  joinedAt     DateTime?
+  // When true the member is listed on the public "Members / Leadership" page.
+  isPublic     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([isPublic])
+  @@map("member_profiles")
+}
+
+// ========================================
+// SITE SETTINGS  (KEY / VALUE STORE)
+// Every value the organization can edit from Admin Panel -> Settings lives here.
+// Examples: organization name, phone number, email, bank details for donations.
+// The full list of keys is documented in "lib/settings.ts".
+// ========================================
+model SiteSetting {
+  key       String   @id
+  value     String
+  group     String   @default("GENERAL")
+  updatedAt DateTime @updatedAt
+
+  @@index([group])
+  @@map("site_settings")
+}
+
+// ========================================
+// CONTENT SECTIONS  (LONG EDITABLE TEXT)
+// About page blocks, Vision, Mission, Objectives, "Women Empowered" introduction...
+// Anything in here can be rewritten from Admin Panel -> Content Sections
+// without touching any code.
+// ========================================
+model ContentSection {
+  id          String   @id @default(cuid())
+  slug        String   @unique // short machine name, e.g. "vision"
+  title       String // heading shown on the page
+  subtitle    String? // smaller line under the heading
+  body        String   @default("") // main paragraph(s). Line breaks are kept.
+  bulletList  String? // one item per line, shown as a bullet list
+  imageUrl    String?
+  group       String   @default("ABOUT") // ABOUT / HOME / WOMEN / BENEFICIARIES / IMPACT
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([group])
+  @@map("content_sections")
+}
+
+// ========================================
+// PROGRAMS SECTION
+// This table controls Programs (/programs and the homepage preview).
+// ========================================
+model Program {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  category        String? // e.g. Education, Health, Women Empowerment
+  summary         String? // one or two lines shown on the card
+  description     String    @default("") // full details on the program page
+  objectives      String? // one objective per line
+  results         String? // results / impact achieved so far
+  targetGroup     String? // who the program is for
+  location        String?
+  startDate       DateTime?
+  endDate         DateTime?
+  status          String    @default("PLANNED") // PLANNED / ONGOING / COMPLETED / PAUSED
+  imageUrl        String?
+  isPublished     Boolean   @default(false)
+  featured        Boolean   @default(false) // show on the homepage
+  sortOrder       Int       @default(0)
+  // Optional link to a project this program belongs to.
+  projectId       String?
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([isPublished, status])
+  @@index([projectId])
+  @@map("programs")
+}
+
+// ========================================
+// PROJECTS / OUR WORKS
+// One table is used for BOTH pages. The "kind" column decides where an
+// entry appears:
+//   kind = "PROJECT" -> /projects
+//   kind = "WORK"    -> /our-works
+// ========================================
+model Project {
+  id             String    @id @default(cuid())
+  slug           String    @unique
+  title          String
+  kind           String    @default("PROJECT") // PROJECT or WORK
+  category       String?
+  summary        String?
+  description    String    @default("")
+  objectives     String? // one objective per line
+  activities     String? // one activity per line
+  results        String? // results achieved
+  impact         String? // impact / difference created
+  beneficiaries  String? // description of who benefited (no invented numbers)
+  location       String?
+  startDate      DateTime?
+  endDate        DateTime?
+  status         String    @default("PLANNED") // PLANNED / ONGOING / COMPLETED / PAUSED
+  imageUrl       String?
+  isPublished    Boolean   @default(false)
+  featured       Boolean   @default(false) // show on the homepage
+  sortOrder      Int       @default(0)
+  programs       Program[]
+  galleryImages  GalleryImage[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([kind, isPublished])
+  @@map("projects")
+}
+
+// ========================================
+// EVENTS SECTION
+// This table controls Events (/events and the homepage "Upcoming events").
+// ========================================
+model Event {
+  id               String    @id @default(cuid())
+  slug             String    @unique
+  title            String
+  summary          String?
+  description      String    @default("")
+  startsAt         DateTime // date and time the event begins
+  endsAt           DateTime?
+  location         String?
+  imageUrl         String?
+  // Free text: how someone can register (phone number, form link...).
+  registrationInfo String?
+  status           String    @default("UPCOMING") // UPCOMING / ONGOING / COMPLETED / CANCELLED
+  isPublished      Boolean   @default(false)
+  featured         Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  galleryImages    GalleryImage[]
+
+  @@index([isPublished, startsAt])
+  @@map("events")
+}
+
+// ========================================
+// NEWS / NOTICES
+// This table controls the News page (/news) and its detail pages.
+// "type" separates News from Notices ("NEWS", "NOTICE", "PRESS", "STORY").
+// ========================================
+model NewsPost {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  title         String
+  type          String    @default("NEWS")
+  category      String?
+  excerpt       String? // short summary shown on the listing page
+  content       String    @default("") // full article text
+  coverImageUrl String?
+  publishedAt   DateTime? // shown as the article date
+  isPublished   Boolean   @default(false)
+  featured      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isPublished, publishedAt])
+  @@map("news_posts")
+}
+
+// ========================================
+// GALLERY SECTION
+// GalleryAlbum = a group of photos. GalleryImage = one photo.
+// A photo can be linked to a program, project or event.
+// ========================================
+model GalleryAlbum {
+  id           String         @id @default(cuid())
+  slug         String         @unique
+  title        String
+  description  String?
+  coverImageUrl String?
+  category     String?
+  eventDate    DateTime?
+  isPublished  Boolean        @default(true)
+  sortOrder    Int            @default(0)
+  images       GalleryImage[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("gallery_albums")
+}
+
+model GalleryImage {
+  id          String        @id @default(cuid())
+  title       String? // caption shown under the photo
+  imageUrl    String
+  category    String?
+  takenOn     DateTime?
+  albumId     String?
+  album       GalleryAlbum? @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  // Optional links to other content.
+  programId   String?
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  eventId     String?
+  event       Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  isPublished Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([albumId])
+  @@index([isPublished])
+  @@map("gallery_images")
+}
+
+// ========================================
+// DONORS / SUPPORTERS SECTION
+// Public supporters page (/donors). Admin controls exactly what is public
+// through the "isPublic" switch. Payment details are never stored here.
+// ========================================
+model Donor {
+  id          String   @id @default(cuid())
+  name        String // person or contact name
+  organization String? // organization name (if it is an organization)
+  logoUrl     String?
+  description String?
+  supportArea String? // e.g. Education, Health, Sports
+  websiteUrl  String?
+  isPublic    Boolean  @default(false) // false = kept private (internal record only)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublic])
+  @@map("donors")
+}
+
+// ========================================
+// JOIN COMMUNITY APPLICATIONS
+// Submissions from the public /join form.
+// They are ONLY visible inside the Admin Panel - never on the public website.
+// ========================================
+model JoinApplication {
+  id              String   @id @default(cuid())
+  fullName        String
+  phone           String
+  email           String?
+  address         String?
+  areaOfInterest  String?
+  message         String?
+  extraInfo       String?
+  status          String   @default("NEW") // NEW / REVIEWING / APPROVED / REJECTED
+  adminNote       String? // internal note, never shown to the applicant
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@map("join_applications")
+}
+
+// ========================================
+// CONTACT MESSAGES
+// Submissions from the public /contact form. Admin Panel only.
+// ========================================
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    String   @default("NEW") // NEW / READ / REPLIED / ARCHIVED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("contact_messages")
+}
+
+// ========================================
+// DONATIONS (PRIVATE RECORDS)
+// A simple record book of donations the organization has received.
+// This table is NEVER shown on the public website.
+// "amount" is stored in whole units of the currency (for example rupees).
+// ========================================
+model Donation {
+  id          String   @id @default(cuid())
+  donorName   String
+  donorEmail  String?
+
+  // ---------- Added with the Donation management screens ----------
+  // A DONATION IS NOT A MEMBER CONTRIBUTION. It lives in this table, has its own
+  // status and its own totals, and is never added to the monthly fund figures.
+  donorPhone   String?
+  // ONE_TIME / MONTHLY / GENERAL / IN_KIND / OTHER
+  donationType String  @default("ONE_TIME")
+  purpose      String? // what the donor wanted it used for
+  // PENDING / VERIFIED / REJECTED  (only VERIFIED counts as money received)
+  status       String  @default("PENDING")
+  remarks      String?
+  verifiedById String?
+  verifiedAt   DateTime?
+
+  amount      Int
+  currency    String   @default("NPR")
+  method      String   @default("BANK_TRANSFER")
+  reference   String? // receipt number or bank reference
+  receiptUrl  String? // payment screenshot, served through the guarded /api/files route
+
+  // ---------- WHICH DONOR ACCOUNT MADE THIS GIFT ----------
+  // Empty for an anonymous donation (the ordinary case: a visitor needs no
+  // account to give money). Filled in by the SERVER from the signed-in donor's
+  // cookie, never from the form - otherwise somebody could attach a gift to
+  // another person's history.
+  //
+  // Deliberately a plain column and not a relation: the history screen filters on
+  // it and nothing else joins through it, so there is no foreign key to look
+  // after. See model DonorAccount at the end of this file.
+  donorAccountId String?
+
+  note        String?
+  receivedOn  DateTime @default(now())
+  recordedBy  String? // email of the admin who typed it in
+  // Soft delete: a donation is hidden, never really removed.
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([receivedOn])
+  @@index([status, receivedOn])
+  @@index([donorAccountId, receivedOn])
+  @@map("donations")
+}
+
+// ========================================
+// DONOR ACCOUNTS
+// ========================================
+// WHY THIS IS A SEPARATE TABLE
+//   A donor is NOT a member. A member pays NPR 20 a month, has a membership
+//   profile, can take a loan and appears in the member register. A donor simply
+//   gives money when they choose to.
+//
+//   Putting donors into "users" would mean every donor shows up in the member
+//   list, the monthly fund calculation and the loan screens - which is exactly
+//   the mixing this project has avoided everywhere else.
+//
+// WHAT IT IS FOR
+//   So a person can sign in and see the donations THEY made: amounts, causes,
+//   dates and whether the office has confirmed each one.
+//
+// HOW THE LINK WORKS
+//   Donation.donorAccountId is written by the server while the donor is signed
+//   in. A gift given while signed out stays anonymous and is never attached to
+//   an account afterwards, because an email address typed into a form proves
+//   nothing about who owns it.
+//
+// PASSWORDS
+//   Only a bcrypt hash is stored (lib/auth/password.ts). The plain password is
+//   never written anywhere.
+// ========================================
+model DonorAccount {
+  id    String @id @default(cuid())
+  name  String
+  email String @unique
+  phone String?
+
+  passwordHash String
+
+  // Switching this off locks the account out without deleting its history.
+  isActive Boolean @default(true)
+
+  // Bumped when the password changes, so every older cookie stops working -
+  // the same idea as User.sessionVersion.
+  sessionVersion Int @default(1)
+
+  // ---------- PROVEN EMAIL ADDRESS ----------
+  // Empty until the donor has typed the code that was sent to them. A donation
+  // is not allowed to start while this is empty (see lib/donor/session.ts),
+  // because the history is only trustworthy if the address belongs to the person
+  // holding the account.
+  //
+  // When the site has no mail server configured (no SMTP settings), the account
+  // is activated immediately instead - see app/api/donor/register/route.ts for
+  // exactly why, and what the donor is told.
+  emailVerifiedAt DateTime?
+
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // A donor is looked up by email at sign-in, and their donations by id.
+  @@index([email])
+  @@map("donor_accounts")
+}
+
+// ========================================
+// DONOR TOKENS - PROVING AN EMAIL, RESETTING A PASSWORD
+// ========================================
+// ONE ROW = ONE short-lived secret handed to a donor by email.
+//
+//   EMAIL_VERIFY    a six-digit code, valid for 15 minutes
+//   PASSWORD_RESET  a long random link token, valid for 60 minutes
+//
+// WHAT IS STORED
+//   Only a SHA-256 fingerprint of the secret (tokenHash). Reading this table
+//   therefore tells nobody a usable code - exactly the same rule the member
+//   verification tokens follow.
+//
+// SINGLE USE
+//   usedAt is stamped the moment a token succeeds, so the same code cannot be
+//   replayed. Asking for a new code marks the previous one used.
+//
+// TOO MANY WRONG CODES
+//   attempts is counted per token. After five wrong guesses the token is dead
+//   and the donor has to ask for a new one - which is what stops a six-digit
+//   code from being guessed.
+// ========================================
+model DonorToken {
+  id String @id @default(cuid())
+
+  donorAccountId String
+
+  // EMAIL_VERIFY | PASSWORD_RESET
+  purpose String
+
+  tokenHash String @unique
+
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int      @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([donorAccountId, purpose])
+  @@map("donor_tokens")
+}
+
+// ========================================
+// BENEFICIARIES SECTION
+// Who the organization serves. Categories are fully editable from the
+// Admin Panel (no hard-coded lists).
+//
+// "beneficiaryCount" is optional ON PURPOSE.
+// If it is left empty the number is simply not shown on the website,
+// so that we never display invented statistics.
+// ========================================
+model BeneficiaryCategory {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  description      String?
+  imageUrl         String?
+  iconKey          String? // small icon name, see components/ui/Icon.tsx
+  beneficiaryCount Int? // leave empty if the real number is unknown
+  countLabel       String? // e.g. "people reached", "families supported"
+  isPublished      Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("beneficiary_categories")
+}
+
+// ========================================
+// TASKS
+// Tasks an administrator gives to a member.
+// They appear in the Member Panel under "Assigned tasks".
+// ========================================
+model Task {
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  status       String    @default("TODO") // TODO / IN_PROGRESS / DONE
+  priority     String    @default("NORMAL") // LOW / NORMAL / HIGH
+  dueDate      DateTime?
+  assignedToId String
+  assignedTo   User      @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdById  String?
+  createdBy    User?     @relation("TaskCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([assignedToId, status])
+  @@map("tasks")
+}
+
+// ========================================
+// ACTIVITY LOG
+// A short "who did what" history shown on the Admin Dashboard.
+// Only administrators can read this table.
+// ========================================
+model ActivityLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorName String?
+  action    String // CREATE / UPDATE / DELETE / LOGIN
+  entity    String // Member, Program, Project, ... FundPayment, Expense
+  entityId  String?
+  detail    String?
+  // ---------- EXTRA COLUMNS USED BY THE FINANCIAL AUDIT TRAIL ----------
+  // "oldValue" and "newValue" record what a financial field looked like before
+  // and after a change, for example:  status "PENDING" -> "APPROVED".
+  oldValue  String?
+  newValue  String?
+  // Which computer the change came from (helps investigate a dispute).
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity])
+  @@map("activity_logs")
+}
+
+// ========================================
+// FUND MANAGEMENT - BANKS
+// ========================================
+// The bank accounts the organization accepts contributions into.
+//
+// This code controls the Bank selection shown to members in the Member Panel
+// (Monthly Fund -> Pay) and the "Banks & QR" screen in the Admin Panel.
+//
+// IMPORTANT: only banks with  isActive = true  are shown to members.
+// A bank is NEVER deleted if it already has payments linked to it - it is
+// switched off instead, so that old receipts keep pointing at a real record.
+// ========================================
+model Bank {
+  id            String   @id @default(cuid())
+  name          String // e.g. "NIC Asia Bank", "eSewa", "Khalti"
+  accountName   String // name the account is held in
+  accountNumber String
+  branch        String?
+  // Picture of the payment QR code (uploaded or linked by an administrator).
+  qrImageUrl    String?
+  // Anything the member must know before paying.
+  instructions  String?
+
+  // ---------- WHICH PAYMENT SERVICE IS THIS? ----------
+  //   BANK   -> a bank account (transfer / cheque / deposit)
+  //   ESEWA  -> an eSewa wallet
+  //   KHALTI -> a Khalti wallet
+  //   OTHER  -> anything else the organization uses
+  // Existing rows automatically become "BANK", so nothing built earlier breaks.
+  methodType    String   @default("BANK")
+  // A short label shown above the number, e.g. "eSewa ID", "Account number".
+  accountLabel  String?
+  // The account members are asked to use first. Only one row should have this.
+  isDefault     Boolean  @default(false)
+
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  payments FundPayment[]
+
+  @@index([isActive, sortOrder])
+  @@index([methodType])
+  @@map("banks")
+}
+
+// ========================================
+// FUND MANAGEMENT - FUND CATEGORIES
+// ========================================
+// What kind of money came in: monthly member fund, donation, event fund...
+// Categories can be added, renamed and switched off from the Admin Panel.
+// ========================================
+model FundCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String // e.g. "Monthly Member Fund"
+  description String?
+  // "isSystem" marks the categories the monthly fund logic depends on.
+  // They can be renamed but should not be switched off.
+  isSystem    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  payments FundPayment[]
+
+  @@index([isActive, sortOrder])
+  @@map("fund_categories")
+}
+
+// ========================================
+// FUND MANAGEMENT - PAYMENTS (COLLECTIONS)
+// ========================================
+// ONE ROW = ONE payment a member (or an administrator on somebody's behalf)
+// has submitted.
+//
+// MONEY RULES
+//   Only rows with  status = "APPROVED"  count towards the total collection
+//   and the available balance. Pending, rejected and cancelled rows never do.
+//
+// "amount" is stored as a whole number in the smallest whole unit of the
+// currency (for example Nepali rupees, no paisa). This matches the existing
+// "donations" table and avoids decimal rounding mistakes.
+// ========================================
+model FundPayment {
+  id       String @id @default(cuid())
+  memberId String
+  member   User   @relation("MemberPayments", fields: [memberId], references: [id], onDelete: Cascade)
+
+  amount        Int
+  currency      String @default("NPR")
+  paymentDate   DateTime // the day the member says they paid
+  method        String   @default("BANK_TRANSFER") // BANK_TRANSFER / QR / CASH / CHEQUE / ONLINE / OTHER
+
+  // Which bank the money went into.
+  bankId String?
+  bank   Bank?   @relation(fields: [bankId], references: [id], onDelete: SetNull)
+  // A copy of the bank name at the time of payment. If the bank is later
+  // renamed or switched off, old receipts still show the correct name.
+  bankNameSnapshot String?
+
+  // The bank's transaction id. Used to catch the same payment being submitted
+  // twice (see "txnKey" below).
+  transactionId   String
+  referenceNumber String?
+  receiptUrl      String?
+
+  // What the money is for.
+  fundCategoryId String?
+  fundCategory   FundCategory? @relation(fields: [fundCategoryId], references: [id], onDelete: SetNull)
+  purpose        String?
+  description    String?
+  // The month this payment belongs to (always the 1st day of that month,
+  // for example 2026-10-01 = October 2026). Empty for one-off donations.
+  periodMonth    DateTime?
+
+  // PENDING / APPROVED / REJECTED / CANCELLED
+  status     String  @default("PENDING")
+  reviewNote String? // why it was rejected, or an approval note
+  submittedAt DateTime @default(now())
+  reviewedAt  DateTime?
+  reviewedById String?
+  reviewedBy   User?   @relation("PaymentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  // ---------- DUPLICATE TRANSACTION PROTECTION ----------
+  // txnKey is the value the database keeps unique.
+  //   * While a payment is pending or approved it is simply the transaction id,
+  //     so the SAME bank transaction can never be recorded twice.
+  //   * When a payment is rejected or cancelled the key is suffixed, which frees
+  //     the transaction id so the member can correct a mistake and submit again.
+  // The rejected row is kept, so nothing is ever silently lost.
+  txnKey String @unique
+
+  createdById String?
+  updatedById String?
+
+  // Soft delete: financial rows are never really removed.
+  // "isDeleted = true" hides the row from lists but keeps the audit trail.
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, paymentDate])
+  @@index([memberId, status])
+  @@index([periodMonth])
+  @@index([bankId])
+  @@map("fund_payments")
+}
+
+// ========================================
+// FUND MANAGEMENT - MONTHLY CONTRIBUTIONS
+// ========================================
+// ONE ROW = ONE member's obligation for ONE month.
+//   October 2026 / required 1000 / paid 1000 / status PAID
+//
+// This is what the monthly tracking table in the Admin Panel shows, and what
+// the member sees in the Member Panel under "Monthly fund".
+//
+// "paidAmount" is recalculated from APPROVED payments only - it is never
+// typed in by hand (see lib/fund/calc.ts).
+// ========================================
+model MonthlyContribution {
+  id       String @id @default(cuid())
+  memberId String
+  member   User   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // Always the FIRST day of the month, so each month appears exactly once.
+  periodMonth    DateTime
+  requiredAmount Int
+  paidAmount     Int    @default(0)
+
+  // PENDING / PARTIAL / PAID / OVERDUE / WAIVED
+  status String @default("PENDING")
+  waivedReason String?
+  note         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // One row per member per month - this is what stops a month being added twice.
+  @@unique([memberId, periodMonth])
+  @@index([periodMonth, status])
+  @@index([memberId, periodMonth])
+  @@map("monthly_contributions")
+}
+
+// ========================================
+// FUND MANAGEMENT - EXPENSE CATEGORIES
+// ========================================
+// Event, Office, Equipment, Transportation, Food, Salary, Maintenance,
+// Charity, Emergency, Other. Editable from the Admin Panel.
+// ========================================
+model ExpenseCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  isSystem    Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  expenses Expense[]
+
+  @@index([isActive, sortOrder])
+  @@map("expense_categories")
+}
+
+// ========================================
+// FUND MANAGEMENT - EXPENSES
+// ========================================
+// ONE ROW = ONE amount of money the organization spent.
+//
+// APPROVAL RULE
+//   Only  status = "APPROVED"  expenses are subtracted from the fund balance.
+//   A Finance Admin or Admin records the expense; a Super Admin approves it.
+//
+// "amount" is a whole number in the currency's main unit (same rule as
+// FundPayment above).
+// ========================================
+model Expense {
+  id         String           @id @default(cuid())
+  title      String
+  categoryId String?
+  category   ExpenseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  amount        Int
+  currency      String   @default("NPR")
+  expenseDate   DateTime
+  paidTo        String? // vendor / person who received the money
+  method        String   @default("CASH") // CASH / BANK_TRANSFER / CHEQUE / ONLINE / OTHER
+  description   String?
+  receiptUrl    String? // bill or receipt picture
+  referenceNumber String?
+
+  // PENDING / APPROVED / REJECTED
+  status      String    @default("PENDING")
+  reviewNote  String?
+  reviewedAt  DateTime?
+
+  addedById    String?
+  addedBy      User?    @relation("ExpenseAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+  reviewedById String?
+  reviewedBy   User?    @relation("ExpenseReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  updatedById String?
+
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, expenseDate])
+  @@index([categoryId])
+  @@map("expenses")
+}
+
+// ========================================
+// NOTIFICATIONS
+// ========================================
+// Short messages shown to one person:
+//   "Your fund payment has been approved."
+//   "New fund payment requires verification."  (to every administrator)
+//
+// A member only ever sees their own notifications (filtered by userId).
+// ========================================
+model Notification {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  message String
+  // INFO / SUCCESS / WARNING / ERROR - decides the colour of the badge.
+  type    String @default("INFO")
+  // Optional page to open when the notification is clicked.
+  link    String?
+
+  isRead  Boolean   @default(false)
+  readAt  DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ========================================
+// ========================================
+// EMAIL VERIFICATION + PASSWORD RESET TOKENS
+// ========================================
+// ONE ROW = ONE "please prove it is you" secret.
+//
+// TWO USES (the "purpose" column decides which):
+//   EMAIL_VERIFY   -> sent when an administrator creates a member account
+//   PASSWORD_RESET -> sent when a member clicks "Forgot password"
+//
+// HOW IT IS KEPT SAFE
+//   The secret is emailed as a long random text. Only its SHA-256 "fingerprint"
+//   (tokenHash) is stored here, so even somebody who reads this whole table
+//   cannot use a single row to sign in. The row also expires and can be used
+//   only once ("usedAt").
+// ========================================
+model VerificationToken {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // EMAIL_VERIFY / PASSWORD_RESET
+  purpose String
+
+  // SHA-256 fingerprint of the secret that was emailed. Never the secret itself.
+  tokenHash String @unique
+
+  // The short 6 digit code (also hashed). Lets a member type the code instead
+  // of clicking a link, which is much easier on a phone.
+  codeHash String?
+
+  expiresAt DateTime
+  // Filled in the moment it is used - a token can never be replayed.
+  usedAt    DateTime?
+  // How many times somebody typed a wrong code (blocks patient guessing).
+  attempts  Int       @default(0)
+
+  // Who asked for it (an administrator, or the member themselves).
+  requestedById String?
+  requestIp     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+  @@map("verification_tokens")
+}
+
+// ========================================
+// KARYA SAMITI - POSTS / POSITIONS
+// ========================================
+// अध्यक्ष, उपाध्यक्ष, सचिव, सह-सचिव, कोषाध्यक्ष, सदस्य...
+//
+// Kept in its own table so the organization can add ANY position it wants
+// (the six above are only the starting list). "sortOrder" is what decides the
+// order they appear in inside the Admin Panel dropdown.
+// ========================================
+model KaryaSamitiPost {
+  id        String   @id @default(cuid())
+  // The Nepali name shown on the public page, e.g. "अध्यक्ष".
+  name      String   @unique
+  // Optional English name, for the English parts of the website.
+  nameEn    String?
+  // Optional longer explanation of what the post is responsible for.
+  description String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  members KaryaSamitiMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("karya_samiti_posts")
+}
+
+// ========================================
+// KARYA SAMITI - COMMITTEE MEMBERS
+// ========================================
+// ONE ROW = ONE person on the कार्य समिति.
+//
+// PUBLIC vs PRIVATE (this split is the whole point of the table)
+//   PUBLIC  (any visitor may see):
+//       fullName, postTitle, currentAddress, photoUrl, displayOrder, status
+//   PRIVATE (Admin / Super Admin only, NEVER sent to a public page):
+//       phone, email, permanentAddress, dateOfBirth, citizenshipNo,
+//       citizenshipDistrict, memberCode, joiningDate, committeeJoiningDate,
+//       internalNotes
+//
+// The public page in app/(site)/karya-samiti only ever SELECTS the public
+// columns, so the private ones are not even loaded from the database - there is
+// no way for them to leak into the HTML or into a JSON answer.
+// ========================================
+model KaryaSamitiMember {
+  id String @id @default(cuid())
+
+  // ---------- PUBLIC INFORMATION ----------
+  fullName       String // e.g. "राम बहादुर"
+  // The position exactly as it should be printed, e.g. "अध्यक्ष".
+  // Kept as text so a custom position can be typed even without a post row.
+  postTitle      String
+  // Optional link to the posts table (gives the position a sort order).
+  postId         String?
+  post           KaryaSamitiPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
+  currentAddress String? // e.g. "काठमाडौं, नेपाल"
+  photoUrl       String?
+  // Lower numbers are shown first on the public page.
+  displayOrder   Int     @default(0)
+
+  // CURRENT = serving today (shown publicly)
+  // FORMER  = served in the past (kept for the records, hidden by default)
+  status   String  @default("CURRENT")
+  // Switched off = kept in the database but not shown to visitors.
+  isActive Boolean @default(true)
+
+  // ---------- PRIVATE / ADMIN INFORMATION ----------
+  phone             String?
+  email             String?
+  permanentAddress  String?
+  dateOfBirth       DateTime?
+  citizenshipNo     String?
+  citizenshipDistrict String?
+  // The organization's own member number (used in reports and on paper).
+  memberCode        String?   @unique
+  // Optional link to a login account, so the same person can sign in.
+  userId            String?   @unique
+  user              User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  joiningDate       DateTime?
+  committeeJoiningDate DateTime?
+  internalNotes     String?
+
+  // ---------- AUDIT ----------
+  createdById String?
+  updatedById String?
+
+  // Soft delete: a person is hidden instead of removed, so history survives.
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status, displayOrder])
+  @@index([isActive])
+  @@index([postId])
+  @@map("karya_samiti_members")
+}
+
+// ========================================
+// LOAN MANAGEMENT - LOANS
+// ========================================
+// ONE ROW = ONE loan the organization gave to a member.
+//
+// IMPORTANT: THIS IS COMPLETELY SEPARATE FROM THE MONTHLY MEMBER FUND.
+//   Loan money never appears in the monthly contribution totals, and the
+//   monthly contribution never appears here. That is deliberate: the two are
+//   different kinds of money and mixing them would make both reports wrong.
+//
+// THE REMAINING BALANCE IS NEVER TYPED IN and never stored here.
+//   Remaining = principalAmount - (sum of the LoanReturn rows)
+//   It is recalculated from the return records by lib/loan/calc.ts, so the
+//   number on the screen can always be rebuilt from the history.
+//
+// "agreementUrl" is the uploaded physical agreement. It is PRIVATE: the file is
+// never placed in the public folder and is only streamed to a signed-in
+// administrator by app/api/admin/loans/document/route.ts.
+// ========================================
+model Loan {
+  id String @id @default(cuid())
+
+  // Human readable number, e.g. "LN-2026-0001" (unique).
+  loanNo String @unique
+
+  memberId String
+  member   User   @relation("LoanBorrower", fields: [memberId], references: [id], onDelete: Cascade)
+
+  // Whole rupees, same rule as every other money column in this project.
+  principalAmount Int
+  currency        String   @default("NPR")
+  // OPTIONAL ON PURPOSE. A loan is recorded first and the money is handed over
+  // later (approve -> pay out), so there is a perfectly normal moment when a
+  // loan exists but no money has moved yet. Making this column required made
+  // every new loan impossible to save - the database answered
+  // "Argument `givenDate` must not be null."
+  givenDate       DateTime?
+
+  purpose         String? // why the member needed the money
+  // What the agreement says (amount, return plan, anything agreed verbally).
+  agreementNote   String?
+  // The uploaded physical agreement. PRIVATE - administrators only.
+  agreementUrl    String?
+  // Optional extra supporting document, e.g. a citizenship copy.
+  supportingUrl   String?
+  // When the money is expected back. Used to work out "Overdue".
+  expectedReturnDate DateTime?
+  // How many instalments were agreed, if any.
+  installments    Int?
+
+  // ---------- DATES OF EACH STEP ----------
+  // The office often records a loan on paper first and enters it later, so each
+  // step keeps its own date instead of one "created" date.
+  requestedDate   DateTime? // when the member asked for the money
+  // approvedAt (below) is when a Super Administrator approved it
+  disbursedDate   DateTime? // when the money actually changed hands
+
+  // ---------- INTEREST (only if the club charges it) ----------
+  // Whole rupees, and 0 means "no interest". The total payable is NEVER stored:
+  // it is principalAmount + interestAmount, worked out in lib/loan/calc.ts, so
+  // there is only one version of that number.
+  interestAmount  Int @default(0)
+
+  // ---------- THE PHYSICAL AGREEMENT ----------
+  // Whether the paper agreement has been signed, kept apart from whether the
+  // file has been scanned, because those are two different facts.
+  agreementSigned Boolean @default(false)
+  agreementNo     String? // the number written on the paper
+  agreementDate   DateTime?
+  // NOT_REQUIRED / PENDING / SIGNED - and see "agreementUrl" above for the file.
+  agreementStatus String  @default("PENDING")
+
+  // Why a loan was refused (shown to the member, and kept for the audit trail).
+  rejectionReason String?
+
+  // PENDING / UNDER_REVIEW / APPROVED / REJECTED / DISBURSED / PARTIALLY_PAID /
+  // OVERDUE / COMPLETED / CANCELLED
+  //
+  // REJECTED and CANCELLED are final and are never overwritten.
+  // For everything else the value is recalculated from the return records
+  // whenever a repayment is added or the record is opened
+  // (see lib/loan/service.ts -> recalculateLoan).
+  status String @default("PENDING")
+
+  approvedById String?
+  approvedBy   User?   @relation("LoanApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt   DateTime?
+
+  notes String?
+
+  createdById String?
+  createdBy   User?   @relation("LoanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+
+  // Soft delete: a loan row is hidden, never really removed.
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  returns   LoanReturn[]
+  documents LoanDocument[]
+
+  @@index([status, givenDate])
+  @@index([memberId, status])
+  @@index([givenDate])
+  @@map("loans")
+}
+
+// ========================================
+// LOAN MANAGEMENT - RETURNS (PART PAYMENTS)
+// ========================================
+// ONE ROW = ONE amount a member paid back.
+//
+// Partial returns are completely normal here:
+//   loan 50,000 / returns 10,000 + 15,000 + 5,000 -> remaining 20,000
+// The loan only becomes FULLY_RETURNED when the sum reaches the loan amount.
+// ========================================
+model LoanReturn {
+  id     String @id @default(cuid())
+  loanId String
+  loan   Loan   @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  amount     Int
+  returnDate DateTime
+  method     String   @default("CASH") // CASH / BANK_TRANSFER / CHEQUE / ONLINE / OTHER
+  referenceNumber String?
+  // Picture or scan of the proof (receipt, deposit slip). Private.
+  proofUrl   String?
+  notes      String?
+
+  recordedById String?
+  recordedBy   User?   @relation("LoanReturnRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  // Soft delete: a wrongly typed return is hidden and the balance recalculated.
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([loanId, returnDate])
+  @@map("loan_returns")
+}
+
+// ========================================
+// LOAN MANAGEMENT - EXTRA DOCUMENTS
+// ========================================
+// The main agreement lives on the Loan row. This table is for anything else that
+// belongs to the same loan: a renewal agreement, a citizenship copy, a signed
+// schedule, a court paper...
+//
+// These files are PRIVATE for the same reason as the agreement.
+// ========================================
+model LoanDocument {
+  id     String @id @default(cuid())
+  loanId String
+  loan   Loan   @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  title     String
+  fileUrl   String
+  kind      String   @default("AGREEMENT") // AGREEMENT / CITIZENSHIP / SCHEDULE / OTHER
+
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  @@index([loanId])
+  @@map("loan_documents")
+}
+
+// ========================================
+// DISTRICT-WISE WORK / ACTIVITY (ALL 77 DISTRICTS)
+// ========================================
+// ONE ROW = ONE activity the organization carried out in one place.
+//
+// "district" holds the official Nepali district name (see config/districts.ts).
+// Nothing is stored as a number here; the district is plain text so the list of
+// 77 districts can be corrected without touching the database.
+//
+// "photoUrls" and "documentUrls" keep one link per line (the Admin Panel uses
+// the "lines" field type, exactly like Program -> objectives).
+// ========================================
+model DistrictActivity {
+  id String @id @default(cuid())
+
+  district     String // one of the 77 districts
+  municipality String? // municipality or rural municipality
+  ward         String?
+
+  title        String
+  activityType String? // Education, Health, Women, Environment, Youth...
+  description  String?
+
+  // Numbers the organization actually recorded. Empty = "not recorded yet",
+  // which is shown as a dash instead of an invented figure.
+  beneficiaries   Int?
+  membersInvolved Int?
+
+  activityDate DateTime
+  // How much fund was used for this activity (whole rupees). This is the
+  // organization's own record; it is NOT mixed into the fund balance.
+  amountUsed   Int?
+
+  // PLANNED / ONGOING / COMPLETED / CANCELLED
+  status          String  @default("PLANNED")
+  responsibleTeam String?
+
+  // One link per line.
+  photoUrls    String?
+  documentUrls String?
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  updatedById String?
+
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([district, activityDate])
+  @@index([status, activityDate])
+  @@index([activityDate])
+  @@map("district_activities")
+}
+
+// ========================================
+// MEMBER <-> ADMIN MESSAGING
+// ========================================
+// ONE ROW = ONE message in a conversation.
+//
+// HOW A CONVERSATION IS FOUND
+//   "threadMemberId" is the member the conversation belongs to. A member only
+//   ever reads rows where threadMemberId is their own id, so a member can never
+//   see another member's conversation.
+//
+// "readAt" empty = still unread (this is what the unread badge counts).
+// ========================================
+model Message {
+  id String @id @default(cuid())
+
+  // Which conversation this belongs to (always the MEMBER's user id).
+  threadMemberId String
+
+  senderId String
+  sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // Empty when a member writes to "the organization" in general.
+  recipientId String?
+  recipient   User?   @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+
+  subject String?
+  body    String
+
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([threadMemberId, createdAt])
+  @@index([recipientId, readAt])
+  @@map("messages")
+}

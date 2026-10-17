@@ -115,18 +115,77 @@ export async function notifyAdmins(input: {
       select: { id: true },
     });
 
-    for (const admin of admins) {
-      await notifyUser({
+    // ---------- there is nobody to tell ----------
+    // A configuration problem, not a silence to hide: with no active
+    // administrator nobody would ever see the bell. The log says so plainly.
+    if (admins.length === 0) {
+      console.warn(
+        '[notifications] no active administrator was found, so this was not delivered:',
+        input.title,
+      );
+      return;
+    }
+
+    // ---------- one INSERT for all of them ----------
+    // The old loop created the rows one at a time and stopped at the first
+    // failure, so some administrators could be notified and others not. A single
+    // createMany writes every row or none.
+    await prisma.notification.createMany({
+      data: admins.map((admin) => ({
         userId: admin.id,
         title: input.title,
         message: input.message,
         type: input.type ?? 'INFO',
         link: input.link ?? null,
-        email: input.email,
-      });
+      })),
+    });
+
+    // Email is a separate, optional step: it needs each address and a working
+    // mail server, and a mail failure must never undo the bell.
+    if (input.email) {
+      void notifyAdminsByEmail(
+        admins.map((admin) => admin.id),
+        input,
+      );
     }
   } catch (error) {
     console.error('[notifications] could not notify administrators:', error);
+  }
+}
+
+/**
+ * The optional email half of notifyAdmins(), kept out of the main path so the
+ * database write is never delayed by a mail server.
+ */
+async function notifyAdminsByEmail(
+  userIds: string[],
+  input: { title: string; message: string; link?: string | null },
+): Promise<void> {
+  try {
+    const people = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { name: true, email: true },
+    });
+
+    for (const person of people) {
+      if (!person.email) continue;
+
+      const mail = buildNotificationEmail({
+        memberName: person.name,
+        title: input.title,
+        message: input.message,
+        link: input.link ?? null,
+      });
+
+      void sendMail({
+        to: person.email,
+        subject: mail.subject,
+        html: mail.html,
+        text: mail.text,
+      }).catch(() => undefined);
+    }
+  } catch (error) {
+    console.error('[notifications] could not email administrators:', error);
   }
 }
 
@@ -187,6 +246,97 @@ export async function markAllNotificationsRead(userId: string): Promise<number> 
     });
 
     return result.count;
+  } catch {
+    return 0;
+  }
+}
+
+// ========================================
+// DELETING NOTIFICATIONS
+// ========================================
+// A notification is a message, not a record. Keeping a stale one - "new donation
+// submitted" for a donation that has since been deleted - is worse than having no
+// notification at all, because it sends people to a page that no longer exists.
+//
+// Every function here takes the owner's id and puts it in the WHERE clause, so a
+// made-up id cannot remove somebody else's message.
+
+/** Remove one notification. Returns how many rows went (0 or 1). */
+export async function deleteNotification(id: string, userId: string): Promise<number> {
+  if (!isDatabaseConfigured()) return 0;
+
+  try {
+    const result = await prisma.notification.deleteMany({ where: { id, userId } });
+    return result.count;
+  } catch {
+    return 0;
+  }
+}
+
+/** Remove every notification this person has already read. */
+export async function deleteReadNotifications(userId: string): Promise<number> {
+  if (!isDatabaseConfigured()) return 0;
+
+  try {
+    const result = await prisma.notification.deleteMany({ where: { userId, isRead: true } });
+    return result.count;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Sweep away notices that point at a donation which no longer exists.
+ *
+ * WHY THIS IS NEEDED AT ALL
+ *   Deleting a donation already removes the notifications that name it (see
+ *   lib/donation/delete.ts). But a notice created by an OLDER version of the site
+ *   - before the link carried the donation id - says only "new donation
+ *   submitted", so nothing could match it to the record. Those are exactly the
+ *   ones that linger after a demo entry is deleted.
+ *
+ * HOW IT DECIDES
+ *   Only notices whose link contains "#donation-" are examined, and only the ones
+ *   whose donation id no longer exists in the table are removed. A notice about a
+ *   donation that is still there is never touched.
+ */
+export async function purgeStaleDonationNotifications(userId: string): Promise<number> {
+  if (!isDatabaseConfigured()) return 0;
+
+  try {
+    const rows = await prisma.notification.findMany({
+      where: { userId, link: { contains: '#donation-' } },
+      select: { id: true, link: true },
+      take: 200,
+    });
+
+    if (rows.length === 0) return 0;
+
+    const pairs = rows
+      .map((row) => {
+        const after = (row.link ?? '').split('#donation-')[1] ?? '';
+        const donationId = after.split(/[^A-Za-z0-9_-]/)[0];
+        return { notificationId: row.id, donationId };
+      })
+      .filter((pair) => pair.donationId !== '');
+
+    if (pairs.length === 0) return 0;
+
+    const alive = await prisma.donation.findMany({
+      where: { id: { in: pairs.map((pair) => pair.donationId) } },
+      select: { id: true },
+    });
+
+    const stillThere = new Set(alive.map((row) => row.id));
+    const stale = pairs.filter((pair) => !stillThere.has(pair.donationId)).map((pair) => pair.notificationId);
+
+    if (stale.length === 0) return 0;
+
+    const removed = await prisma.notification.deleteMany({
+      where: { id: { in: stale }, userId },
+    });
+
+    return removed.count;
   } catch {
     return 0;
   }

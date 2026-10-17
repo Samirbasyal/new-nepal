@@ -31,6 +31,8 @@ import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Section';
 import { isSuperAdminRole } from '@/lib/constants';
 import { organization } from '@/config/site';
+import { unreadNotificationCount } from '@/lib/notifications';
+import { NotificationBell } from '@/components/admin/NotificationBell';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +73,10 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
   const pendingCount = await countPendingPayments();
 
+  // The bell in the header. Loaded on the server so the number is right on the
+  // very first paint, then kept fresh by the component itself.
+  const unreadNotifications = await unreadNotificationCount(user.id);
+
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
       {/* ========================================
@@ -102,6 +108,10 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                 <span className="block text-ink-500">Administrator</span>
               </span>
             </div>
+
+            {/* New donations, payments and member activity show up here without
+                anybody refreshing: the bell keeps its own count up to date. */}
+            <NotificationBell initialCount={unreadNotifications} />
 
             <Link
               href="/"
