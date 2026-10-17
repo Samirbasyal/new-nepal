@@ -172,11 +172,14 @@ export async function POST(request: Request) {
       .catch(() => undefined);
 
     // ---------- Tell the office, so nothing waits unnoticed ----------
+    // The link points at THIS donation on the donations screen (the card carries
+    // id="donation-<id>"), so clicking the bell opens the gift that needs checking
+    // rather than the top of a long list.
     await notifyAdmins({
-      title: 'New donation submitted for verification',
+      title: 'New donation payment submitted for verification',
       message: `${donation.donorName} - ${formatMoney(data.amount)} - ${donation.purpose ?? 'General donation'} (${method?.label ?? data.method})`,
       type: 'INFO',
-      link: '/admin/donations',
+      link: `/admin/donations#donation-${donation.id}`,
     });
 
     return ok(

@@ -102,7 +102,9 @@ export const DONATION_TYPE_OPTIONS = [
 ];
 
 export const DONATION_STATUS_OPTIONS = [
+  { value: 'INITIATED', label: 'Started (donor has not paid yet)' },
   { value: 'PENDING', label: 'Pending (waiting to be checked)' },
+  { value: 'INFO_REQUIRED', label: 'More information needed from the donor' },
   { value: 'VERIFIED', label: 'Verified (money received)' },
   { value: 'REJECTED', label: 'Rejected' },
 ];
@@ -158,7 +160,9 @@ export const donationDecisionSchema = z.object({
 });
 
 export const DONATION_STATUS_TONES: Record<string, 'neutral' | 'info' | 'success' | 'warning' | 'danger'> = {
+  INITIATED: 'neutral',
   PENDING: 'warning',
+  INFO_REQUIRED: 'info',
   VERIFIED: 'success',
   REJECTED: 'danger',
 };

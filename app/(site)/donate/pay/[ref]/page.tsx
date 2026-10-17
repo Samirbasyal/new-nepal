@@ -79,7 +79,21 @@ export default async function DonatePayPage({ params }: { params: Promise<{ ref:
 
   const qrImageUrl = setting(settings, 'donate.qrImageUrl', '');
   const hasQr = hasRealValue(qrImageUrl);
-  const hasBank = [bank.bankName, bank.accountName, bank.accountNumber, bank.branch].some(hasRealValue);
+
+  // "Bank transfer" is offered when there is either an account to transfer to or
+  // a QR code to scan. A QR on its own is a real, payable method.
+  const hasBankAccount = [bank.bankName, bank.accountName, bank.accountNumber, bank.branch].some(hasRealValue);
+  const hasBank = hasBankAccount || hasQr;
+
+  // eSewa is offered ONLY when an ID has been saved in the Admin Panel. An empty
+  // field hides the method instead of asking the donor to send money nowhere.
+  const esewa = {
+    id: setting(settings, 'donate.esewaId', ''),
+    name: setting(settings, 'donate.esewaName', ''),
+  };
+  const hasEsewa = hasRealValue(esewa.id);
+
+  const paymentNote = setting(settings, 'donate.paymentNote', '');
 
   return (
     <>
@@ -132,6 +146,9 @@ export default async function DonatePayPage({ params }: { params: Promise<{ ref:
               bank={bank}
               hasBank={hasBank}
               qrImageUrl={hasQr ? qrImageUrl : null}
+              esewa={esewa}
+              hasEsewa={hasEsewa}
+              paymentNote={paymentNote}
             />
           </div>
 

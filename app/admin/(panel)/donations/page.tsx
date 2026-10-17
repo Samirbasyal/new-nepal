@@ -30,6 +30,7 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { SectionHeading } from '@/components/ui/Section';
 import { ResourceManager } from '@/components/admin/ResourceManager';
 import { DonationDecisionPanel } from '@/components/admin/DonationDecisionPanel';
+import { DonationQuickActions } from '@/components/admin/DonationQuickActions';
 import type { FieldConfig, ColumnConfig } from '@/components/admin/types';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import {
@@ -37,6 +38,7 @@ import {
   DONATION_STATUS_OPTIONS,
   DONATION_TYPE_OPTIONS,
 } from '@/lib/donation/schemas';
+import { DONATION_PURPOSES } from '@/lib/donation/purposes';
 import { formatMoney } from '@/lib/fund/calc';
 import { formatDate } from '@/lib/utils';
 
@@ -85,11 +87,43 @@ function Card({
 export default async function AdminDonationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ year?: string }>;
+  searchParams: Promise<{ year?: string; from?: string; to?: string }>;
 }) {
   const params = await searchParams;
   const thisYear = new Date().getFullYear();
   const year = Number(params.year ?? thisYear) || thisYear;
+
+  // ========================================
+  // THE DATE RANGE OF THE PURPOSE REPORT
+  // ========================================
+  // Two plain dates, both optional. They only affect the report further down,
+  // never the record list, so the office can ask "what came in for health work
+  // between these two days?" without losing sight of everything else.
+  function parseDay(value: string | undefined): Date | null {
+    const text = (value ?? '').trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null;
+    const date = new Date(`${text}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const fromDay = parseDay(params.from);
+  const toDay = parseDay(params.to);
+
+  // The end date is inclusive: "to 2026-10-17" must include that whole day.
+  const rangeStart = fromDay;
+  const rangeEnd = toDay ? new Date(toDay.getTime() + 24 * 60 * 60 * 1000) : null;
+
+  const rangeLabel =
+    fromDay || toDay
+      ? `${fromDay ? formatDate(fromDay) : 'the beginning'} to ${toDay ? formatDate(toDay) : 'today'}`
+      : 'All time';
+
+  // Two ready-made dates for the quick buttons, built from the server's own clock
+  // so a link never offers a range in the future.
+  const now = new Date();
+  const two = (value: number) => String(value).padStart(2, '0');
+  const todayIso = `${now.getFullYear()}-${two(now.getMonth() + 1)}-${two(now.getDate())}`;
+  const thisMonthIso = `${now.getFullYear()}-${two(now.getMonth() + 1)}-01`;
 
   // ========================================
   // READ THE DONATIONS ONCE AND ADD THEM UP
@@ -150,7 +184,12 @@ export default async function AdminDonationsPage({
   }
 
   const verified = rows.filter((row) => row.status === 'VERIFIED');
-  const pending = rows.filter((row) => row.status === 'PENDING');
+
+  // A donation the office has asked a question about is STILL waiting: it has not
+  // been approved and it must not disappear from the queue, or it would be
+  // forgotten. Both states sit in one list, and the card says which one it is.
+  const pending = rows.filter((row) => row.status === 'PENDING' || row.status === 'INFO_REQUIRED');
+
   const rejected = rows.filter((row) => row.status === 'REJECTED');
 
   const totalVerified = verified.reduce((sum, row) => sum + row.amount, 0);
@@ -174,6 +213,66 @@ export default async function AdminDonationsPage({
   ).size;
 
   const averageDonation = verified.length > 0 ? Math.round(totalVerified / verified.length) : 0;
+
+  // ========================================
+  // THE PURPOSE REPORT
+  // ========================================
+  // A saved purpose is the human label ("Health and Medical Support"), because
+  // that is what the record list prints. Grouping therefore matches on the label
+  // prefix - the "Other / General Donation - <own words>" case still falls under
+  // General. An empty purpose counts as General too: money given without a
+  // stated cause is still money the club received.
+  function purposeCodeOf(rawPurpose: string | null): string {
+    const text = (rawPurpose ?? '').trim();
+    if (text === '') return 'GENERAL';
+
+    const hit = DONATION_PURPOSES.find(
+      (purpose) => text === purpose.label || text.startsWith(`${purpose.label} `),
+    );
+
+    return hit?.code ?? 'GENERAL';
+  }
+
+  function inRange(row: { receivedOn: Date }): boolean {
+    const time = row.receivedOn.getTime();
+    if (rangeStart && time < rangeStart.getTime()) return false;
+    if (rangeEnd && time >= rangeEnd.getTime()) return false;
+    return true;
+  }
+
+  const rowsInRange = rows.filter(inRange);
+
+  const byPurpose = DONATION_PURPOSES.map((purpose) => {
+    const approved = rowsInRange.filter(
+      (row) => row.status === 'VERIFIED' && purposeCodeOf(row.purpose) === purpose.code,
+    );
+
+    const waiting = rowsInRange.filter(
+      (row) =>
+        (row.status === 'PENDING' || row.status === 'INFO_REQUIRED' || row.status === 'INITIATED') &&
+        purposeCodeOf(row.purpose) === purpose.code,
+    );
+
+    return {
+      code: purpose.code,
+      label: purpose.label,
+      icon: purpose.icon,
+      approvedCount: approved.length,
+      approvedAmount: approved.reduce((sum, row) => sum + row.amount, 0),
+      waitingCount: waiting.length,
+      waitingAmount: waiting.reduce((sum, row) => sum + row.amount, 0),
+    };
+  });
+
+  const reportApprovedTotal = byPurpose.reduce((sum, row) => sum + row.approvedAmount, 0);
+  const reportWaitingTotal = byPurpose.reduce((sum, row) => sum + row.waitingAmount, 0);
+
+  // Only the purposes that have something to show, so the table never looks like
+  // a list of empty rows. The last (General) entry stays even when empty, because
+  // it is the place unlabelled money lands.
+  const purposeRows = byPurpose.filter(
+    (row) => row.approvedCount > 0 || row.waitingCount > 0 || row.code === 'GENERAL',
+  );
 
   // ========================================
   // THE FORM
@@ -273,22 +372,31 @@ export default async function AdminDonationsPage({
           description="Money given by donors. Only verified donations count. Nothing here is ever added to the member fund, the loans or the expenses."
         />
 
-        <form method="get" className="flex items-end gap-2">
-          <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ink-700">Year</span>
-            <select name="year" defaultValue={String(year)} className="input">
-              {[...new Set([thisYear, ...availableYears])].map((option) => (
-                <option key={option} value={String(option)}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit" className="btn btn-outline btn-sm">
-            <Icon name="search" className="h-4 w-4" />
-            Show
-          </button>
-        </form>
+        <div className="flex flex-wrap items-end gap-2">
+          {/* Where a donor sends the money. Kept on its own screen so that fixing a
+              donor's record can never move the club's bank account. */}
+          <Link href="/admin/donations/payment-details" className="btn btn-outline btn-sm">
+            <Icon name="qr-code" className="h-4 w-4" />
+            Bank &amp; QR details
+          </Link>
+
+          <form method="get" className="flex items-end gap-2">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-ink-700">Year</span>
+              <select name="year" defaultValue={String(year)} className="input">
+                {[...new Set([thisYear, ...availableYears])].map((option) => (
+                  <option key={option} value={String(option)}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" className="btn btn-outline btn-sm">
+              <Icon name="search" className="h-4 w-4" />
+              Show
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* ========================================
@@ -339,6 +447,141 @@ export default async function AdminDonationsPage({
       </div>
 
       {/* ========================================
+          WHERE THE MONEY WENT - PURPOSE REPORT + DATE FILTER
+          ======================================== */}
+      <section id="donation-purposes" className="card p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-base font-bold text-ink-900">
+              Where the money went - by purpose
+            </h2>
+            <p className="mt-1 text-xs text-ink-500">
+              {rangeLabel}. Only approved donations count as money received; waiting ones are shown
+              beside them, never added in.
+            </p>
+          </div>
+
+          <form method="get" className="flex flex-wrap items-end gap-2">
+            <input type="hidden" name="year" value={String(year)} />
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-ink-700">From</span>
+              <input type="date" name="from" defaultValue={params.from ?? ''} className="input" />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-ink-700">To</span>
+              <input type="date" name="to" defaultValue={params.to ?? ''} className="input" />
+            </label>
+
+            <button type="submit" className="btn btn-outline btn-sm">
+              <Icon name="filter" className="h-4 w-4" />
+              Show
+            </button>
+          </form>
+        </div>
+
+        {/* ---------- quick ranges ---------- */}
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <Link
+            href={`/admin/donations?year=${thisYear}&from=${thisMonthIso}&to=${todayIso}`}
+            className="rounded-full border border-ink-200 px-3 py-1 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700"
+          >
+            This month
+          </Link>
+          <Link
+            href={`/admin/donations?year=${thisYear}&from=${thisYear}-01-01&to=${todayIso}`}
+            className="rounded-full border border-ink-200 px-3 py-1 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700"
+          >
+            This year
+          </Link>
+          <Link
+            href={`/admin/donations?year=${thisYear}`}
+            className="rounded-full border border-ink-200 px-3 py-1 font-semibold text-ink-600 hover:border-brand-300 hover:text-brand-700"
+          >
+            All time
+          </Link>
+        </div>
+
+        {/* ---------- the table ---------- */}
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[540px] text-sm">
+            <thead>
+              <tr className="border-b border-ink-200 text-left text-[11px] uppercase tracking-wide text-ink-500">
+                <th className="py-2 pr-3 font-semibold">Purpose</th>
+                <th className="py-2 pr-3 text-right font-semibold">Approved</th>
+                <th className="py-2 pr-3 text-right font-semibold">Donations</th>
+                <th className="py-2 pr-3 text-right font-semibold">Waiting</th>
+                <th className="py-2 pl-3 font-semibold">Share of approved</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {purposeRows.map((row) => {
+                const share =
+                  reportApprovedTotal > 0 ? Math.round((row.approvedAmount / reportApprovedTotal) * 100) : 0;
+
+                return (
+                  <tr key={row.code} className="border-b border-ink-100 last:border-0">
+                    <td className="py-2.5 pr-3">
+                      <span className="flex items-center gap-2 text-ink-800">
+                        <Icon name={row.icon} className="h-4 w-4 shrink-0 text-ink-400" />
+                        {row.label}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-3 text-right font-semibold text-ink-900">
+                      {formatMoney(row.approvedAmount)}
+                    </td>
+                    <td className="py-2.5 pr-3 text-right text-ink-600">{row.approvedCount}</td>
+                    <td className="py-2.5 pr-3 text-right">
+                      {row.waitingCount > 0 ? (
+                        <span className="text-amber-700">
+                          {formatMoney(row.waitingAmount)}
+                          <span className="ml-1 text-xs text-ink-400">({row.waitingCount})</span>
+                        </span>
+                      ) : (
+                        <span className="text-ink-300">-</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 pl-3">
+                      <span className="flex items-center gap-2">
+                        <span className="h-1.5 w-24 overflow-hidden rounded-full bg-ink-100">
+                          <span
+                            className="block h-full rounded-full bg-brand-500"
+                            style={{ width: `${share}%` }}
+                          />
+                        </span>
+                        <span className="text-xs text-ink-500">{share}%</span>
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+
+            <tfoot>
+              <tr className="border-t border-ink-200 text-ink-900">
+                <td className="py-2.5 pr-3 font-semibold">Total</td>
+                <td className="py-2.5 pr-3 text-right font-bold">{formatMoney(reportApprovedTotal)}</td>
+                <td className="py-2.5 pr-3 text-right font-semibold">
+                  {byPurpose.reduce((sum, row) => sum + row.approvedCount, 0)}
+                </td>
+                <td className="py-2.5 pr-3 text-right font-semibold text-amber-700">
+                  {reportWaitingTotal > 0 ? formatMoney(reportWaitingTotal) : '-'}
+                </td>
+                <td className="py-2.5 pl-3 text-xs text-ink-500">Not counted as received</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <p className="mt-3 text-xs text-ink-500">
+          A donation is grouped by the cause the donor chose. A gift with no cause recorded, or one
+          written in the donor&apos;s own words under &quot;Other&quot;, is counted under Other / General.
+        </p>
+      </section>
+
+      {/* ========================================
           WAITING FOR VERIFICATION
           ======================================== */}
       {pending.length > 0 ? (
@@ -356,7 +599,11 @@ export default async function AdminDonationsPage({
 
           <ul className="mt-4 space-y-4">
             {pending.slice(0, 20).map((donation) => (
-              <li key={donation.id} className="rounded-card border border-ink-200 p-4">
+              <li
+                key={donation.id}
+                id={`donation-${donation.id}`}
+                className="scroll-mt-24 rounded-card border border-ink-200 p-4"
+              >
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
                     <p className="font-semibold text-ink-900">{donation.donorName}</p>
@@ -380,6 +627,9 @@ export default async function AdminDonationsPage({
                 {donation.reference ? (
                   <p className="mt-1 text-sm text-ink-600">Reference: {donation.reference}</p>
                 ) : null}
+                <p className="mt-1 text-xs text-ink-400">
+                  Donation reference <span className="font-mono">{donation.id}</span>
+                </p>
 
                 {/* The picture the donor attached. It opens through the guarded
                     /api/files/... route, so only a signed-in administrator can
@@ -397,7 +647,31 @@ export default async function AdminDonationsPage({
                   <p className="mt-2 text-xs text-ink-500">No receipt was attached.</p>
                 )}
 
+                {donation.status === 'INFO_REQUIRED' ? (
+                  <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+                    <Icon name="clock" className="h-3.5 w-3.5" />
+                    A question was sent - waiting for the donor&apos;s answer
+                  </p>
+                ) : null}
+
                 <DonationDecisionPanel donationId={donation.id} donorName={donation.donorName} />
+
+                {/* Correcting a typo, or removing a test record, is allowed at any
+                    stage - including after approval. See DonationQuickActions. */}
+                <DonationQuickActions
+                  donation={{
+                    id: donation.id,
+                    donorName: donation.donorName,
+                    donorEmail: donation.donorEmail,
+                    donorPhone: donation.donorPhone,
+                    amount: donation.amount,
+                    method: donation.method,
+                    purpose: donation.purpose,
+                    reference: donation.reference,
+                    remarks: donation.remarks,
+                    receivedOn: donation.receivedOn.toISOString(),
+                  }}
+                />
               </li>
             ))}
           </ul>
@@ -417,6 +691,94 @@ export default async function AdminDonationsPage({
           </p>
         </section>
       )}
+
+      {/* ========================================
+          ALREADY APPROVED - still editable, still removable
+          ======================================== */}
+      {verified.length > 0 ? (
+        <section id="donations-approved" className="card p-5">
+          <div>
+            <h2 className="font-display text-base font-bold text-ink-900">
+              Approved donations ({verified.length})
+            </h2>
+            <p className="mt-1 text-xs text-ink-500">
+              A mistake can still be corrected after approval, and a test record can still be removed.
+              Removing one takes it out of every total - the history is kept, never destroyed.
+            </p>
+          </div>
+
+          <ul className="mt-4 space-y-4">
+            {verified.slice(0, 10).map((donation) => (
+              <li
+                key={donation.id}
+                id={`donation-${donation.id}`}
+                className="scroll-mt-24 rounded-card border border-ink-200 p-4"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-ink-900">{donation.donorName}</p>
+                    <p className="text-xs text-ink-500">
+                      {donation.donorEmail ?? 'no email'} · {donation.donorPhone ?? 'no phone'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display text-lg font-bold text-green-700">
+                      {formatMoney(donation.amount)}
+                    </p>
+                    <p className="text-xs text-ink-500">
+                      {formatDate(donation.receivedOn)} · {typeLabel(donation.donationType)}
+                    </p>
+                  </div>
+                </div>
+
+                {donation.purpose ? (
+                  <p className="mt-2 text-sm text-ink-600">Purpose: {donation.purpose}</p>
+                ) : null}
+                {donation.reference ? (
+                  <p className="mt-1 text-sm text-ink-600">Reference: {donation.reference}</p>
+                ) : null}
+                <p className="mt-1 text-xs text-ink-400">
+                  Donation reference <span className="font-mono">{donation.id}</span>
+                </p>
+
+                {donation.receiptUrl ? (
+                  <a
+                    href={donation.receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-card border border-brand-300 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+                  >
+                    <Icon name="eye" className="h-3.5 w-3.5" />
+                    View receipt
+                  </a>
+                ) : null}
+
+                <DonationQuickActions
+                  donation={{
+                    id: donation.id,
+                    donorName: donation.donorName,
+                    donorEmail: donation.donorEmail,
+                    donorPhone: donation.donorPhone,
+                    amount: donation.amount,
+                    method: donation.method,
+                    purpose: donation.purpose,
+                    reference: donation.reference,
+                    remarks: donation.remarks,
+                    receivedOn: donation.receivedOn.toISOString(),
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
+
+          {verified.length > 10 ? (
+            <p className="mt-4 text-xs text-ink-500">
+              Showing the 10 most recent. Everything else is in the table below - filter it by
+              “Verified”.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       {/* ========================================
           THE RECORDS TABLE

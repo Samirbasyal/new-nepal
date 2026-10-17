@@ -67,7 +67,15 @@ export const SETTING_DEFINITIONS = [
   { key: 'donate.bankAccountName', label: 'Account holder name', group: 'DONATE', default: '', type: 'text' },
   { key: 'donate.bankAccountNumber', label: 'Account number', group: 'DONATE', default: '', type: 'text' },
   { key: 'donate.bankBranch', label: 'Branch', group: 'DONATE', default: '', type: 'text' },
-  { key: 'donate.qrImageUrl', label: 'QR code image link (optional)', group: 'DONATE', default: '', type: 'text' },
+  // The QR picture is uploaded on  Admin Panel -> Donations -> Bank & QR details.
+  // What is stored here is the address that upload produced, never a made-up one.
+  { key: 'donate.qrImageUrl', label: 'QR code picture (set it on Donations -> Bank & QR details)', group: 'DONATE', default: '', type: 'text' },
+  // eSewa is offered to a donor ONLY while an ID is filled in here. An empty
+  // field hides the method, so the website never asks for money to an account
+  // that does not exist.
+  { key: 'donate.esewaId', label: 'eSewa ID / mobile number (empty hides eSewa)', group: 'DONATE', default: '', type: 'text' },
+  { key: 'donate.esewaName', label: 'eSewa account holder name', group: 'DONATE', default: '', type: 'text' },
+  { key: 'donate.paymentNote', label: 'Instructions shown above the payment details', group: 'DONATE', default: '', type: 'textarea' },
   { key: 'donate.otherMethods', label: 'Other ways to give (one per line)', group: 'DONATE', default: '', type: 'textarea' },
   { key: 'donate.note', label: 'Extra note shown under the options', group: 'DONATE', default: 'Please contact us after transferring so we can send you a receipt.', type: 'textarea' },
 
