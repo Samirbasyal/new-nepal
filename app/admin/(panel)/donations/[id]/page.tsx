@@ -72,6 +72,47 @@ export default async function AdminDonationDetailPage({ params }: { params: Prom
         .catch(() => null)
     : null;
 
+  // ---------- the donor's own account, and everything they have given ----------
+  // A donation is only trustworthy if it belongs to somebody who exists. This is
+  // the one place the office can see that in full: the account, when it was
+  // opened, whether the email was proven, and how much has come from it.
+  const donorAccount = donation.donorAccountId
+    ? await prisma.donorAccount
+        .findUnique({
+          where: { id: donation.donorAccountId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            createdAt: true,
+            emailVerifiedAt: true,
+            lastLoginAt: true,
+            isActive: true,
+          },
+        })
+        .catch(() => null)
+    : null;
+
+  const donorTotals = donorAccount
+    ? await prisma.donation
+        .aggregate({
+          where: { donorAccountId: donorAccount.id, isDeleted: false },
+          _count: { _all: true },
+          _sum: { amount: true },
+        })
+        .catch(() => null)
+    : null;
+
+  const donorApproved = donorAccount
+    ? await prisma.donation
+        .aggregate({
+          where: { donorAccountId: donorAccount.id, isDeleted: false, status: 'VERIFIED' },
+          _sum: { amount: true },
+        })
+        .catch(() => null)
+    : null;
+
   const statusLabel = labelOf(DONATION_STATUS_OPTIONS, donation.status);
   const methodLabel = labelOf(DONATION_METHOD_OPTIONS, donation.method);
   const typeLabel = labelOf(DONATION_TYPE_OPTIONS, donation.donationType);
@@ -208,7 +249,26 @@ export default async function AdminDonationDetailPage({ params }: { params: Prom
                 Donor account
               </dt>
               <dd className="text-ink-800">
-                {donation.donorAccountId ? 'Signed-in donor' : 'Anonymous (no account)'}
+                {donorAccount ? (
+                  <>
+                    <span className="block font-semibold">{donorAccount.name}</span>
+                    <span className="block break-all text-xs text-ink-600">{donorAccount.email}</span>
+                    <span className="mt-1 block text-[11px] text-ink-500">
+                      Opened {formatDate(donorAccount.createdAt)}
+                      {donorAccount.emailVerifiedAt ? ' · email confirmed' : ' · email NOT confirmed'}
+                      {donorAccount.isActive ? '' : ' · account switched off'}
+                    </span>
+                    {donorTotals ? (
+                      <span className="mt-1 block text-[11px] text-ink-500">
+                        {donorTotals._count._all} donation{donorTotals._count._all === 1 ? '' : 's'} ·{' '}
+                        {formatMoney(donorTotals._sum.amount ?? 0)} given ·{' '}
+                        {formatMoney(donorApproved?._sum.amount ?? 0)} approved
+                      </span>
+                    ) : null}
+                  </>
+                ) : (
+                  'Not linked to a donor account'
+                )}
               </dd>
             </div>
             <div>

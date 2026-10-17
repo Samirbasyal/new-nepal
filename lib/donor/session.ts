@@ -51,6 +51,13 @@ export type DonorIdentity = {
   id: string;
   name: string;
   email: string;
+  /**
+   * True once the donor has proven they can read the address.
+   *
+   * A donation cannot be started while this is false - the history would
+   * otherwise be attached to an address nobody had checked. See requireDonor().
+   */
+  emailVerified: boolean;
 };
 
 /** What the cookie carries. Never the password, never anything private. */
@@ -64,7 +71,13 @@ type DonorTokenPayload = {
 // ========================================
 // CREATE
 // ========================================
-export async function createDonorSession(donor: DonorIdentity & { sessionVersion?: number }, remember = false) {
+// Takes only what the cookie carries. Whether the email is proven is NOT put in
+// the token: it is read from the database on every request, so switching it on or
+// off takes effect immediately rather than at the next sign-in.
+export async function createDonorSession(
+  donor: { id: string; name: string; email: string; sessionVersion?: number },
+  remember = false,
+) {
   const days = remember ? SESSION_DAYS_REMEMBER : SESSION_DAYS;
   const maxAgeSeconds = days * 24 * 60 * 60;
   const expiresAt = Math.floor((Date.now() + maxAgeSeconds * 1000) / 1000);
@@ -148,7 +161,14 @@ export const getCurrentDonor = cache(async (): Promise<DonorIdentity | null> => 
   try {
     const donor = await prisma.donorAccount.findUnique({
       where: { id: token.sub },
-      select: { id: true, name: true, email: true, isActive: true, sessionVersion: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        isActive: true,
+        sessionVersion: true,
+        emailVerifiedAt: true,
+      },
     });
 
     if (!donor || !donor.isActive) return null;
@@ -157,7 +177,12 @@ export const getCurrentDonor = cache(async (): Promise<DonorIdentity | null> => 
     // end the session). Refuse it.
     if (donor.sessionVersion !== token.sv) return null;
 
-    return { id: donor.id, name: donor.name, email: donor.email };
+    return {
+      id: donor.id,
+      name: donor.name,
+      email: donor.email,
+      emailVerified: Boolean(donor.emailVerifiedAt),
+    };
   } catch {
     return null;
   }
@@ -166,9 +191,41 @@ export const getCurrentDonor = cache(async (): Promise<DonorIdentity | null> => 
 // ========================================
 // PAGE GUARD
 // ========================================
-// Use at the top of every page that shows a donor their own donations.
-export async function requireDonor(): Promise<DonorIdentity> {
+// Use at the top of every page that shows a donor their own donations, AND at
+// the top of the donation journey itself.
+//
+// THE ORDER OF THE TWO CHECKS MATTERS
+//   1. not signed in          -> the sign-in page, which links to registration
+//   2. signed in, unproven    -> the code page, which is the only thing that can
+//                                finish the job
+//
+// "next" is carried through both redirects, so a visitor who clicked Donate
+// lands back on the donation form after signing in - not on a generic dashboard
+// wondering what happened to the cause they had chosen.
+//
+// The value is only accepted when it is a path on this website (a leading "/"),
+// so the parameter can never be used to send somebody to another domain.
+export function safeNext(next?: string | null): string | null {
+  const text = (next ?? '').trim();
+  if (!text.startsWith('/') || text.startsWith('//')) return null;
+  return text;
+}
+
+export async function requireDonor(next?: string | null): Promise<DonorIdentity> {
   const donor = await getCurrentDonor();
-  if (!donor) redirect('/donor/login?notice=login-required');
+  const target = safeNext(next);
+
+  if (!donor) {
+    const query = new URLSearchParams({ notice: 'login-required' });
+    if (target) query.set('next', target);
+    redirect(`/donor/login?${query.toString()}`);
+  }
+
+  if (!donor.emailVerified) {
+    const query = new URLSearchParams({ notice: 'verify-required', email: donor.email });
+    if (target) query.set('next', target);
+    redirect(`/donor/verify-email?${query.toString()}`);
+  }
+
   return donor;
 }

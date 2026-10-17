@@ -40,9 +40,18 @@ const POINTS = [
   'Your donation form is filled in for you next time.',
 ];
 
-export default async function DonorRegisterPage() {
+export default async function DonorRegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const destination = next && next.startsWith('/') ? next : '/donor/dashboard';
+
   const donor = await getCurrentDonor();
-  if (donor) redirect('/donor/donations');
+  if (donor) {
+    redirect(donor.emailVerified ? destination : `/donor/verify-email?email=${encodeURIComponent(donor.email)}`);
+  }
 
   return (
     <>
@@ -56,7 +65,7 @@ export default async function DonorRegisterPage() {
       <Section>
         <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_300px]">
           <div className="card p-6">
-            <DonorAuthForm mode="register" />
+            <DonorAuthForm mode="register" next={next} />
           </div>
 
           <aside className="space-y-4">

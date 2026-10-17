@@ -22,7 +22,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { PageHero, Section } from '@/components/ui/Section';
 import { DonationWizard } from '@/components/donate/DonationWizard';
-import { getCurrentDonor } from '@/lib/donor/session';
+import { requireDonor } from '@/lib/donor/session';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -34,14 +34,25 @@ export const metadata: Metadata = {
 };
 
 export default async function DonateStartPage() {
-  const donor = await getCurrentDonor();
+  // ========================================
+  // THE GATE
+  // ========================================
+  // A donation is not started until there is a real donor account behind it, with
+  // a confirmed email address. Without that, a gift could not be attached to
+  // anybody, and the history page would be fiction.
+  //
+  // requireDonor() sends a visitor who is not signed in to the sign-in page (which
+  // links to registration), and a visitor whose email is not confirmed to the code
+  // page. The address of THIS page travels with them, so after signing in they
+  // land back here rather than on a dashboard wondering where the form went.
+  const donor = await requireDonor('/donate/start');
 
   // The phone number stored on the account, if there is one. Kept separate from
   // the session cookie - the cookie holds only what is needed to recognise the
   // account.
   let phone: string | undefined;
 
-  if (donor && isDatabaseConfigured()) {
+  if (isDatabaseConfigured()) {
     const account = await prisma.donorAccount
       .findUnique({ where: { id: donor.id }, select: { phone: true } })
       .catch(() => null);
@@ -60,23 +71,19 @@ export default async function DonateStartPage() {
 
       <Section>
         <div className="mx-auto max-w-3xl">
-          {donor ? (
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-card border border-brand-200 bg-brand-50/60 px-4 py-3 text-sm">
-              <p className="flex items-center gap-2 text-ink-700">
-                <Icon name="user" className="h-4 w-4 text-brand-600" />
-                Signed in as <span className="font-semibold text-ink-900">{donor.email}</span> - this
-                donation will be saved to your history.
-              </p>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded-card border border-brand-200 bg-brand-50/60 px-4 py-3 text-sm">
+            <p className="flex items-center gap-2 text-ink-700">
+              <Icon name="user" className="h-4 w-4 text-brand-600" />
+              Signed in as <span className="font-semibold text-ink-900">{donor.email}</span> - this
+              donation will be saved to your history.
+            </p>
 
-              <Link href="/donor/donations" className="text-xs font-semibold text-brand-700 hover:underline">
-                My donations
-              </Link>
-            </div>
-          ) : null}
+            <Link href="/donor/dashboard" className="text-xs font-semibold text-brand-700 hover:underline">
+              My donations
+            </Link>
+          </div>
 
-          <DonationWizard
-            prefill={donor ? { name: donor.name, email: donor.email, phone } : undefined}
-          />
+          <DonationWizard prefill={{ name: donor.name, email: donor.email, phone }} />
 
           <div className="mt-10 border-t border-ink-200 pt-5">
             <Link

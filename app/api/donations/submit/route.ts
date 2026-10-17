@@ -45,6 +45,7 @@ import {
 import { storeImage, StorageUnavailableError, UploadValidationError } from '@/lib/storage';
 import { formatMoney } from '@/lib/utils';
 import { notifyAdmins } from '@/lib/notifications';
+import { getCurrentDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -95,14 +96,30 @@ export async function POST(request: Request) {
     return fail('Please attach a photo or screenshot of your payment.', 422);
   }
 
+  // ---------- the donor must own this donation ----------
+  // Checked here as well as on the page, because this endpoint can be called
+  // directly. Without it, a reference that leaked would let somebody file a
+  // payment - and a receipt - against another person's gift.
+  const donor = await getCurrentDonor();
+
+  if (!donor) {
+    return fail('Please sign in again - your donor session has ended.', 401);
+  }
+
   try {
     // ---------- The donation must still be waiting to be paid ----------
     const donation = await prisma.donation.findFirst({
       where: { id: data.reference, isDeleted: false },
-      select: { id: true, status: true, donorName: true, purpose: true },
+      select: { id: true, status: true, donorName: true, purpose: true, donorAccountId: true },
     });
 
     if (!donation) {
+      return fail('That donation reference was not found. Please start again.', 404);
+    }
+
+    if (donation.donorAccountId !== donor.id) {
+      // Deliberately the same answer as "not found": whether a reference belongs
+      // to somebody else is not information this endpoint should hand out.
       return fail('That donation reference was not found. Please start again.', 404);
     }
 

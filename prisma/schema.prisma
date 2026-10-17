@@ -558,12 +558,66 @@ model DonorAccount {
   // the same idea as User.sessionVersion.
   sessionVersion Int @default(1)
 
+  // ---------- PROVEN EMAIL ADDRESS ----------
+  // Empty until the donor has typed the code that was sent to them. A donation
+  // is not allowed to start while this is empty (see lib/donor/session.ts),
+  // because the history is only trustworthy if the address belongs to the person
+  // holding the account.
+  //
+  // When the site has no mail server configured (no SMTP settings), the account
+  // is activated immediately instead - see app/api/donor/register/route.ts for
+  // exactly why, and what the donor is told.
+  emailVerifiedAt DateTime?
+
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // A donor is looked up by email at sign-in, and their donations by id.
   @@index([email])
   @@map("donor_accounts")
+}
+
+// ========================================
+// DONOR TOKENS - PROVING AN EMAIL, RESETTING A PASSWORD
+// ========================================
+// ONE ROW = ONE short-lived secret handed to a donor by email.
+//
+//   EMAIL_VERIFY    a six-digit code, valid for 15 minutes
+//   PASSWORD_RESET  a long random link token, valid for 60 minutes
+//
+// WHAT IS STORED
+//   Only a SHA-256 fingerprint of the secret (tokenHash). Reading this table
+//   therefore tells nobody a usable code - exactly the same rule the member
+//   verification tokens follow.
+//
+// SINGLE USE
+//   usedAt is stamped the moment a token succeeds, so the same code cannot be
+//   replayed. Asking for a new code marks the previous one used.
+//
+// TOO MANY WRONG CODES
+//   attempts is counted per token. After five wrong guesses the token is dead
+//   and the donor has to ask for a new one - which is what stops a six-digit
+//   code from being guessed.
+// ========================================
+model DonorToken {
+  id String @id @default(cuid())
+
+  donorAccountId String
+
+  // EMAIL_VERIFY | PASSWORD_RESET
+  purpose String
+
+  tokenHash String @unique
+
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int      @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([donorAccountId, purpose])
+  @@map("donor_tokens")
 }
 
 // ========================================

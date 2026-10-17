@@ -190,8 +190,9 @@ export default async function DonatePage() {
               ) : (
                 <>
                   <p className="mt-2 text-sm leading-relaxed text-ink-600">
-                    A donor account is free and optional. It keeps a record of what you gave, for which
-                    cause, and whether the office has confirmed it. Donating works without one.
+                    Giving starts with a free donor account, so every donation is tied to a real person
+                    and your own record is always a sign-in away. It takes a moment - then you choose the
+                    cause and the amount.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <ButtonLink href="/donor/register" variant="outline" className="flex-1">

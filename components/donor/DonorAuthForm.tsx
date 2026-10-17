@@ -110,7 +110,30 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
         return;
       }
 
-      const target = next && next.startsWith('/') ? next : '/donor/donations';
+      const data = payload?.data ?? {};
+      const wanted = next && next.startsWith('/') ? next : null;
+
+      // ---------- the address still has to be proven ----------
+      // No cookie was created, so this is not a sign-in yet. The code page
+      // finishes the job and then returns to wherever the donor was going.
+      if (data.needsVerification) {
+        const query = new URLSearchParams({ email: String(data.email ?? email.trim()) });
+        if (wanted) query.set('next', wanted);
+
+        if (data.emailSent === false) {
+          setFailure(
+            'Your account is created, but the code could not be emailed. On the next page you can try again.',
+          );
+        }
+
+        router.push(`/donor/verify-email?${query.toString()}`);
+        return;
+      }
+
+      // ---------- signed in ----------
+      // A donor who came to give goes back to the donation form; anybody else
+      // lands on their dashboard.
+      const target = wanted ?? (mode === 'register' ? '/donate/start' : '/donor/dashboard');
       router.push(target);
       router.refresh();
     } catch {
@@ -121,6 +144,11 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
   }
 
   const isRegister = mode === 'register';
+
+  // Keeps the "where was I going" address alive when switching between the two
+  // pages, so somebody who clicked Donate still arrives at the donation form.
+  const withNext = (path: string) =>
+    next && next.startsWith('/') ? `${path}?next=${encodeURIComponent(next)}` : path;
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -226,14 +254,14 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
         {isRegister ? (
           <>
             Already have an account?{' '}
-            <Link href="/donor/login" className="font-semibold text-brand-700 hover:underline">
+            <Link href={withNext('/donor/login')} className="font-semibold text-brand-700 hover:underline">
               Sign in
             </Link>
           </>
         ) : (
           <>
             New here?{' '}
-            <Link href="/donor/register" className="font-semibold text-brand-700 hover:underline">
+            <Link href={withNext('/donor/register')} className="font-semibold text-brand-700 hover:underline">
               Create a donor account
             </Link>
           </>
@@ -242,13 +270,15 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
 
       {mode === 'login' ? (
         <p className="text-center text-xs text-ink-500">
-          Forgotten your password? Contact the office and they will reset it for you. A donation never
-          needs an account - you can always give without signing in.
+          <Link href="/donor/forgot-password" className="font-semibold text-brand-700 hover:underline">
+            Forgot your password?
+          </Link>{' '}
+          {isRegister ? '' : 'We will email you a link to choose a new one.'}
         </p>
       ) : (
         <p className="text-center text-xs text-ink-500">
-          An account is only for seeing your own donation history. It gives no access to the member or
-          administrator panel.
+          A donor account is only for giving and for seeing your own history. It gives no access to the
+          member or administrator panel.
         </p>
       )}
     </form>

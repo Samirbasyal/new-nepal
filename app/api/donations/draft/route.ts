@@ -59,22 +59,28 @@ export async function POST(request: Request) {
     return fail('The form could not be sent. Please try again.', 422);
   }
 
-  // ---------- Is a donor signed in? ----------
-  // If so, this gift is attached to their account, so it appears in their own
-  // history later. The value comes from the SIGNED COOKIE and is re-checked
-  // against the database - never from the form, because a browser could claim to
-  // be anybody.
+  // ========================================
+  // WHO IS GIVING - AND IT IS NOT OPTIONAL
+  // ========================================
+  // Since part 6 the donation journey starts only after a donor has registered
+  // and confirmed their email, so there is no such thing as an anonymous draft
+  // any more. If this cookie is missing or no longer valid, the browser is
+  // replaying an old tab: refusing is the honest answer.
   //
-  // A failure here must never stop a donation: an anonymous gift is still a
-  // perfectly good gift. So the lookup falls back to null.
-  let donorAccountId: string | null = null;
+  // The id comes from the SIGNED COOKIE and is re-read from the database inside
+  // getCurrentDonor(), never from the form - a browser must not be able to
+  // attach a gift to somebody else's history.
+  const donor = await getCurrentDonor();
 
-  try {
-    const donor = await getCurrentDonor();
-    if (donor) donorAccountId = donor.id;
-  } catch {
-    donorAccountId = null;
+  if (!donor) {
+    return fail('Please sign in again - your donor session has ended.', 401);
   }
+
+  if (!donor.emailVerified) {
+    return fail('Please confirm your email address before donating.', 403);
+  }
+
+  const donorAccountId = donor.id;
 
   try {
     const donation = await prisma.donation.create({

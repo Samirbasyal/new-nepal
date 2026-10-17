@@ -39,8 +39,15 @@ export default async function DonorLoginPage({
 }) {
   const { notice, next } = await searchParams;
 
+  const destination = next && next.startsWith('/') ? next : '/donor/dashboard';
+
   const donor = await getCurrentDonor();
-  if (donor) redirect('/donor/donations');
+
+  // Already signed in: go where they were heading. An unproven account is sent
+  // to the code page instead, because that is the only thing left to do.
+  if (donor) {
+    redirect(donor.emailVerified ? destination : `/donor/verify-email?email=${encodeURIComponent(donor.email)}`);
+  }
 
   return (
     <>
@@ -55,7 +62,18 @@ export default async function DonorLoginPage({
         <div className="mx-auto max-w-lg">
           {notice === 'login-required' ? (
             <div className="mb-4">
-              <Alert tone="info">Please sign in to see your donation history.</Alert>
+              <Alert tone="info">
+                Please sign in - or create a donor account - to continue with your donation. It takes a
+                moment, and it keeps your giving record in one place.
+              </Alert>
+            </div>
+          ) : null}
+
+          {notice === 'password-changed' ? (
+            <div className="mb-4">
+              <Alert tone="success">
+                Your new password is saved. Please sign in with it.
+              </Alert>
             </div>
           ) : null}
 
@@ -67,8 +85,8 @@ export default async function DonorLoginPage({
             <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-600">
               <Icon name="info" className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
               <span>
-                You do not need an account to donate, and giving money never requires one. An account is
-                only for looking back at your own history.
+                A donor account is what ties a donation to you. It takes a moment to create, and from
+                then on every gift you make - and the office&apos;s decision on it - is in one place.
               </span>
             </p>
           </div>

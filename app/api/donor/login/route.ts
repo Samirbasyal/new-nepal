@@ -71,6 +71,7 @@ export async function POST(request: Request) {
         passwordHash: true,
         isActive: true,
         sessionVersion: true,
+        emailVerifiedAt: true,
       },
     });
 
@@ -87,6 +88,17 @@ export async function POST(request: Request) {
       return fail(
         'This account has been switched off. Please contact the office if you think that is a mistake.',
         403,
+      );
+    }
+
+    // ---------- the password is right, but the address is not proven ----------
+    // No cookie is created. The donor is handed to the code page, which can send
+    // a fresh code and finishes the sign-in as soon as the code is typed.
+    if (!donor.emailVerifiedAt) {
+      return ok(
+        { needsVerification: true, email: donor.email, name: donor.name },
+        200,
+        'Please confirm your email address before signing in. We have sent you a code.',
       );
     }
 

@@ -27,6 +27,7 @@ import { PageHero, Section } from '@/components/ui/Section';
 import { PaymentStep } from '@/components/donate/PaymentStep';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { getSettings, hasRealValue, setting } from '@/lib/settings';
+import { requireDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,13 @@ export default async function DonatePayPage({ params }: { params: Promise<{ ref:
     );
   }
 
+  // ---------- only the donor who started this gift may pay it ----------
+  // The reference in the address is long and unguessable, but "unguessable" is
+  // not the same as "yours". The cookie decides, and the donation must belong to
+  // that account - otherwise this page would let anybody who stumbled on a link
+  // submit a payment against somebody else's donation.
+  const donor = await requireDonor(`/donate/pay/${ref}`);
+
   const donation = await prisma.donation
     .findFirst({
       where: { id: ref, isDeleted: false },
@@ -56,11 +64,13 @@ export default async function DonatePayPage({ params }: { params: Promise<{ ref:
         donorEmail: true,
         donorPhone: true,
         purpose: true,
+        donorAccountId: true,
       },
     })
     .catch(() => null);
 
   if (!donation) notFound();
+  if (donation.donorAccountId !== donor.id) notFound();
 
   // Already paid, waiting, or finished - the payment form is no longer the right
   // place to be.
