@@ -490,6 +490,7 @@ model Donation {
   currency    String   @default("NPR")
   method      String   @default("BANK_TRANSFER")
   reference   String? // receipt number or bank reference
+  receiptUrl  String? // payment screenshot, served through the guarded /api/files route
   note        String?
   receivedOn  DateTime @default(now())
   recordedBy  String? // email of the admin who typed it in
