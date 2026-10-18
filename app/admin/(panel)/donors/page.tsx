@@ -1,18 +1,17 @@
 // ========================================
-// ADMIN PANEL
-// This code controls the Donor / Supporter manager.
+// ADMIN PANEL - DONORS & SUPPORTERS
 // ========================================
 // Address: /admin/donors
 //
-// IMPORTANT PRIVACY RULE
-//   A donor is PRIVATE by default. Nothing appears on the public /donors page
-//   until you switch on "Show publicly". Only publish information that the
-//   supporter has actually agreed to share.
+// THE PRIVACY RULE, IN ONE PLACE
+//   A donor is PRIVATE until an administrator deliberately switches "Public"
+//   on. A private donor is not sent to the public page, is not counted there,
+//   and cannot be reached through any public address. Only this screen and the
+//   server routes behind it can see the record.
 //
-//   Donation amounts are NOT stored here. They are recorded separately in
-//   Admin Panel -> Donations received, which is never shown publicly.
+// WHAT A DONOR RECORD HOLDS
+//   The gallery card shows two things: the photo and the name. Everything else -
 //
-// The validation rules live in lib/validation/schemas.ts -> donorSchema
 // ========================================
 
 import type { Metadata } from 'next';
@@ -24,41 +23,123 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// ========================================
+// THE TABLE
+// ========================================
+// "Visibility" is the toggle column: green means the donor is on the public
+// gallery. Flipping it takes effect on the next page load of /donors, because
+// that page reads the database every time.
 const COLUMNS: ColumnConfig[] = [
   { name: 'name', label: 'Name' },
-  { name: 'organization', label: 'Organization', hideOnMobile: true },
-  { name: 'supportArea', label: 'Supports', hideOnMobile: true },
-  { name: 'isPublic', label: 'Shown publicly', toggle: true },
+  { name: 'address', label: 'Address', hideOnMobile: true },
+  { name: 'donationPurpose', label: 'Donation purpose', hideOnMobile: true },
+  { name: 'isPublic', label: 'Public', toggle: true },
 ];
 
+// ========================================
+// THE FORM
+// ========================================
 const FIELDS: FieldConfig[] = [
-  // ---------- Details ----------
-  { name: 'name', label: 'Contact name', type: 'text', required: true, hint: 'The person we deal with.', section: 'Details' },
-  { name: 'organization', label: 'Organization name', type: 'text', hint: 'Leave empty for an individual supporter.', section: 'Details' },
+  // ---------- who the donor is ----------
   {
-    name: 'supportArea',
-    label: 'Area they support',
+    name: 'name',
+    label: 'Donor name',
     type: 'text',
-    placeholder: 'For example: Education, Health, General support',
-    hint: 'Used to group supporters on the public page.',
-    section: 'Details',
+    required: true,
+    hint: 'Printed under the photo on the public gallery.',
+    section: 'Donor',
   },
-  { name: 'description', label: 'Short description', type: 'textarea', hint: 'Only publish what the supporter has agreed to.', section: 'Details' },
-  { name: 'websiteUrl', label: 'Website', type: 'url', placeholder: 'https://...', hint: 'Only if the supporter agreed to be linked.', section: 'Details' },
+  {
+    name: 'address',
+    label: 'Address',
+    type: 'text',
+    required: true,
+    placeholder: 'For example: Kathmandu, Nepal',
+    hint: 'Shown only after a visitor clicks the card.',
+    section: 'Donor',
+  },
+  {
+    name: 'occupation',
+    label: 'Occupation',
+    type: 'text',
+    required: false,
+    placeholder: 'For example: Teacher, farmer, shop owner',
+    hint: 'Optional. Left out of the detail panel when empty.',
+    section: 'Donor',
+  },
 
-  // ---------- Logo ----------
-  { name: 'logoUrl', label: 'Logo', type: 'image', uploadable: true, hint: 'Use the supporter\'s own logo file, with their permission.', section: 'Logo' },
+  // ---------- what the gift was for ----------
+  {
+    name: 'donationPurpose',
+    label: 'Donation purpose',
+    type: 'text',
+    required: true,
+    placeholder: 'For example: Education support, Emergency relief',
+    hint: 'What the donation was given for. Shown in the detail panel.',
+    section: 'The donation',
+  },
+  {
+    name: 'description',
+    label: 'Short description',
+    type: 'textarea',
+    required: true,
+    placeholder: 'One or two sentences about this contribution.',
+    hint: 'A brief explanation of the donor\u2019s contribution. Visible to the public, so only write what the donor agreed to.',
+    section: 'The donation',
+  },
 
-  // ---------- Visibility ----------
+  // ---------- the picture ----------
+  {
+    name: 'logoUrl',
+    label: 'Donor photo',
+    type: 'image',
+    uploadable: true,
+    hint: 'Optional. Without a photo the gallery shows a tidy initial instead. Use a picture the donor gave you permission to publish.',
+    section: 'Photo',
+  },
+
+  // ---------- visibility ----------
+  // Deliberately the last section, and deliberately worded as two states rather
+  // than a tick box called "something": this is the switch that decides whether a
+  // person's name appears on the internet.
   {
     name: 'isPublic',
-    label: 'Show publicly on /donors',
+    label: 'Public - show this donor on the public gallery',
     type: 'checkbox',
-    hint: 'Off = kept as a private internal record. This is the default on purpose.',
+    hint: 'OFF = Private (the default). The record exists only in this panel. ON = Public: photo and name appear on the home page and /donors, and the details open when a visitor clicks the card.',
     section: 'Visibility',
   },
-  { name: 'isActive', label: 'Active supporter', type: 'checkbox', hint: 'Switch off to hide without deleting the record.', section: 'Visibility' },
-  { name: 'sortOrder', label: 'Sort order', type: 'number', hint: 'Lower numbers appear first.', section: 'Visibility' },
+  {
+    name: 'isActive',
+    label: 'Active supporter',
+    type: 'checkbox',
+    hint: 'A second, softer switch. Switch it off to keep the record but hide it everywhere, without deleting anything.',
+    section: 'Visibility',
+  },
+  {
+    name: 'sortOrder',
+    label: 'Sort order',
+    type: 'number',
+    hint: 'Lower numbers appear first in the gallery.',
+    section: 'Visibility',
+  },
+
+  // ---------- kept from the old form ----------
+  {
+    name: 'organization',
+    label: 'Organization (optional)',
+    type: 'text',
+    hint: 'Only when the supporter is a business, club or group rather than one person.',
+    section: 'Optional extras',
+  },
+  {
+    name: 'websiteUrl',
+    label: 'Website (optional)',
+    type: 'url',
+    placeholder: 'https://...',
+    hint: 'Only if the supporter agreed to be linked.',
+    section: 'Optional extras',
+  },
 ];
 
 export default function AdminDonorsPage() {
@@ -67,7 +148,7 @@ export default function AdminDonorsPage() {
       resourceKey="donors"
       entityLabel="Donor"
       title="Donors & supporters"
-      description="Supporters appear on /donors only when 'Show publicly' is switched on."
+      description="A new donor is Private until you switch Public on. Private records never reach the public website."
       fields={FIELDS}
       columns={COLUMNS}
       publishField="isPublic"

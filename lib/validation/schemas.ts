@@ -411,9 +411,18 @@ export const galleryImageSchema = z.object({
 // ========================================
 export const donorSchema = z.object({
   name: requiredText('Donor name', 2, 160),
+
+  // ---------- the four details the public detail panel is built from ----------
+  // Address, purpose and description are required because they are what a visitor
+  // reads after clicking a card; an empty one leaves a hole in the panel.
+  // Occupation is genuinely optional and is left out of the panel when empty.
+  address: requiredText('Address', 2, 200),
+  occupation: optionalText(160),
+  donationPurpose: requiredText('Donation purpose', 2, 200),
+  description: requiredText('Short description', 10, 1000),
+
   organization: optionalText(160),
   logoUrl: optionalText(500),
-  description: optionalText(1000),
   supportArea: optionalText(160),
   websiteUrl: optionalText(300),
   // isPublic must be switched on deliberately: by default a donor stays private.

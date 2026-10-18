@@ -1,24 +1,30 @@
 // ========================================
-// DONOR SECTION
-// This code controls the Donor / Supporters page.
+// PUBLIC - OUR DONORS & SUPPORTERS
 // ========================================
-// WHAT IS PUBLIC
-//   Only donors that an administrator has switched to PUBLIC appear here
-//   (Admin Panel -> Donors -> "Show publicly").
+// Address: /donors
 //
-// WHAT IS NEVER PUBLIC
-//   Donation amounts, payment references, bank details, contact details and
-//   internal notes. None of those are stored in the "donors" table at all -
-//   money records live in a separate, private table (Admin Panel -> Donations
-//   received) which is never shown on the public website.
+// WHAT IS PUBLIC
+//   Only donors an administrator has switched to Public (and that are still
+//   active). The filter is in the query itself - getPublicDonors() asks the
+//   database for isPublic: true - not in the template. A private record is never
+//   loaded, so it cannot reach the HTML, a cached copy, or a data file.
+//
+// WHAT THE PAGE SENDS TO THE BROWSER
+//   Five fields per donor, mapped by hand below. Address, occupation, purpose and
+//   description travel with the page, but they are only rendered inside the
+//   detail panel, which stays closed until a visitor clicks a card.
+//
+// WHY THE PHOTO IS A ROUTE, NOT A FILE ADDRESS
+//   /api/donors/photo/<id> checks the record before answering, so a picture stops
+//   loading the moment a donor is switched back to Private.
 // ========================================
 
 import type { Metadata } from 'next';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { PageHero, Section, SectionHeading, CardGrid } from '@/components/ui/Section';
-import { DonorCard } from '@/components/public/Cards';
+import { PageHero, Section } from '@/components/ui/Section';
+import { DonorGallery, type PublicDonor } from '@/components/public/DonorGallery';
 import { getPublicDonors } from '@/lib/data/public';
 
 export const dynamic = 'force-dynamic';
@@ -26,65 +32,55 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Donors and supporters',
   description:
-    'Organizations and individuals who support the work of Janakalyan Samataa Yuwa Club.',
+    'The individuals and organizations who support the work of Janakalyan Samataa Yuwa Club.',
 };
 
 export default async function DonorsPage() {
   const donors = await getPublicDonors();
 
-  // Group donors by the area they support, so the page reads like a
-  // professional supporters wall.
-  const byArea = new Map<string, typeof donors>();
-  for (const donor of donors) {
-    const area = donor.supportArea?.trim() || 'General support';
-    const list = byArea.get(area) ?? [];
-    list.push(donor);
-    byArea.set(area, list);
-  }
+  // ========================================
+  // ONLY THESE FIELDS LEAVE THE SERVER
+  // ========================================
+  const galleryDonors: PublicDonor[] = donors.map((donor) => ({
+    id: donor.id,
+    name: donor.name,
+    photoUrl: donor.logoUrl ? `/api/donors/photo/${donor.id}` : null,
+    address: donor.address ?? null,
+    occupation: donor.occupation ?? null,
+    // Older records have no donationPurpose; the area they support reads
+    // naturally in the same place.
+    purpose: donor.donationPurpose ?? donor.supportArea ?? null,
+    description: donor.description ?? null,
+  }));
 
   return (
     <>
       <PageHero
         eyebrow="Supporters"
         icon="heart"
-        title="Our donors and supporters"
-        description="With sincere thanks to the organizations and individuals who make this work possible."
+        title="Our Donors & Supporters"
+        description="With sincere thanks to the people and organizations who make this work possible. Click a photo to read about their contribution."
       />
 
       {/* ========================================
-          DONOR CARDS
+          THE GALLERY
           ======================================== */}
-      {donors.length > 0 ? (
-        [...byArea.entries()].map(([area, list], index) => (
-          <Section key={area} muted={index % 2 === 1}>
-            <SectionHeading
-              eyebrow={area}
-              icon="heart"
-              title={area}
-              description={`${list.length} supporter${list.length === 1 ? '' : 's'} in this area.`}
-            />
-
-            <CardGrid columns={3}>
-              {list.map((donor) => (
-                <DonorCard key={donor.id} donor={donor} />
-              ))}
-            </CardGrid>
-          </Section>
-        ))
-      ) : (
-        <Section>
+      <Section>
+        {galleryDonors.length > 0 ? (
+          <DonorGallery donors={galleryDonors} />
+        ) : (
           <EmptyState
             icon="heart"
             title="Our supporters will be listed here"
-            description="Add donors and supporters from Admin Panel → Donors, then switch on 'Show publicly'. Their names, logos and the area they support will appear on this page. Donation amounts and payment details are never shown publicly."
+            description="Donors and supporters are added from the Admin Panel. Only records marked Public appear on this page - nothing is published by accident."
           />
-        </Section>
-      )}
+        )}
+      </Section>
 
       {/* ========================================
           THANK YOU + CALL TO ACTION
           ======================================== */}
-      <Section>
+      <Section muted>
         <div className="mx-auto max-w-3xl text-center">
           <span className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent-50 text-accent-600">
             <Icon name="heart" className="h-6 w-6" />
@@ -108,7 +104,8 @@ export default async function DonorsPage() {
           </div>
 
           <p className="mt-6 text-xs text-ink-500">
-            Donor privacy: we only publish the information a supporter agrees to share.
+            Donor privacy: we publish only what a supporter has agreed to share, and any donor can be
+            withdrawn at any time.
           </p>
         </div>
       </Section>

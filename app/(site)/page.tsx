@@ -27,14 +27,9 @@ import { Hero } from '@/components/public/Hero';
 import { StatGrid } from '@/components/public/StatGrid';
 import { ProgramCard } from '@/components/public/ProgramCard';
 import { ProjectCard } from '@/components/public/ProjectCard';
-import {
-  AlbumCard,
-  BeneficiaryCard,
-  DonorCard,
-  EventCard,
-  NewsCard,
-} from '@/components/public/Cards';
+import { AlbumCard, BeneficiaryCard, EventCard, NewsCard } from '@/components/public/Cards';
 import { GalleryGrid } from '@/components/public/GalleryGrid';
+import { DonorGallery, type PublicDonor } from '@/components/public/DonorGallery';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
@@ -70,6 +65,21 @@ export default async function HomePage() {
   const introBody = setting(settings, 'home.aboutBody');
   const womenIntro = womenContent[0];
   const topDonors = donors.slice(0, 6);
+
+  // ========================================
+  // THE SIX FACES ON THE HOME PAGE
+  // ========================================
+  // Hand-mapped, so the browser receives exactly what a card and its detail
+  // panel need - and nothing that belongs only to the admin panel.
+  const galleryDonors: PublicDonor[] = topDonors.map((donor) => ({
+    id: donor.id,
+    name: donor.name,
+    photoUrl: donor.logoUrl ? `/api/donors/photo/${donor.id}` : null,
+    address: donor.address ?? null,
+    occupation: donor.occupation ?? null,
+    purpose: donor.donationPurpose ?? donor.supportArea ?? null,
+    description: donor.description ?? null,
+  }));
 
   // Real counts of what is published on this website (not impact claims).
   const published = {
@@ -424,16 +434,14 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Supporters"
             icon="heart"
-            title="With thanks to our supporters"
-            description="Organizations and individuals who make this work possible."
+            title="Our Donors & Supporters"
+            description="The people and organizations who make this work possible. Click a photo to read about their contribution."
             align="center"
           />
 
-          <CardGrid columns={3}>
-            {topDonors.map((donor) => (
-              <DonorCard key={donor.id} donor={donor} />
-            ))}
-          </CardGrid>
+          {/* Same gallery as /donors, limited to the first few faces. The cards
+              carry a photo and a name; the full details open on a click. */}
+          <DonorGallery donors={galleryDonors} />
 
           <div className="mt-8 text-center">
             <ButtonLink href="/donors" variant="outline">

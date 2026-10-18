@@ -406,10 +406,24 @@ model Donor {
   id          String   @id @default(cuid())
   name        String // person or contact name
   organization String? // organization name (if it is an organization)
+
+  // The donor's photo. The column keeps its old name (logoUrl) so that every
+  // picture uploaded before this change still shows, without a data migration.
   logoUrl     String?
-  description String?
-  supportArea String? // e.g. Education, Health, Sports
+
+  // ---------- DETAILS SHOWN ONLY AFTER A VISITOR CLICKS THE CARD ----------
+  // These are never printed on the gallery card itself.
+  address         String? // where the donor is from
+  occupation      String? // optional - left out of the detail panel when empty
+  donationPurpose String? // what the gift was given for
+
+  // Kept for older records: the area this supporter backs. The public page falls
+  // back to it when donationPurpose is empty.
+  supportArea String?
   websiteUrl  String?
+
+  description String?
+
   isPublic    Boolean  @default(false) // false = kept private (internal record only)
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
