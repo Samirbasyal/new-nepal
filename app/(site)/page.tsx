@@ -22,8 +22,13 @@
 //  12. CALLS TO ACTION      -> Join / Donate / Contact
 // ========================================
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Hero } from '@/components/public/Hero';
+import { HeroSlider, type SliderPhoto } from '@/components/public/HeroSlider';
+import { FocusAreas } from '@/components/public/FocusAreas';
+import { DonateBand } from '@/components/public/DonateBand';
+import { MembersStrip, type PublicMemberCard } from '@/components/public/MembersStrip';
 import { StatGrid } from '@/components/public/StatGrid';
 import { ProgramCard } from '@/components/public/ProgramCard';
 import { ProjectCard } from '@/components/public/ProjectCard';
@@ -45,6 +50,7 @@ import {
   getPrograms,
   getProjects,
   getPublicDonors,
+  getPublicMembers,
 } from '@/lib/data/public';
 import { getSettings, hasRealValue, setting } from '@/lib/settings';
 import { formatNumber } from '@/lib/utils';
@@ -54,17 +60,46 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   // Load everything the homepage needs, in parallel.
-  const [data, settings, womenContent, donors] = await Promise.all([
+  const [data, settings, womenContent, donors, focusRows, publicMembers] = await Promise.all([
     getHomepageData(),
     getSettings(),
     getContentByGroup('WOMEN'),
     getPublicDonors(),
+    // The four "What We Work For" cards, written in Admin Panel -> Content
+    // sections. An empty group is fine - the component falls back to the agreed
+    // wording rather than leaving the band blank.
+    getContentByGroup('FOCUS'),
+    getPublicMembers(),
   ]);
 
   const introTitle = setting(settings, 'home.aboutTitle');
   const introBody = setting(settings, 'home.aboutBody');
+  const aboutImageUrl = setting(settings, 'home.aboutImageUrl', '');
   const womenIntro = womenContent[0];
   const topDonors = donors.slice(0, 6);
+
+  // ========================================
+  // THE HERO SLIDER
+  // ========================================
+  // Real gallery photographs, already managed in Admin Panel -> Gallery. Only the
+  // four fields the slider needs are passed on.
+  const sliderPhotos: SliderPhoto[] = data.photos.slice(0, 6).map((photo) => ({
+    id: photo.id,
+    imageUrl: photo.imageUrl,
+    title: photo.title ?? null,
+    category: photo.category ?? null,
+  }));
+
+  // ========================================
+  // THE MEMBER FACES
+  // ========================================
+  // getPublicMembers() already selects only public, safe columns.
+  const memberCards: PublicMemberCard[] = publicMembers.slice(0, 6).map((member) => ({
+    id: member.id,
+    name: member.user.name,
+    designation: member.designation ?? null,
+    photoUrl: member.photoUrl ?? null,
+  }));
 
   // ========================================
   // THE SIX FACES ON THE HOME PAGE
@@ -96,17 +131,25 @@ export default async function HomePage() {
       {/* ========================================
           1. HERO SECTION
           ======================================== */}
-      <Hero />
+      <Hero photos={sliderPhotos} />
 
       {/* ========================================
-          2. INTRODUCTION / ABOUT PREVIEW
+          2. WHAT WE WORK FOR
+          ======================================== */}
+      <FocusAreas rows={focusRows} />
+
+      {/* ========================================
+          3. INTRODUCTION / ABOUT PREVIEW
           ======================================== */}
       <Section>
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-14">
-          <div className="lg:col-span-7">
+          {/* The photograph comes first on a wide screen, and after the text on a
+              phone - order utilities keep the reading order sensible without
+              duplicating any markup. */}
+          <div className="lg:order-2 lg:col-span-7">
             <p className="eyebrow mb-2">
               <Icon name="users" className="h-4 w-4" />
-              About us
+              Community-based youth organization
             </p>
 
             <h2 className="font-display text-2xl font-bold leading-tight text-ink-900 sm:text-3xl">
@@ -145,8 +188,21 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Quick highlights list */}
-          <div className="lg:col-span-5">
+          {/* The picture, when one has been chosen in Settings -> Homepage. Until
+              then the highlights list keeps the column useful - never an empty
+              box and never a borrowed stock photo. */}
+          <div className="lg:order-1 lg:col-span-5">
+            {aboutImageUrl ? (
+              <div className="relative aspect-[4/5] w-full overflow-hidden rounded-card ring-1 ring-ink-200">
+                <Image
+                  src={aboutImageUrl}
+                  alt="Members of Janakalyan Samataa Yuwa Club at work in the community"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              </div>
+            ) : (
             <div className="card p-6">
               <h3 className="text-base font-bold text-ink-900">Our main areas of work</h3>
 
@@ -174,6 +230,7 @@ export default async function HomePage() {
                 Edit this list in config/site.ts or replace it with your own programs.
               </p>
             </div>
+            )}
           </div>
         </div>
       </Section>
@@ -183,9 +240,9 @@ export default async function HomePage() {
           ======================================== */}
       <Section muted>
         <SectionHeading
-          eyebrow="Programs"
+          eyebrow="Programs and activities"
           icon="layers"
-          title="Our programs"
+          title="Recent Programs"
           description="Ongoing and past programs run together with the community."
         />
 
@@ -214,7 +271,15 @@ export default async function HomePage() {
       </Section>
 
       {/* ========================================
-          4. PROJECTS / OUR WORKS PREVIEW
+          4. SUPPORT OUR MISSION
+          ======================================== */}
+      {/* The one band on the page that is impossible to scroll past without
+          noticing. It leads to the real donation flow - never to a fake
+          "payment successful" screen. */}
+      <DonateBand />
+
+      {/* ========================================
+          5. PROJECTS / OUR WORKS PREVIEW
           ======================================== */}
       <Section>
         <SectionHeading
@@ -424,6 +489,13 @@ export default async function HomePage() {
           </div>
         </Section>
       ) : null}
+
+      {/* ========================================
+          OUR MEMBERS AND VOLUNTEERS
+          ======================================== */}
+      {/* Names, posts and photos only - the same fields the public members page
+          already shows. Nothing private is selected from the database. */}
+      <MembersStrip members={memberCards} />
 
       {/* ========================================
           11. DONOR / SUPPORTER SECTION

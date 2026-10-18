@@ -80,21 +80,26 @@ export const organization = {
 // group: 'more' are collected into a "More" drop-down menu on desktop.
 // On mobile every link is simply listed inside the menu.
 export const navigation = [
+  // ---------- the seven links shown directly ----------
+  // Only LABELS and ORDER changed; every address is the one that already
+  // existed, so no bookmark or search result breaks.
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
   { label: 'Programs', href: '/programs' },
-  { label: 'Projects', href: '/projects' },
-  { label: 'Events', href: '/events' },
-  { label: 'News', href: '/news' },
-  { label: 'Gallery', href: '/gallery' },
-  { label: 'Our Works', href: '/our-works', group: 'more' as const },
+  { label: 'Our Work', href: '/our-works' },
+  { label: 'Our Members', href: '/members' },
+  { label: 'Our Donors & Supporters', href: '/donors' },
+  { label: 'Contact', href: '/contact' },
+
+  // ---------- collected under "More" ----------
+  { label: 'Projects', href: '/projects', group: 'more' as const },
+  { label: 'Events', href: '/events', group: 'more' as const },
+  { label: 'News', href: '/news', group: 'more' as const },
+  { label: 'Gallery', href: '/gallery', group: 'more' as const },
   { label: 'Impact', href: '/impact', group: 'more' as const },
-  { label: 'Members', href: '/members', group: 'more' as const },
   // कार्य समिति (working committee) - photo, name, post and current address only.
   { label: 'कार्य समिति', href: '/karya-samiti', group: 'more' as const },
-  { label: 'Donors', href: '/donors', group: 'more' as const },
   { label: 'Join Us', href: '/join', group: 'more' as const },
-  { label: 'Contact', href: '/contact', group: 'more' as const },
 ];
 
 // The links that appear directly in the navbar (everything else goes to "More").

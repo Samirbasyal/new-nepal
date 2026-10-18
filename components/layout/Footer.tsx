@@ -49,6 +49,12 @@ export async function Footer() {
               <span className="font-display text-base font-bold text-white">{orgName}</span>
             </div>
 
+            {/* The club's one-line promise. It is a constant, not an editable
+                field, because it is part of the identity rather than content. */}
+            <p className="mt-1 text-sm font-semibold italic text-accent-300">
+              Together for Equality, Justice and Opportunity.
+            </p>
+
             <p className="mt-4 text-sm leading-relaxed text-brand-100">
               {footerConfig.aboutText}
             </p>

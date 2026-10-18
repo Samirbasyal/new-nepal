@@ -295,6 +295,10 @@ export const NOTIFICATION_TYPE_OPTIONS = [
 export const CONTENT_GROUP_OPTIONS = [
   { value: 'ABOUT', label: 'About page' },
   { value: 'HOME', label: 'Homepage' },
+  // The four cards in the "What We Work For" band on the homepage. One row per
+  // card: title, subtitle and body; the order is sortOrder. Editing happens in
+  // Admin Panel -> Content sections, exactly like every other text on the site.
+  { value: 'FOCUS', label: 'Homepage - What We Work For' },
   { value: 'WOMEN', label: 'Women Empowered' },
   { value: 'BENEFICIARIES', label: 'Beneficiaries' },
   { value: 'IMPACT', label: 'Impact' },

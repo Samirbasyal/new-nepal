@@ -14,14 +14,35 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Section';
+import { HeroSlider, type SliderPhoto } from '@/components/public/HeroSlider';
+import { organization } from '@/config/site';
 import { getSettings, setting } from '@/lib/settings';
 
-export async function Hero() {
+// ========================================
+// THE WORDS ON THE HERO
+// ========================================
+// They still come from Admin Panel -> Settings, so the club can change them at
+// any time. Two constants below only matter for a site that has never been
+// edited: the old shipped text is recognised and replaced with the current
+// wording, instead of leaving the previous sentence in place for ever.
+const LEGACY_TITLE = 'Working together for a fair and thriving community';
+
+const NEW_TITLE = 'Welcome to Our Club';
+
+const NEW_SUBTITLE =
+  'We are a community youth organization working together for equality, dignity, social justice, and sustainable community development in Bajhang, Nepal.';
+
+export async function Hero({ photos = [] }: { photos?: SliderPhoto[] }) {
   const settings = await getSettings();
 
-  const title = setting(settings, 'home.heroTitle');
-  const subtitle = setting(settings, 'home.heroSubtitle');
+  const storedTitle = setting(settings, 'home.heroTitle');
+  const storedSubtitle = setting(settings, 'home.heroSubtitle');
   const imageUrl = setting(settings, 'home.heroImageUrl', '');
+
+  const title = !storedTitle || storedTitle.trim() === LEGACY_TITLE ? NEW_TITLE : storedTitle;
+
+  const subtitle =
+    !storedSubtitle || storedSubtitle.trim() === organization.tagline ? NEW_SUBTITLE : storedSubtitle;
 
   return (
     <section className="relative overflow-hidden bg-brand-900 text-white">
@@ -76,9 +97,15 @@ export async function Hero() {
             </div>
           </div>
 
-          {/* ---------- Right: picture or a simple highlight card ---------- */}
+          {/* ---------- Right: the automatic slider ---------- */}
+          {/* Real gallery photographs rotate here. When the club has not
+              published any yet, the single hero image (or the quiet card below)
+              is used instead, so the space is never empty and no borrowed photo
+              is ever shown. */}
           <div className="lg:col-span-5">
-            {imageUrl ? (
+            {photos.length > 0 ? (
+              <HeroSlider photos={photos} />
+            ) : imageUrl ? (
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-card ring-1 ring-white/20">
                 <Image
                   src={imageUrl}

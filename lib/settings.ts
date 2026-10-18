@@ -55,10 +55,22 @@ export const SETTING_DEFINITIONS = [
   { key: 'social.tiktok', label: 'TikTok link', group: 'SOCIAL', default: '', type: 'text' },
 
   // --- Homepage hero ---
-  { key: 'home.heroTitle', label: 'Homepage main heading', group: 'HOMEPAGE', default: 'Working together for a fair and thriving community', type: 'text' },
-  { key: 'home.heroSubtitle', label: 'Homepage sub heading', group: 'HOMEPAGE', default: defaultOrganization.tagline, type: 'textarea' },
+  { key: 'home.heroTitle', label: 'Homepage main heading', group: 'HOMEPAGE', default: 'Welcome to Our Club', type: 'text' },
+  {
+    key: 'home.heroSubtitle',
+    label: 'Homepage sub heading',
+    group: 'HOMEPAGE',
+    default:
+      'We are a community youth organization working together for equality, dignity, social justice, and sustainable community development in Bajhang, Nepal.',
+    type: 'textarea',
+  },
   { key: 'home.heroImageUrl', label: 'Homepage hero image link (optional)', group: 'HOMEPAGE', default: '', type: 'text' },
-  { key: 'home.aboutTitle', label: 'Introduction heading', group: 'HOMEPAGE', default: 'Who we are', type: 'text' },
+
+  // The photograph beside the "Community-Based Youth Organization" text.
+  // Leave it empty and that column shows the areas-of-work card instead.
+  { key: 'home.aboutImageUrl', label: 'About section photo link (optional)', group: 'HOMEPAGE', default: '', type: 'text' },
+
+  { key: 'home.aboutTitle', label: 'Introduction heading', group: 'HOMEPAGE', default: 'Community-Based Youth Organization', type: 'text' },
   { key: 'home.aboutBody', label: 'Introduction paragraph', group: 'HOMEPAGE', default: defaultOrganization.description, type: 'textarea' },
 
   // --- Donate page (NO secrets here - safe public information only) ---
