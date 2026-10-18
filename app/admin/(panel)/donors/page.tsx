@@ -33,7 +33,9 @@ const COLUMNS: ColumnConfig[] = [
   { name: 'name', label: 'Name' },
   { name: 'address', label: 'Address', hideOnMobile: true },
   { name: 'donationPurpose', label: 'Donation purpose', hideOnMobile: true },
-  { name: 'isPublic', label: 'Public', toggle: true },
+  // The switch in the table is the quick publish / unpublish: green means the
+  // donor is on the public gallery right now.
+  { name: 'isPublic', label: 'Visibility', toggle: true },
 ];
 
 // ========================================
@@ -102,11 +104,19 @@ const FIELDS: FieldConfig[] = [
   // Deliberately the last section, and deliberately worded as two states rather
   // than a tick box called "something": this is the switch that decides whether a
   // person's name appears on the internet.
+  // Two named states, not a tick box whose meaning has to be guessed. Private is
+  // listed first because it is the default: a new record is never public until
+  // an administrator deliberately chooses Public.
   {
     name: 'isPublic',
-    label: 'Public - show this donor on the public gallery',
-    type: 'checkbox',
-    hint: 'OFF = Private (the default). The record exists only in this panel. ON = Public: photo and name appear on the home page and /donors, and the details open when a visitor clicks the card.',
+    label: 'Visibility',
+    type: 'radio',
+    required: true,
+    options: [
+      { value: 'false', label: 'Private - only in this panel (default)' },
+      { value: 'true', label: 'Public - show on the website' },
+    ],
+    hint: 'Private donors never appear on the home page, the gallery, in search results or in donor counts, and their photo cannot be opened by the public. Switching back to Private removes them at once.',
     section: 'Visibility',
   },
   {

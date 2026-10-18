@@ -28,6 +28,14 @@ export type FieldType =
   | 'datetime'
   | 'checkbox'
   | 'select'
+  /**
+   * A visible choice between named states, such as Private / Public.
+   *
+   * When the options are "true" and "false" the stored value is still a boolean,
+   * so a radio group can drive a real switch without any change to the API or
+   * the database.
+   */
+  | 'radio'
   /** An image address, with a preview and an upload button. */
   | 'image';
 

@@ -32,7 +32,9 @@ import { cn, toDateInputValue, toDateTimeInputValue } from '@/lib/utils';
 function toInputValue(field: FieldConfig, row: AdminRow | null): string | boolean {
   const raw = row?.[field.name];
 
-  if (field.type === 'checkbox') return Boolean(raw);
+  // A radio group is a boolean in the database, exactly like a checkbox - the
+  // only difference is how it is drawn.
+  if (field.type === 'checkbox' || field.type === 'radio') return Boolean(raw);
 
   if (raw === null || raw === undefined) return '';
 
@@ -284,6 +286,55 @@ function FieldRenderer({
 }) {
   const spanClass = field.span === 1 ? 'sm:col-span-1' : 'sm:col-span-2';
   const type = field.type ?? 'text';
+
+  // ---------- Radio group ----------
+  // Used where "off" is a real, named state rather than an empty field - the
+  // donor's Private / Public switch is the first example. The stored value is
+  // still a boolean, so nothing about the API or the database changes.
+  if (type === 'radio') {
+    const options = field.options ?? [];
+
+    return (
+      <fieldset className={spanClass}>
+        <legend className="mb-1.5 block text-sm font-medium text-ink-700">
+          {field.label}
+          {field.required ? <span className="ml-0.5 text-red-600">*</span> : null}
+        </legend>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+          {options.map((option) => {
+            const optionValue = option.value === 'true';
+            const selected = Boolean(value) === optionValue;
+
+            return (
+              <label
+                key={option.value}
+                className={
+                  'flex cursor-pointer items-start gap-2.5 rounded-btn border px-3.5 py-3 text-sm transition ' +
+                  (selected
+                    ? 'border-brand-500 bg-brand-50/60 text-ink-900 ring-1 ring-brand-500'
+                    : 'border-ink-200 bg-white text-ink-700 hover:border-ink-300')
+                }
+              >
+                <input
+                  type="radio"
+                  name={field.name}
+                  value={option.value}
+                  checked={selected}
+                  onChange={() => onChange(optionValue)}
+                  className="mt-0.5 h-4 w-4 accent-brand-600"
+                />
+                <span className="leading-snug">{option.label}</span>
+              </label>
+            );
+          })}
+        </div>
+
+        {field.hint ? <p className="mt-1.5 text-xs text-ink-500">{field.hint}</p> : null}
+        {error ? <p className="mt-1 text-xs text-red-600">{error}</p> : null}
+      </fieldset>
+    );
+  }
 
   // ---------- Checkbox ----------
   if (type === 'checkbox') {
