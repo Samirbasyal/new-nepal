@@ -44,6 +44,9 @@ const ICON_PATHS = {
   edit: 'M4 20h4l10-10-4-4L4 16v4zM14 6l4 4',
   trash: 'M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13h10l1-13M10 11v6M14 11v6',
   search: 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3',
+  // The photo viewer's magnifier: with a plus, and with a minus.
+  'zoom-in': 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3M8 11h6M11 8v6',
+  'zoom-out': 'M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.3-4.3M8 11h6',
   filter: 'M3 5h18l-7 8v6l-4 2v-8L3 5z',
   save: 'M5 3h11l3 3v15H5zM8 3v6h7V3M8 14h8v7H8z',
   upload: 'M12 16V4M7 9l5-5 5 5M4 20h16',

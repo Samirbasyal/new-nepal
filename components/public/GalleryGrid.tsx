@@ -39,6 +39,13 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
   // Which photo is currently open in the viewer (-1 = viewer closed).
   const [openIndex, setOpenIndex] = useState(-1);
 
+  // ---------- ZOOM ----------
+  // The picture is shown fitted to the screen first. Pressing the magnifier (or
+  // double-clicking the photo) switches to a larger copy inside a scrollable
+  // frame, so a wide group photo can actually be read. Every new photo starts
+  // fitted again - a zoomed view is never carried across.
+  const [zoomed, setZoomed] = useState(false);
+
   const open = openIndex >= 0;
   const current = open ? photos[openIndex] : null;
 
@@ -65,6 +72,11 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
       document.body.style.overflow = '';
     };
   }, [open, photos.length]);
+
+  // A different photo, or the viewer closed: back to the fitted view.
+  useEffect(() => {
+    setZoomed(false);
+  }, [openIndex]);
 
   if (photos.length === 0) return null;
 
@@ -126,15 +138,45 @@ export function GalleryGrid({ photos }: { photos: GalleryPhoto[] }) {
             <Icon name="close" className="h-5 w-5" />
           </button>
 
-          {/* Only the picture. It keeps its own shape, is never stretched, and
-              is capped by the viewport so nothing overflows or scrolls. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={current.imageUrl}
-            alt={current.title || 'Gallery photo'}
+          {/* ---------- CLOSE ---------- */}
+          {/* (kept below with the other controls) */}
+          {/* ---------- ZOOM ---------- */}
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setZoomed((value) => !value);
+            }}
+            className="absolute left-3 top-3 z-10 rounded-full bg-black/55 p-2.5 text-white ring-1 ring-white/20 hover:bg-black/75 sm:left-5 sm:top-5"
+            aria-label={zoomed ? 'Zoom out' : 'Zoom in'}
+            aria-pressed={zoomed}
+          >
+            <Icon name={zoomed ? 'zoom-out' : 'zoom-in'} className="h-5 w-5" />
+          </button>
+
+          {/* Only the picture. Fitted to the screen by default; when zoomed it
+              lives in a scrollable frame so it can be moved around without ever
+              pushing the page sideways. */}
+          <div
             onClick={(event) => event.stopPropagation()}
-            className="h-auto max-h-[80vh] w-auto max-w-[92vw] rounded-lg object-contain shadow-2xl sm:max-h-[84vh]"
-          />
+            onDoubleClick={() => setZoomed((value) => !value)}
+            className={cn(
+              'max-w-[94vw] rounded-lg',
+              zoomed ? 'max-h-[84vh] cursor-zoom-out overflow-auto' : 'overflow-hidden',
+            )}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={current.imageUrl}
+              alt={current.title || 'Gallery photo'}
+              className={cn(
+                'rounded-lg object-contain shadow-2xl',
+                zoomed
+                  ? 'w-[190vw] max-w-none sm:w-[130vw] lg:w-[110vw]'
+                  : 'h-auto max-h-[80vh] w-auto max-w-[92vw] sm:max-h-[84vh]',
+              )}
+            />
+          </div>
 
           {/* Previous / next buttons */}
           {photos.length > 1 ? (

@@ -388,12 +388,26 @@ model GalleryImage {
   eventId     String?
   event       Event?        @relation(fields: [eventId], references: [id], onDelete: SetNull)
   isPublished Boolean       @default(true)
+
+  // ---------- WHERE THIS PHOTO APPEARS ----------
+  // "GALLERY" (the default, and what every existing photo becomes) is the photo
+  // wall on /gallery and the homepage gallery band.
+  //
+  // "SLIDER" is the rotating banner at the top of the homepage. The two sets are
+  // deliberately separate: a photograph chosen for the moving banner is often a
+  // wide, calm shot, while the wall wants every picture of the work.
+  //
+  // Existing rows are untouched - the column simply appears with GALLERY, so
+  // nothing disappears from the wall after the update.
+  placement   String        @default("GALLERY")
+
   sortOrder   Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   @@index([albumId])
   @@index([isPublished])
+  @@index([placement, isPublished])
   @@map("gallery_images")
 }
 

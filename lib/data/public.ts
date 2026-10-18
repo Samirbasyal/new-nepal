@@ -243,17 +243,46 @@ export async function getGalleryAlbums(limit?: number) {
   );
 }
 
-export async function getGalleryImages(options: { limit?: number; albumId?: string } = {}) {
+/**
+ * The photo wall.
+ *
+ * placement is "GALLERY" unless asked otherwise. That is also the value every
+ * photo already in the database receives, so the wall keeps everything it had
+ * before the slider was separated out.
+ */
+export async function getGalleryImages(
+  options: { limit?: number; albumId?: string; placement?: string } = {},
+) {
   return safeQuery(
     () =>
       prisma.galleryImage.findMany({
         where: {
           isPublished: true,
+          placement: options.placement ?? 'GALLERY',
           ...(options.albumId ? { albumId: options.albumId } : {}),
         },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
         ...(options.limit ? { take: options.limit } : {}),
         include: { album: { select: { id: true, title: true, slug: true } } },
+      }),
+    [],
+  );
+}
+
+/**
+ * The moving banner at the top of the homepage.
+ *
+ * Only photos an administrator marked "Hero slider". If none have been marked,
+ * the list is empty on purpose - the hero then shows its single image or the
+ * quiet highlight card, rather than quietly borrowing the photo wall.
+ */
+export async function getSliderImages(limit = 6) {
+  return safeQuery(
+    () =>
+      prisma.galleryImage.findMany({
+        where: { isPublished: true, placement: 'SLIDER' },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+        take: limit,
       }),
     [],
   );

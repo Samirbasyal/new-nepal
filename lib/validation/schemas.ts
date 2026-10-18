@@ -402,6 +402,11 @@ export const galleryImageSchema = z.object({
   programId: optionalText(60),
   projectId: optionalText(60),
   eventId: optionalText(60),
+
+  // Which of the two places this photo belongs to. Anything unrecognised falls
+  // back to the wall, so a mistaken value can never make a photo vanish.
+  placement: z.enum(['GALLERY', 'SLIDER']).catch('GALLERY'),
+
   isPublished: boolField(true),
   sortOrder: intField(0),
 });

@@ -85,6 +85,9 @@ const ALBUM_FIELDS: FieldConfig[] = [
 const PHOTO_COLUMNS: ColumnConfig[] = [
   { name: 'imageUrl', label: 'Photo', type: 'image' },
   { name: 'title', label: 'Caption' },
+  // GALLERY = the photo wall, SLIDER = the moving banner at the top of the home
+  // page. The two sets are separate on purpose.
+  { name: 'placement', label: 'Shown in', hideOnMobile: true },
   { name: 'category', label: 'Category', hideOnMobile: true },
   { name: 'takenOn', label: 'Date', type: 'date', hideOnMobile: true },
   { name: 'isPublished', label: 'Visible', toggle: true },
@@ -132,6 +135,21 @@ export default async function AdminGalleryPage({
     { name: 'programId', label: 'Related program', type: 'select', options: lookups.programs, hint: 'Optional.', section: 'Show it on another page' },
     { name: 'projectId', label: 'Related project / work', type: 'select', options: lookups.projects, hint: 'Optional. It will also appear on that project page.', section: 'Show it on another page' },
     { name: 'eventId', label: 'Related event', type: 'select', options: lookups.events, hint: 'Optional. It will also appear on that event page.', section: 'Show it on another page' },
+
+    // ---------- Where it appears ----------
+    // One choice, two destinations. Existing photos are already "Photo wall",
+    // so nothing moves unless somebody changes it.
+    {
+      name: 'placement',
+      label: 'Where this photo is shown',
+      type: 'select',
+      options: [
+        { value: 'GALLERY', label: 'Photo wall (gallery on /gallery and the home page)' },
+        { value: 'SLIDER', label: 'Hero slider (the moving banner at the top of the home page)' },
+      ],
+      hint: 'A photo appears in ONE place. Choosing the slider does not remove it from the website - it simply shows it in the banner instead of the wall.',
+      section: 'Where it appears',
+    },
 
     // ---------- Visibility ----------
     { name: 'isPublished', label: 'Visible on the website', type: 'checkbox', section: 'Publishing' },

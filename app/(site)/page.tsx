@@ -51,6 +51,7 @@ import {
   getProjects,
   getPublicDonors,
   getPublicMembers,
+  getSliderImages,
 } from '@/lib/data/public';
 import { getSettings, hasRealValue, setting } from '@/lib/settings';
 import { formatNumber } from '@/lib/utils';
@@ -60,7 +61,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   // Load everything the homepage needs, in parallel.
-  const [data, settings, womenContent, donors, focusRows, publicMembers] = await Promise.all([
+  const [data, settings, womenContent, donors, focusRows, publicMembers, sliderImages] =
+    await Promise.all([
     getHomepageData(),
     getSettings(),
     getContentByGroup('WOMEN'),
@@ -70,6 +72,7 @@ export default async function HomePage() {
     // wording rather than leaving the band blank.
     getContentByGroup('FOCUS'),
     getPublicMembers(),
+    getSliderImages(6),
   ]);
 
   const introTitle = setting(settings, 'home.aboutTitle');
@@ -83,7 +86,9 @@ export default async function HomePage() {
   // ========================================
   // Real gallery photographs, already managed in Admin Panel -> Gallery. Only the
   // four fields the slider needs are passed on.
-  const sliderPhotos: SliderPhoto[] = data.photos.slice(0, 6).map((photo) => ({
+  // These come from the photos an administrator marked "Hero slider" - NOT from
+  // the photo wall. Two separate sets, on purpose.
+  const sliderPhotos: SliderPhoto[] = sliderImages.map((photo) => ({
     id: photo.id,
     imageUrl: photo.imageUrl,
     title: photo.title ?? null,
