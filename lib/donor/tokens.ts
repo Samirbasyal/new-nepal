@@ -58,8 +58,11 @@ export async function issueDonorToken(
     data: { usedAt: new Date() },
   });
 
-  const raw = purpose === 'EMAIL_VERIFY' ? sixDigitCode() : randomBytes(24).toString('hex');
-  const minutes = purpose === 'EMAIL_VERIFY' ? VERIFY_MINUTES : RESET_MINUTES;
+  // BOTH purposes now use a six-digit code: easy to read out over the phone and
+  // impossible to confuse with a long link. The emailed link still works, because
+  // the code inside it is the same secret (see app/(site)/donor/reset-password).
+  const raw = sixDigitCode();
+  const minutes = VERIFY_MINUTES;
   const expiresAt = new Date(Date.now() + minutes * 60 * 1000);
 
   await prisma.donorToken.create({
@@ -157,4 +160,45 @@ export async function isResetTokenUsable(raw: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// ========================================
+// CHECK A PASSWORD-RESET CODE
+// ========================================
+// Same rules as the email code: 15 minutes, five wrong guesses, one live code.
+// It deliberately does NOT mark the code as used - the caller does that only
+// AFTER the new password has been saved, so a failed save does not lock the
+// donor out of their own code.
+export async function checkDonorResetCode(
+  donorAccountId: string,
+  code: string,
+): Promise<{ ok: boolean; reason?: 'expired' | 'locked' | 'wrong' | 'missing' }> {
+  if (!isDatabaseConfigured()) return { ok: false, reason: 'missing' };
+
+  const token = await prisma.donorToken.findFirst({
+    where: { donorAccountId, purpose: 'PASSWORD_RESET', usedAt: null },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (!token) return { ok: false, reason: 'missing' };
+  if (token.expiresAt.getTime() < Date.now()) return { ok: false, reason: 'expired' };
+  if (token.attempts >= MAX_ATTEMPTS) return { ok: false, reason: 'locked' };
+
+  if (hashDonorToken(code.trim()) !== token.tokenHash) {
+    const next = token.attempts + 1;
+    await prisma.donorToken.update({ where: { id: token.id }, data: { attempts: next } });
+    return { ok: false, reason: next >= MAX_ATTEMPTS ? 'locked' : 'wrong' };
+  }
+
+  return { ok: true };
+}
+
+/** Burn the code once the password has really been changed. */
+export async function consumeDonorResetCode(donorAccountId: string): Promise<void> {
+  if (!isDatabaseConfigured()) return;
+
+  await prisma.donorToken.updateMany({
+    where: { donorAccountId, purpose: 'PASSWORD_RESET', usedAt: null },
+    data: { usedAt: new Date() },
+  });
 }

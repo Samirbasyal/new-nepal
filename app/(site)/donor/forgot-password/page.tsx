@@ -12,7 +12,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { PageHero, Section } from '@/components/ui/Section';
-import { DonorForgotForm } from '@/components/donor/DonorForgotForm';
+import { DonorForgotCodeForm } from '@/components/donor/DonorForgotCodeForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +34,7 @@ export default function DonorForgotPasswordPage() {
       <Section>
         <div className="mx-auto max-w-lg">
           <div className="card p-6">
-            <DonorForgotForm />
+            <DonorForgotCodeForm />
           </div>
 
           <p className="mt-4 text-center text-xs text-ink-500">
