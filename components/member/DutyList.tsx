@@ -45,7 +45,18 @@ function formatDate(value: string | null): string | null {
   return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-export function DutyList({ duties, postTitle }: { duties: MemberDuty[]; postTitle: string }) {
+export function DutyList({
+  duties,
+  postTitle,
+  memberName,
+  permanent = [],
+}: {
+  duties: MemberDuty[];
+  postTitle: string;
+  memberName?: string;
+  /** Duties that come with the post itself (Admin -> Duties of each post). */
+  permanent?: string[];
+}) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -77,26 +88,63 @@ export function DutyList({ duties, postTitle }: { duties: MemberDuty[]; postTitl
     }
   }
 
-  if (duties.length === 0) {
-    return (
-      <div className="card p-8 text-center">
-        <Icon name="check-circle" className="mx-auto h-8 w-8 text-ink-300" />
-        <p className="mt-3 font-semibold text-ink-800">
-          No responsibilities have been given to you yet
-        </p>
-        <p className="mt-1 text-sm text-ink-500">
-          Your post is <strong>{postTitle}</strong>. The office adds duties from Admin Panel →
-          Committee responsibilities, and they will appear here.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* ---------- who this is ---------- */}
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-5">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-ink-500">नाम</p>
+          <p className="font-display text-lg font-bold text-ink-900">{memberName ?? '—'}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-wide text-ink-500">पद</p>
+          <p className="font-display text-lg font-bold text-brand-700">{postTitle}</p>
+        </div>
+      </div>
+
+      {/* ---------- the permanent list that comes with the post ---------- */}
+      {permanent.length > 0 ? (
+        <div className="card border-brand-100 p-5">
+          <h3 className="font-display text-base font-bold text-ink-900">
+            तपाईंको पद तथा जिम्मेवारी
+          </h3>
+          <p className="mt-1 text-xs text-ink-500">
+            These duties come with the post of <strong>{postTitle}</strong>. They apply to whoever
+            holds the post.
+          </p>
+
+          <ol className="mt-4 space-y-2.5">
+            {permanent.map((line, index) => (
+              <li key={`${index}-${line.slice(0, 12)}`} className="flex gap-3 text-sm leading-relaxed text-ink-700">
+                <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[11px] font-bold text-brand-700">
+                  {index + 1}
+                </span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+
       {error ? (
         <div className="rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
+        </div>
+      ) : null}
+
+      {duties.length === 0 ? (
+        <div className="card p-6 text-center">
+          <Icon name="check-circle" className="mx-auto h-7 w-7 text-ink-300" />
+          <p className="mt-2 font-semibold text-ink-800">
+            {permanent.length > 0
+              ? 'No extra tasks have been given to you'
+              : 'No responsibilities have been given to you yet'}
+          </p>
+          <p className="mt-1 text-sm text-ink-500">
+            {permanent.length > 0
+              ? 'Your permanent duties for this post are listed above. The office can add a dated task here when something extra is needed.'
+              : 'The office adds duties from Admin Panel → Duties of each post, and they will appear here.'}
+          </p>
         </div>
       ) : null}
 

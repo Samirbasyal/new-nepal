@@ -53,7 +53,7 @@ import { sendVerificationEmail } from '@/lib/auth/verification';
 import type { MailResult } from '@/lib/email/mailer';
 import { notifyAdmins } from '@/lib/notifications';
 // KARYA SAMITI (à¤•à¤¾à¤°à¥à¤¯ à¤¸à¤®à¤¿à¤¤à¤¿) validation rules (see lib/karya/schemas.ts)
-import { committeeDutySchema, karyaMemberSchema, karyaMemberUpdateSchema, karyaPostSchema } from '@/lib/karya/schemas';
+import { committeeDutySchema, karyaMemberSchema, karyaMemberUpdateSchema, karyaPostSchema, roleDutySchema } from '@/lib/karya/schemas';
 // LOAN MANAGEMENT: the rules (lib/loan/schemas.ts), the arithmetic
 // (lib/loan/calc.ts) and the actions (lib/loan/service.ts).
 import { loanSchema, loanUpdateSchema } from '@/lib/loan/schemas';
@@ -1210,4 +1210,5 @@ export const RESOURCE_KEYS = Object.keys(RESOURCES);
 export const SEARCH_NOTE = isSqlite()
   ? 'Local SQLite database detected: search is case-sensitive.'
   : '';
+
 

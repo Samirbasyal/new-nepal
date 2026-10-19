@@ -1440,7 +1440,7 @@ model Message {
   // FILE  = any other document
   kind String @default("TEXT")
 
-  audioUrl String?
+  audioUrl      String?
   // Length of the recording in seconds, so the player can show 0:07 / 0:07.
   audioDuration Int?
 
@@ -1519,4 +1519,32 @@ model PersonalNote {
 
   @@index([ownerId, updatedAt])
   @@map("personal_notes")
+}
+
+// ========================================
+// PERMANENT DUTIES FOR A POST (पद)
+// ========================================
+// These are the duties that belong to the POST, not to one person:
+// whoever is Adhyakshya gets the Adhyakshya list, automatically.
+//
+// A person therefore sees two kinds of duty in their panel:
+//   1. these permanent ones (from their post)
+//   2. the extra ones an administrator gave them personally (CommitteeDuty)
+//
+// postTitle is matched exactly against KaryaSamitiMember.postTitle, so the
+// office does not have to link anything by hand.
+// ========================================
+model CommitteeRoleDuty {
+  id String @id @default(cuid())
+
+  postTitle   String // e.g. "अध्यक्ष"
+  description String // one responsibility, written as a sentence
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postTitle, sortOrder])
+  @@map("committee_role_duties")
 }

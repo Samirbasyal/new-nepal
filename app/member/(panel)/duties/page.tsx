@@ -55,6 +55,19 @@ export default async function MemberDutiesPage() {
       })
     : [];
 
+  // ---------- permanent duties that come with the POST ----------
+  // Matched on the post title, so nothing has to be assigned by hand. Whoever
+  // becomes अध्यक्ष sees the अध्यक्ष list on the day they are recorded.
+  const permanentRows = committeeMember
+    ? await prisma.committeeRoleDuty.findMany({
+        where: { postTitle: committeeMember.postTitle, isActive: true },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        select: { description: true },
+      })
+    : [];
+
+  const permanent = permanentRows.map((row) => row.description);
+
   const duties: MemberDuty[] = rows.map((duty) => ({
     id: duty.id,
     title: duty.title,
@@ -79,7 +92,12 @@ export default async function MemberDutiesPage() {
       />
 
       {committeeMember ? (
-        <DutyList duties={duties} postTitle={committeeMember.postTitle} />
+        <DutyList
+          duties={duties}
+          postTitle={committeeMember.postTitle}
+          memberName={committeeMember.fullName}
+          permanent={permanent}
+        />
       ) : (
         <Alert tone="info" title="You are not on the committee list yet">
           Your login is not linked to a Karya Samiti record, so there are no committee duties to

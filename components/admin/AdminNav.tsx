@@ -90,6 +90,7 @@ const NAV_GROUPS: NavGroup[] = [
       // ========================================
       { label: 'Karya Samiti', href: '/admin/karya-samiti', icon: 'users' },
       { label: 'Committee responsibilities', href: '/admin/karya-samiti/duties', icon: 'shield-check' },
+      { label: 'Duties of each post', href: '/admin/karya-samiti/role-duties', icon: 'file-text' },
       { label: 'Committee posts', href: '/admin/karya-samiti/posts', icon: 'file-text' },
       { label: 'Member tasks', href: '/admin/tasks', icon: 'check-circle' },
     ],

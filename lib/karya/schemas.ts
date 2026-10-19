@@ -175,3 +175,14 @@ export const DUTY_STATUS_OPTIONS = [
   { value: 'IN_PROGRESS', label: 'In progress' },
   { value: 'COMPLETED', label: 'Completed' },
 ] as const;
+
+// ========================================
+// PERMANENT DUTIES FOR A POST
+// ========================================
+// One row = one duty line for a post (e.g. अध्यक्ष).
+export const roleDutySchema = z.object({
+  postTitle: requiredText('Post', 2, 120),
+  description: requiredText('Responsibility', 3, 600),
+  sortOrder: z.coerce.number().int().min(0).max(999).default(0),
+  isActive: z.boolean().default(true),
+});
