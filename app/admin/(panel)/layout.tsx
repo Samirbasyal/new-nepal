@@ -133,7 +133,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
         <Container className="py-8 lg:h-full lg:min-h-0">
           <div className="grid grid-cols-1 gap-8 lg:h-full lg:min-h-0 lg:grid-cols-12">
             {/* Sidebar (desktop only) */}
-            <aside className="hidden self-start lg:col-span-3 lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2">
+            <aside className="hidden self-start lg:col-span-3 lg:block lg:h-full lg:min-h-0 lg:min-w-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-2">
               <div>
                 {/* The Super Admin only sections (Loan management) are left out
                     of the menu for everybody else. The pages themselves check
@@ -147,7 +147,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
             {/* The id is where the menu scrolls to after a click - the content,
                 not the top of the document. */}
-            <div id="panel-content" className="min-w-0 lg:col-span-9 lg:h-full lg:min-h-0 lg:overflow-y-auto">
+            <div id="panel-content" className="min-w-0 lg:col-span-9 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
               {/* Quick menu (mobile only) */}
               <div className="mb-6">
                 <AdminMobileNav
