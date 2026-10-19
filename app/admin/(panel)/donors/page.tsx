@@ -16,6 +16,7 @@
 
 import type { Metadata } from 'next';
 import { ResourceManager } from '@/components/admin/ResourceManager';
+import { AddSupporterWithAmount } from '@/components/admin/AddSupporterWithAmount';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
 export const metadata: Metadata = {
@@ -154,7 +155,10 @@ const FIELDS: FieldConfig[] = [
 
 export default function AdminDonorsPage() {
   return (
-    <ResourceManager
+    <>
+      <AddSupporterWithAmount />
+
+      <ResourceManager
       resourceKey="donors"
       entityLabel="Donor"
       title="Donors & supporters"
@@ -163,6 +167,7 @@ export default function AdminDonorsPage() {
       columns={COLUMNS}
       publishField="isPublic"
       defaults={{ isPublic: false, isActive: true, sortOrder: 0 }}
-    />
+      />
+    </>
   );
 }
