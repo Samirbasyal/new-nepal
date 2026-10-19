@@ -17,13 +17,16 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { TextField, TextareaField } from '@/components/forms/Field';
 import { formatDateTime } from '@/lib/utils';
 
 type Message = {
   id: string;
+  kind?: string;
+  audioUrl?: string | null;
+  audioDuration?: number | null;
   subject: string | null;
   body: string;
   mine: boolean;
@@ -66,6 +69,76 @@ export function MemberConversation({ memberId, memberName }: { memberId: string;
   useEffect(() => {
     void load();
   }, [load]);
+
+  // ---------- voice reply ----------
+  const [recording, setRecording] = useState(false);
+  const [recSeconds, setRecSeconds] = useState(0);
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const startedAtRef = useRef(0);
+
+  async function startRecording() {
+    setProblem(null);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+
+      chunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => stream.getTracks().forEach((track) => track.stop());
+
+      recorder.start();
+      recorderRef.current = recorder;
+      startedAtRef.current = Date.now();
+      setRecSeconds(0);
+      setRecording(true);
+    } catch {
+      setProblem("The microphone could not be opened. Please allow microphone access.");
+    }
+  }
+
+  async function stopAndSendVoice() {
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+
+    const duration = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000));
+
+    setRecording(false);
+    recorderRef.current = null;
+    recorder.stop();
+    setVoiceBusy(true);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+      const form = new FormData();
+      form.append("memberId", memberId);
+      form.append("file", blob, "voice.webm");
+      form.append("duration", String(duration));
+
+      const response = await fetch("/api/admin/member-messages/voice", {
+        method: "POST",
+        body: form,
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok || !payload?.ok) {
+        setProblem(payload?.error ?? "The voice message could not be sent.");
+        return;
+      }
+
+      setMessages((current) => [...(current ?? []), payload.data as Message]);
+    } catch {
+      setProblem("The voice message could not be sent.");
+    } finally {
+      setVoiceBusy(false);
+    }
+  }
 
   const send = async () => {
     setFieldErrors({});
@@ -146,7 +219,11 @@ export function MemberConversation({ memberId, memberName }: { memberId: string;
                 <p className="mt-2 text-sm font-medium text-ink-800">{message.subject}</p>
               ) : null}
 
-              <p className="mt-1 whitespace-pre-line text-sm text-ink-600">{message.body}</p>
+              {message.kind === 'VOICE' && message.audioUrl ? (
+                <audio controls preload="metadata" src={message.audioUrl} className="mt-2 w-full max-w-sm" />
+              ) : (
+                <p className="mt-1 whitespace-pre-line text-sm text-ink-600">{message.body}</p>
+              )}
             </li>
           ))}
         </ul>
@@ -202,7 +279,27 @@ export function MemberConversation({ memberId, memberName }: { memberId: string;
           />
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {recording ? (
+            <button
+              type="button"
+              onClick={() => void stopAndSendVoice()}
+              className="btn btn-primary btn-sm"
+            >
+              Stop and send ({recSeconds}s)
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void startRecording()}
+              disabled={voiceBusy}
+              className="inline-flex items-center gap-2 rounded-btn border border-ink-300 px-3 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-100 disabled:opacity-60"
+            >
+              <Icon name="phone" className="h-4 w-4" />
+              {voiceBusy ? "Sending..." : "Record reply"}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => void send()}
