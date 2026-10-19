@@ -33,6 +33,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { TextField, TextareaField } from '@/components/forms/Field';
+import { checkImageFile } from '@/lib/upload-limits';
 
 /** The keys this form owns. Anything else is left exactly as it was. */
 const OWNED_KEYS = [
@@ -75,6 +76,14 @@ export function DonationPaymentSettingsForm({ initial }: { initial: Record<strin
     event.target.value = '';
 
     if (!file) return;
+
+    // ---------- 4 MB rule, checked before the upload starts ----------
+    const check = checkImageFile(file);
+    if (!check.ok) {
+      setError(check.error);
+      setSuccess(null);
+      return;
+    }
 
     setUploading(true);
     setError(null);

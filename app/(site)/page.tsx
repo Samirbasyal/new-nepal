@@ -35,6 +35,7 @@ import { ProjectCard } from '@/components/public/ProjectCard';
 import { AlbumCard, BeneficiaryCard, EventCard, NewsCard } from '@/components/public/Cards';
 import { GalleryGrid } from '@/components/public/GalleryGrid';
 import { DonorGallery, type PublicDonor } from '@/components/public/DonorGallery';
+import { DonorAccountBand } from '@/components/public/DonorAccountBand';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
@@ -527,6 +528,14 @@ export default async function HomePage() {
           </div>
         </Section>
       ) : null}
+
+      {/* ========================================
+          DONOR ACCOUNT
+          Sign in, create an account, FORGOT PASSWORD and confirm your
+          email - all reachable from the home page, not only by guessing
+          the address.
+          ======================================== */}
+      <DonorAccountBand />
 
       {/* ========================================
           12. CALLS TO ACTION (JOIN / DONATE / CONTACT)

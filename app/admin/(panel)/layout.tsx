@@ -145,7 +145,9 @@ export default async function AdminPanelLayout({ children }: { children: React.R
               </div>
             </aside>
 
-            <div className="min-w-0 lg:col-span-9">
+            {/* The id is where the menu scrolls to after a click - the content,
+                not the top of the document. */}
+            <div id="panel-content" className="min-w-0 scroll-mt-24 lg:col-span-9">
               {/* Quick menu (mobile only) */}
               <div className="mb-6">
                 <AdminMobileNav

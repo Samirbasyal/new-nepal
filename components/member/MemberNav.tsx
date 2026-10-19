@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { LogoutButton } from '@/components/layout/LogoutButton';
+import { PanelNavLink } from '@/components/ui/PanelNavLink';
 import { cn } from '@/lib/utils';
 
 // Every entry in the member menu. Add a page in app/member/(panel)/ and add
@@ -53,7 +54,14 @@ const MEMBER_LINKS: { label: string; href: string; icon: IconName }[] = [
   { label: 'Events', href: '/events', icon: 'calendar' },
 ];
 
-export function MemberNav({ memberName }: { memberName: string }) {
+export function MemberNav({
+  memberName,
+  pendingPayments = 0,
+}: {
+  memberName: string;
+  /** How many fund payments this member has waiting for approval. */
+  pendingPayments?: number;
+}) {
   const pathname = usePathname();
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -63,14 +71,23 @@ export function MemberNav({ memberName }: { memberName: string }) {
       {/* ========================================
           MOBILE: HORIZONTAL BUTTON ROW
           ======================================== */}
+      {/* MOBILE: the pending payment follows the member around the panel */}
+      {pendingPayments > 0 ? (
+        <div className="mb-3 flex items-center gap-2 rounded-card border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 lg:hidden">
+          <Icon name="clock" className="h-4 w-4 shrink-0" />
+          Pending Payment · waiting for approval
+        </div>
+      ) : null}
+
       <nav
         className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden"
         aria-label="Member panel menu"
       >
         {MEMBER_LINKS.map((item) => (
-          <Link
+          <PanelNavLink
             key={item.href}
             href={item.href}
+            active={isActive(item.href)}
             className={cn(
               'inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ring-1 ring-inset transition-colors',
               isActive(item.href)
@@ -80,7 +97,12 @@ export function MemberNav({ memberName }: { memberName: string }) {
           >
             <Icon name={item.icon} className="h-4 w-4" />
             {item.label}
-          </Link>
+            {item.href === '/member/fund/pay' && pendingPayments > 0 ? (
+              <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                {pendingPayments}
+              </span>
+            ) : null}
+          </PanelNavLink>
         ))}
       </nav>
 
@@ -102,14 +124,34 @@ export function MemberNav({ memberName }: { memberName: string }) {
             </div>
           </div>
 
+          {/* ========================================
+              PENDING PAYMENT
+              Shown until an administrator approves or rejects the payment. The
+              number comes from the database on every page load, so it survives a
+              refresh and a new login.
+              ======================================== */}
+          {pendingPayments > 0 ? (
+            <div className="card border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-center gap-2 text-sm font-bold text-amber-800">
+                <Icon name="clock" className="h-4 w-4" />
+                Pending Payment
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-amber-700">
+                {pendingPayments === 1
+                  ? 'One payment is waiting for the office to verify it.'
+                  : `${pendingPayments} payments are waiting for the office to verify them.`}
+              </p>
+            </div>
+          ) : null}
+
           {/* Menu */}
           <nav className="card p-2" aria-label="Member panel menu">
             <ul className="space-y-0.5">
               {MEMBER_LINKS.map((item) => (
                 <li key={item.href}>
-                  <Link
+                  <PanelNavLink
                     href={item.href}
-                    aria-current={isActive(item.href) ? 'page' : undefined}
+                    active={isActive(item.href)}
                     className={cn(
                       'flex items-center gap-3 rounded-btn px-3 py-2.5 text-sm font-medium transition-colors',
                       isActive(item.href)
@@ -119,7 +161,12 @@ export function MemberNav({ memberName }: { memberName: string }) {
                   >
                     <Icon name={item.icon} className="h-4 w-4" />
                     {item.label}
-                  </Link>
+                    {item.href === '/member/fund/pay' && pendingPayments > 0 ? (
+                      <span className="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                        {pendingPayments}
+                      </span>
+                    ) : null}
+                  </PanelNavLink>
                 </li>
               ))}
             </ul>

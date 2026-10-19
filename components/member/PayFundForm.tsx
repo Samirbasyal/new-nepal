@@ -25,10 +25,12 @@ import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
 import { Alert } from '@/components/ui/Alert';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { TextField, TextareaField, SelectField } from '@/components/forms/Field';
 import { useFormSubmit } from '@/hooks/useFormSubmit';
 import { paymentAccountTypeLabel } from '@/lib/constants';
+import { checkImageFile } from '@/lib/upload-limits';
 import { cn } from '@/lib/utils';
 
 export type BankOption = {
@@ -99,6 +101,14 @@ export function PayFundForm({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // ---------- 4 MB rule, checked before the upload starts ----------
+    const check = checkImageFile(file);
+    if (!check.ok) {
+      setUploadError(check.error);
+      event.target.value = '';
+      return;
+    }
+
     setUploadError(null);
     setUploading(true);
 
@@ -158,14 +168,71 @@ export function PayFundForm({
     );
   }
 
+  // ========================================
+  // SUCCESS SCREEN
+  // ========================================
+  // Once the payment is saved, the form is gone and nothing else is shown on this
+  // screen. A member who has just sent money should read one clear message, not
+  // scroll past a form that looks as if it is still waiting to be filled in.
+  //
+  // The payment is NOT approved here. It is PENDING until an administrator checks
+  // the receipt in Admin Panel -> Payment verification. The 24 hours is the review
+  // period the office promises, not an automatic approval.
+  if (success) {
+    return (
+      <div className="mx-auto max-w-xl">
+        <div className="card p-8 text-center">
+          <span className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-600 ring-1 ring-green-200">
+            <Icon name="check-circle" className="h-8 w-8" />
+          </span>
+
+          <h2 className="mt-5 font-display text-2xl font-bold text-ink-900">
+            Successfully submitted your request!
+          </h2>
+
+          <p className="mt-2 font-display text-lg font-bold text-accent-600">
+            Please wait for approval within 24 hours.
+          </p>
+
+          <p className="mt-4 text-sm leading-relaxed text-ink-600">
+            Your payment details and receipt are saved. It is <strong>waiting for the office to
+            verify it</strong> and is <strong>not approved yet</strong>. Nothing is counted as
+            received until an administrator has checked it.
+          </p>
+
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 ring-1 ring-amber-200">
+            <Icon name="clock" className="h-4 w-4" />
+            Pending Payment
+          </div>
+
+          <p className="mt-4 text-xs text-ink-500">
+            You will receive a notification here as soon as the office approves or rejects it.
+          </p>
+
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/member/fund/history"
+              className="inline-flex items-center gap-2 rounded-btn bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+            >
+              <Icon name="list" className="h-4 w-4" />
+              See my payment history
+            </Link>
+
+            <Link
+              href="/member/dashboard"
+              className="inline-flex items-center gap-2 rounded-btn border border-ink-300 px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-ink-100"
+            >
+              <Icon name="grid" className="h-4 w-4" />
+              Back to dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {success ? (
-        <Alert tone="success" title="Payment submitted">
-          {success} The office will verify it and you will receive a notification.
-        </Alert>
-      ) : null}
-
       {error ? <Alert tone="error" title="Could not submit the payment">{error}</Alert> : null}
 
       {/* ========================================
@@ -343,7 +410,16 @@ export function PayFundForm({
       </fieldset>
 
       <Button type="submit" disabled={busy || uploading} className="w-full sm:w-auto">
-        {busy ? 'Submitting…' : 'Submit payment for verification'}
+        {busy ? (
+          // The indicator sits on the button that was clicked, in the orange
+          // accent colour, and stays until the server has answered.
+          <span className="inline-flex items-center gap-2 text-accent-100" role="status">
+            <Icon name="refresh" className="h-4 w-4 animate-spin" />
+            Please wait…
+          </span>
+        ) : (
+          'Submit payment for verification'
+        )}
       </Button>
     </form>
   );

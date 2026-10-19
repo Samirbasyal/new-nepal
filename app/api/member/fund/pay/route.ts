@@ -111,6 +111,28 @@ export async function POST(request: Request) {
     // what a monthly contribution normally means.
     const periodMonth = data.periodMonth ? monthStart(data.periodMonth) : monthStart(new Date());
 
+    // ---------- 6b. No accidental second submission for the same month ----------
+    // A member who clicks twice, or comes back the next day unsure whether it
+    // worked, must not create a second request for the same period. The check is
+    // on the server, so it holds even if the page is refreshed or reopened.
+    //
+    // Partial payments are deliberately still possible when the office allows
+    // them (the setting in the Admin Panel), but the SAME amount twice is always
+    // treated as a duplicate - that is a double click, not two payments.
+    const pendingThisMonth = await prisma.fundPayment.findFirst({
+      where: { memberId, periodMonth, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, amount: true },
+    });
+
+    if (pendingThisMonth && (!allowPartial || pendingThisMonth.amount === data.amount)) {
+      return fail(
+        'You already have a payment for this month waiting for approval. Please wait for the office to verify it before submitting another one.',
+        409,
+        { periodMonth: 'A payment for this month is already waiting for approval.' },
+      );
+    }
+
     // Make sure their monthly row exists before the payment points at it.
     await ensureContribution(memberId, periodMonth, monthlyAmount);
 

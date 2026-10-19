@@ -370,7 +370,12 @@ export async function storeImage(
   }
 
   if (file.size > MAX_UPLOAD_BYTES) {
-    throw new UploadValidationError('That picture is larger than 4 MB. Please use a smaller one.');
+    // The same sentence the browser shows (lib/upload-limits.ts), so a person who
+    // gets past the browser check reads the same explanation here.
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    throw new UploadValidationError(
+      `Image size exceeds 4 MB. Please upload an image under 4 MB. Your file is ${sizeMb} MB.`,
+    );
   }
 
   if (file.size === 0) {

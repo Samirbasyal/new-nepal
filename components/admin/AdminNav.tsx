@@ -1,4 +1,4 @@
-// ========================================
+﻿// ========================================
 // ADMIN PANEL - SIDEBAR MENU
 // ========================================
 // The list of sections in the Admin Panel.
@@ -28,6 +28,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { PanelNavLink } from '@/components/ui/PanelNavLink';
 import { cn } from '@/lib/utils';
 
 type NavGroup = {
@@ -84,7 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
     links: [
       { label: 'Members', href: '/admin/members', icon: 'users' },
       // ========================================
-      // KARYA SAMITI (कार्य समिति)
+      // KARYA SAMITI (à¤•à¤¾à¤°à¥à¤¯ à¤¸à¤®à¤¿à¤¤à¤¿)
       // ========================================
       { label: 'Karya Samiti', href: '/admin/karya-samiti', icon: 'users' },
       { label: 'Committee posts', href: '/admin/karya-samiti/posts', icon: 'file-text' },
@@ -227,23 +228,22 @@ export function AdminNav({
 
               return (
                 <li key={link.href}>
-                  <Link
+                  <PanelNavLink
                     href={link.href}
-                    aria-current={active ? 'page' : undefined}
-                    // A screen reader hears the number too, because the badge is
-                    // only a coloured circle otherwise.
-                    aria-label={
-                      badge > 0 ? `${link.label}, ${badge} waiting` : undefined
-                    }
+                    active={active}
                     className={cn(
                       'flex items-center gap-3 rounded-btn px-3 py-2 text-sm font-medium transition-colors',
                       active ? 'bg-brand-600 text-white' : 'text-ink-700 hover:bg-ink-100',
                     )}
                   >
                     <Icon name={link.icon} className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{link.label}</span>
+                    {/* The number is read out too, because the badge is only a
+                        coloured circle otherwise. */}
+                    <span className="truncate" aria-label={badge > 0 ? `${link.label}, ${badge} waiting` : undefined}>
+                      {link.label}
+                    </span>
                     <CountBadge count={badge} active={active} />
-                  </Link>
+                  </PanelNavLink>
                 </li>
               );
             })}
@@ -299,9 +299,10 @@ export function AdminMobileNav({
         const badge = link.href === VERIFY_HREF ? pendingCount : 0;
 
         return (
-          <Link
+          <PanelNavLink
             key={link.href}
             href={link.href}
+            active={active}
             className={cn(
               'inline-flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold ring-1 ring-inset transition-colors',
               active
@@ -321,9 +322,10 @@ export function AdminMobileNav({
                 {badge > 99 ? '99+' : badge}
               </span>
             ) : null}
-          </Link>
+          </PanelNavLink>
         );
       })}
     </nav>
   );
 }
+

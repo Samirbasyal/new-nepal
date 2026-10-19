@@ -42,6 +42,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { TextField, TextareaField } from '@/components/forms/Field';
 import { useFormSubmit } from '@/hooks/useFormSubmit';
+import { checkImageFile } from '@/lib/upload-limits';
 
 export type ProfileFormValues = {
   name: string;
@@ -75,6 +76,13 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues }) {
     event.target.value = '';
 
     if (!file) return;
+
+    // ---------- 4 MB rule, checked before the upload starts ----------
+    const check = checkImageFile(file);
+    if (!check.ok) {
+      setUploadError(check.error);
+      return;
+    }
 
     setUploadError(null);
     setUploadedUrl(null);

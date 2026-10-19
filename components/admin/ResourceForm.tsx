@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/Button';
 import { CheckboxField, SelectField, TextField, TextareaField } from '@/components/forms/Field';
 import { Icon } from '@/components/ui/Icon';
 import type { AdminRow, FieldConfig } from '@/components/admin/types';
+import { checkImageFile } from '@/lib/upload-limits';
 import { cn, toDateInputValue, toDateTimeInputValue } from '@/lib/utils';
 
 // ========================================
@@ -528,6 +529,16 @@ function ImageUploader({ onUploaded }: { onUploaded: (url: string) => void }) {
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // ---------- 4 MB rule, checked BEFORE the upload starts ----------
+    // The server checks this again (lib/storage.ts). This only saves the person
+    // from waiting for a large file to travel and then be refused.
+    const check = checkImageFile(file);
+    if (!check.ok) {
+      setMessage(check.error);
+      event.target.value = '';
+      return;
+    }
 
     setBusy(true);
     setMessage(null);

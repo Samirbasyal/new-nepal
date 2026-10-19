@@ -42,6 +42,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { PUBLIC_PAYMENT_METHODS } from '@/lib/donation/publicSchemas';
+import { checkImageFile } from '@/lib/upload-limits';
 import { cn, formatMoney } from '@/lib/utils';
 
 type Bank = {
@@ -156,6 +157,16 @@ export function PaymentStep({
     if (receiptPreview) URL.revokeObjectURL(receiptPreview);
 
     if (!file) {
+      setReceipt(null);
+      setReceiptPreview(null);
+      return;
+    }
+
+    // ---------- 4 MB rule, checked before a single byte is sent ----------
+    const check = checkImageFile(file);
+    if (!check.ok) {
+      setErrors((current) => ({ ...current, receipt: check.error }));
+      event.target.value = '';
       setReceipt(null);
       setReceiptPreview(null);
       return;

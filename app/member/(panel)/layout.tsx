@@ -18,6 +18,7 @@
 
 import Link from 'next/link';
 import { requireMember } from '@/lib/auth/guards';
+import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { MemberNav } from '@/components/member/MemberNav';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { LogoMark } from '@/components/layout/Logo';
@@ -31,6 +32,15 @@ export default async function MemberPanelLayout({ children }: { children: React.
   // ---------- SERVER-SIDE AUTHORIZATION ----------
   // Not signed in? -> redirected to /member/login
   const user = await requireMember();
+
+  // ---------- Is a payment waiting for approval? ----------
+  // Read from the database on EVERY page of the panel, so the badge cannot be
+  // lost by refreshing, by opening another page, or by signing in again.
+  const pendingPayments = isDatabaseConfigured()
+    ? await prisma.fundPayment
+        .count({ where: { memberId: user.id, status: 'PENDING' } })
+        .catch(() => 0)
+    : 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-ink-50">
@@ -71,11 +81,14 @@ export default async function MemberPanelLayout({ children }: { children: React.
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* Menu (sidebar on desktop, button row on mobile) */}
             <div className="lg:col-span-3">
-              <MemberNav memberName={user.name} />
+              <MemberNav memberName={user.name} pendingPayments={pendingPayments} />
             </div>
 
-            {/* Page content */}
-            <div className="min-w-0 lg:col-span-9">{children}</div>
+            {/* Page content. The id is the place the menu scrolls to after a
+                click - not the top of the document. */}
+            <div id="panel-content" className="min-w-0 scroll-mt-24 lg:col-span-9">
+              {children}
+            </div>
           </div>
         </Container>
       </div>
