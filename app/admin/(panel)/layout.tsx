@@ -133,7 +133,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
         <Container className="py-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* Sidebar (desktop only) */}
-            <aside className="hidden lg:col-span-3 lg:block">
+            <aside className="hidden self-start lg:sticky lg:top-20 lg:col-span-3 lg:block">
               <div className="sticky top-24">
                 {/* The Super Admin only sections (Loan management) are left out
                     of the menu for everybody else. The pages themselves check

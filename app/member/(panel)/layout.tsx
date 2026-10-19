@@ -80,7 +80,7 @@ export default async function MemberPanelLayout({ children }: { children: React.
         <Container className="py-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             {/* Menu (sidebar on desktop, button row on mobile) */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 lg:sticky lg:top-20 self-start">
               <MemberNav memberName={user.name} pendingPayments={pendingPayments} />
             </div>
 

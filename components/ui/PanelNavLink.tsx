@@ -47,15 +47,19 @@ export function PanelNavLink({
   useEffect(() => {
     if (!pending) return;
 
-    setPending(false);
+    // The new section has arrived. Put its FIRST LINE just below the top of the
+    // screen, so the person can start working immediately instead of scrolling
+    // back up to find it. The menu stays visible on the left because the sidebar
+    // is sticky (see the panel layouts), so the item that was clicked does not
+    // disappear while this happens.
+    const content = document.getElementById('panel-content');
+    if (content) content.scrollIntoView({ block: 'start', behavior: 'smooth' });
 
-    // NOTHING is scrolled here on purpose.
-    //
-    // The person clicked a menu item that was already on screen. Moving the page
-    // afterwards is what made the menu disappear and forced them to scroll again
-    // to find the same item. With scroll={false} above, the browser keeps the
-    // exact position, so the clicked item stays where the finger left it and the
-    // new section opens in the content area beside/below it.
+    // Keep "Please wait..." for a moment after the route commits. The route
+    // changes before the browser has painted the new page; clearing instantly
+    // made the indicator vanish while the screen was still blank.
+    const timer = window.setTimeout(() => setPending(false), 500);
+    return () => window.clearTimeout(timer);
   }, [pathname, pending]);
 
   // ---------- never leave the indicator spinning for ever ----------
