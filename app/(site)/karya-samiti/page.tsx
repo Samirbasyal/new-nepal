@@ -28,6 +28,7 @@ import { Icon } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHero, Section, SectionHeading, CardGrid } from '@/components/ui/Section';
 import { CommitteeMemberCard } from '@/components/public/CommitteeMemberCard';
+import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { getFormerCommittee, getPublicCommittee } from '@/lib/karya/queries';
 import { getSettings, setting } from '@/lib/settings';
 import { organization } from '@/config/site';
@@ -47,6 +48,21 @@ export default async function KaryaSamitiPage() {
   // The office can switch former members on in Settings -> Karya Samiti.
   const showFormer = setting(settings, 'karya.showFormer', 'false').toLowerCase() === 'true';
 
+  // ---------- permanent duties, grouped by post ----------
+  const roleDuties = isDatabaseConfigured()
+    ? await prisma.committeeRoleDuty.findMany({
+        where: { isActive: true },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        select: { postTitle: true, description: true },
+      })
+    : [];
+
+  const dutiesByPost = new Map<string, string[]>();
+  for (const duty of roleDuties) {
+    const list = dutiesByPost.get(duty.postTitle) ?? [];
+    list.push(duty.description);
+    dutiesByPost.set(duty.postTitle, list);
+  }
   const [members, former] = await Promise.all([
     getPublicCommittee(false),
     showFormer ? getFormerCommittee() : Promise.resolve([]),
@@ -84,9 +100,29 @@ export default async function KaryaSamitiPage() {
 
         {members.length > 0 ? (
           <CardGrid columns={4}>
-            {members.map((member) => (
-              <CommitteeMemberCard key={member.id} member={member} />
-            ))}
+            {members.map((member) => {
+              const duties = dutiesByPost.get(member.postTitle) ?? [];
+              return (
+                <div key={member.id} className="space-y-3">
+                  <CommitteeMemberCard member={member} />
+                  {duties.length > 0 ? (
+                    <div className="rounded-card border border-ink-200 bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+                        जिम्मेवारी
+                      </p>
+                      <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-ink-700">
+                        {duties.map((duty, index) => (
+                          <li key={index} className="flex gap-2">
+                            <span className="text-brand-600">•</span>
+                            <span>{duty}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </CardGrid>
         ) : (
           <EmptyState
