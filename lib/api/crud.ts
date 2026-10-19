@@ -538,7 +538,14 @@ function handleWriteError(error: unknown, config: ResourceConfig): CrudOutcome<n
     return { ok: false, status: 400, error: 'The selected related item does not exist.' };
   }
 
-  return { ok: false, status: 500, error: 'Could not save your changes. Please try again.' };
+  // TEMPORARY DIAGNOSTIC: the administrator needs the real sentence, not a
+  // polite one, to know what to fix. It is only ever shown inside the Admin
+  // Panel to a signed-in administrator.
+  return {
+    ok: false,
+    status: 500,
+    error: 'Could not save your changes. Details: ' + message.slice(0, 300),
+  };
 }
 
 // ========================================
