@@ -157,7 +157,7 @@ export function MemberNav({
                     className={cn(
                       'flex items-center gap-2 rounded-btn px-2.5 py-1.5 text-[13px] font-medium leading-tight transition-colors',
                       isActive(item.href)
-                        ? 'bg-brand-50 text-brand-700'
+                        ? 'bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-200'
                         : 'text-ink-700 hover:bg-ink-100',
                     )}
                   >
