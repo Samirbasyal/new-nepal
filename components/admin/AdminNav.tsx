@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // ADMIN PANEL - SIDEBAR MENU
 // ========================================
 // The list of sections in the Admin Panel.
@@ -27,6 +27,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { PanelNavLink } from '@/components/ui/PanelNavLink';
 import { cn } from '@/lib/utils';
@@ -216,6 +217,20 @@ export function AdminNav({
 
   // A group marked superAdminOnly is left out for ordinary administrators.
   const groups = NAV_GROUPS.filter((group) => !group.superAdminOnly || isSuperAdmin);
+
+  // ---------- collapsible groups ----------
+  // Only the headings are shown at first. The group that contains the page you
+  // are on opens by itself, so your current place is never hidden.
+  const activeGroup = groups.find((group) => group.links.some((link) => isActive(link.href)))?.title;
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!activeGroup) return;
+    setOpenGroups((current) => (current[activeGroup] ? current : { ...current, [activeGroup]: true }));
+  }, [activeGroup]);
+
+  const toggleGroup = (title: string) =>
+    setOpenGroups((current) => ({ ...current, [title]: !current[title] }));
 
   return (
     <nav aria-label="Admin panel menu" className="space-y-4">
