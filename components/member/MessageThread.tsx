@@ -56,7 +56,15 @@ export function MessageThread() {
         return;
       }
 
-      setMessages(payload.data.messages ?? []);
+      // Only replace the list when something actually changed, so a background
+      // refresh does not make the conversation jump while it is being read.
+      const next = (payload.data.messages ?? []) as Message[];
+      setMessages((current) => {
+        if (!current) return next;
+        const sameLength = current.length === next.length;
+        const sameLast = current[current.length - 1]?.id === next[next.length - 1]?.id;
+        return sameLength && sameLast ? current : next;
+      });
     } catch {
       setProblem('The website could not be reached. Please check your connection and try again.');
       setMessages([]);
@@ -65,6 +73,18 @@ export function MessageThread() {
 
   useEffect(() => {
     void load();
+  }, [load]);
+
+  // ---------- keep the conversation live ----------
+  // A reply from the office appears within a few seconds, without a refresh.
+  // The page only asks while it is visible, so a phone in a pocket is not
+  // polling the server all day.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load();
+    }, 5000);
+
+    return () => window.clearInterval(timer);
   }, [load]);
 
   // Keep the newest message in view.

@@ -88,6 +88,7 @@ const NAV_GROUPS: NavGroup[] = [
       // KARYA SAMITI (à¤•à¤¾à¤°à¥à¤¯ à¤¸à¤®à¤¿à¤¤à¤¿)
       // ========================================
       { label: 'Karya Samiti', href: '/admin/karya-samiti', icon: 'users' },
+      { label: 'Committee responsibilities', href: '/admin/karya-samiti/duties', icon: 'shield-check' },
       { label: 'Committee posts', href: '/admin/karya-samiti/posts', icon: 'file-text' },
       { label: 'Member tasks', href: '/admin/tasks', icon: 'check-circle' },
     ],
@@ -168,6 +169,7 @@ const NAV_GROUPS: NavGroup[] = [
       // Donation records: gifts from outside the membership. They live away from
       // the fund menu on purpose, because donation money is not member fund.
       { label: 'Donation records', href: '/admin/donations', icon: 'heart' },
+      { label: 'My notes', href: '/admin/notes', icon: 'file-text' },
       { label: 'Website settings', href: '/admin/settings', icon: 'settings' },
       { label: 'Activity log', href: '/admin/activity', icon: 'activity' },
     ],

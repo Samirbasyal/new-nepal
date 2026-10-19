@@ -25,6 +25,7 @@ const MEMBER_LINKS: { label: string; href: string; icon: IconName }[] = [
   { label: 'Dashboard', href: '/member/dashboard', icon: 'grid' },
   { label: 'My profile', href: '/member/profile', icon: 'user' },
   { label: 'My tasks', href: '/member/tasks', icon: 'check-circle' },
+  { label: 'My responsibilities', href: '/member/duties', icon: 'shield-check' },
 
   // ========================================
   // MONTHLY FUND (Donation & Fund System)
@@ -48,6 +49,7 @@ const MEMBER_LINKS: { label: string; href: string; icon: IconName }[] = [
   // Messages: the member's own conversation with the office.
   { label: 'Notifications', href: '/member/notifications', icon: 'bell' },
   { label: 'Messages', href: '/member/messages', icon: 'mail' },
+  { label: 'My notes', href: '/member/notes', icon: 'file-text' },
 
   { label: 'Notices', href: '/news?type=NOTICE', icon: 'bell' },
   { label: 'Programs', href: '/programs', icon: 'layers' },

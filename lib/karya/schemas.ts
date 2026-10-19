@@ -151,3 +151,27 @@ export const DEFAULT_KARYA_POSTS = [
   { name: 'कोषाध्यक्ष', nameEn: 'Treasurer', sortOrder: 5 },
   { name: 'सदस्य', nameEn: 'Member', sortOrder: 6 },
 ];
+
+// ========================================
+// COMMITTEE DUTIES (role & responsibilities)
+// ========================================
+// One duty belongs to one committee member. The administrator writes the words,
+// so nothing here is tied to a particular post - the Treasurer this year may
+// have completely different duties next year.
+export const committeeDutySchema = z.object({
+  memberId: requiredText('Committee member', 1, 60),
+  title: requiredText('Responsibility', 3, 200),
+  description: optionalText(4000),
+  instructions: optionalText(4000),
+  deadline: dateField(),
+  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED']).default('PENDING'),
+});
+
+export type CommitteeDutyInput = z.infer<typeof committeeDutySchema>;
+
+/** The three states a duty can be in, used by the list and the member panel. */
+export const DUTY_STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'IN_PROGRESS', label: 'In progress' },
+  { value: 'COMPLETED', label: 'Completed' },
+] as const;

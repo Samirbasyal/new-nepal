@@ -1,4 +1,4 @@
-// ========================================
+﻿// ========================================
 // ADMIN PANEL - SECTION REGISTRY
 // ========================================
 // This file is the "map" of the Admin Panel.
@@ -52,8 +52,8 @@ import { removePayment, removeExpense } from '@/lib/fund/service';
 import { sendVerificationEmail } from '@/lib/auth/verification';
 import type { MailResult } from '@/lib/email/mailer';
 import { notifyAdmins } from '@/lib/notifications';
-// KARYA SAMITI (कार्य समिति) validation rules (see lib/karya/schemas.ts)
-import { karyaMemberSchema, karyaMemberUpdateSchema, karyaPostSchema } from '@/lib/karya/schemas';
+// KARYA SAMITI (à¤•à¤¾à¤°à¥à¤¯ à¤¸à¤®à¤¿à¤¤à¤¿) validation rules (see lib/karya/schemas.ts)
+import { committeeDutySchema, karyaMemberSchema, karyaMemberUpdateSchema, karyaPostSchema } from '@/lib/karya/schemas';
 // LOAN MANAGEMENT: the rules (lib/loan/schemas.ts), the arithmetic
 // (lib/loan/calc.ts) and the actions (lib/loan/service.ts).
 import { loanSchema, loanUpdateSchema } from '@/lib/loan/schemas';
@@ -661,6 +661,27 @@ export const RESOURCES: Record<string, ResourceConfig> = {
   },
 
   // ========================================
+  // COMMITTEE RESPONSIBILITIES (KARYA SAMITI)
+  // ========================================
+  // An administrator gives a duty to one committee member. It appears in that
+  // person's panel under "Your Role & Responsibilities".
+  //
+  // The duties are deliberately NOT tied to a post: the office writes them, so
+  // the Treasurer's duties can change every year without touching code.
+  duties: {
+    key: 'duties',
+    label: 'Committee responsibilities',
+    entity: 'Committee duty',
+    delegate: prismaModel('committeeDuty'),
+    createSchema: committeeDutySchema,
+    updateSchema: committeeDutySchema.partial(),
+    searchFields: ['title', 'description', 'instructions'],
+    statusField: 'status',
+    orderBy: [{ deadline: 'asc' }, { createdAt: 'desc' }],
+    include: { member: { select: { id: true, fullName: true, postTitle: true } } },
+  },
+
+  // ========================================
   // JOIN COMMUNITY APPLICATIONS
   // These come from the public form, so they can only be reviewed and deleted
   // here - not created by hand.
@@ -894,7 +915,7 @@ export const RESOURCES: Record<string, ResourceConfig> = {
 
   // ========================================
   // ========================================
-  // KARYA SAMITI (कार्य समिति) - COMMITTEE MEMBERS
+  // KARYA SAMITI (à¤•à¤¾à¤°à¥à¤¯ à¤¸à¤®à¤¿à¤¤à¤¿) - COMMITTEE MEMBERS
   // ========================================
   // Managed from  Admin Panel -> Karya Samiti.
   //
@@ -947,7 +968,7 @@ export const RESOURCES: Record<string, ResourceConfig> = {
   // ========================================
   // KARYA SAMITI - POSTS / POSITIONS
   // ========================================
-  // अध्यक्ष, उपाध्यक्ष, सचिव... The organization may add any position it needs.
+  // à¤…à¤§à¥à¤¯à¤•à¥à¤·, à¤‰à¤ªà¤¾à¤§à¥à¤¯à¤•à¥à¤·, à¤¸à¤šà¤¿à¤µ... The organization may add any position it needs.
   // A position that is already used by somebody is not deleted - it is switched
   // off, so old records keep a readable post name.
   // ========================================
@@ -1189,3 +1210,4 @@ export const RESOURCE_KEYS = Object.keys(RESOURCES);
 export const SEARCH_NOTE = isSqlite()
   ? 'Local SQLite database detected: search is case-sensitive.'
   : '';
+

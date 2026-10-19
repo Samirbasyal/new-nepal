@@ -55,6 +55,7 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 // ========================================
 // PRISMA CLIENT
 // This generates the code we use to talk to the database
@@ -73,13 +74,13 @@ generator client {
 //   MEMBER -> can only open the Member Panel
 // ========================================
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String    @id @default(cuid())
+  email        String    @unique
   passwordHash String // bcrypt hash - never the real password
   name         String
   phone        String?
-  role         String   @default("MEMBER") // "ADMIN" or "MEMBER"
-  isActive     Boolean  @default(true)
+  role         String    @default("MEMBER") // "ADMIN" or "MEMBER"
+  isActive     Boolean   @default(true)
   lastLoginAt  DateTime?
 
   // ---------- EMAIL VERIFICATION (member accounts) ----------
@@ -102,8 +103,8 @@ model User {
   invitedBy      User?   @relation("MemberInvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
   invitedMembers User[]  @relation("MemberInvitedBy")
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // A user can have one member profile (only for role = MEMBER).
   profile MemberProfile?
@@ -117,17 +118,17 @@ model User {
 
   // ---------- FUND MANAGEMENT RELATIONS ----------
   // Payments this member has submitted (Member Panel -> Monthly fund).
-  fundPayments       FundPayment[]         @relation("MemberPayments")
+  fundPayments         FundPayment[]         @relation("MemberPayments")
   // Payments this administrator verified (approved or rejected).
-  reviewedPayments   FundPayment[]         @relation("PaymentReviewer")
+  reviewedPayments     FundPayment[]         @relation("PaymentReviewer")
   // Month-by-month contribution record for this member.
   monthlyContributions MonthlyContribution[]
   // Expenses this administrator recorded.
-  expensesAdded      Expense[]             @relation("ExpenseAddedBy")
+  expensesAdded        Expense[]             @relation("ExpenseAddedBy")
   // Expenses this administrator approved or rejected.
-  expensesReviewed   Expense[]             @relation("ExpenseReviewedBy")
+  expensesReviewed     Expense[]             @relation("ExpenseReviewedBy")
   // Personal notifications (Member Panel + Admin Panel bell).
-  notifications      Notification[]
+  notifications        Notification[]
 
   // ---------- EMAIL VERIFICATION / PASSWORD RESET TOKENS ----------
   verificationTokens VerificationToken[]
@@ -138,11 +139,11 @@ model User {
 
   // ---------- LOAN MANAGEMENT ----------
   // Loans this member received.
-  borrowedLoans      Loan[]       @relation("LoanBorrower")
+  borrowedLoans       Loan[]       @relation("LoanBorrower")
   // Loans this administrator approved.
-  approvedLoans      Loan[]       @relation("LoanApprovedBy")
+  approvedLoans       Loan[]       @relation("LoanApprovedBy")
   // Loans this administrator created.
-  createdLoans       Loan[]       @relation("LoanCreatedBy")
+  createdLoans        Loan[]       @relation("LoanCreatedBy")
   // Loan returns this administrator recorded.
   recordedLoanReturns LoanReturn[] @relation("LoanReturnRecordedBy")
 
@@ -150,8 +151,13 @@ model User {
   districtActivities DistrictActivity[]
 
   // ---------- MEMBER <-> ADMIN MESSAGING ----------
-  sentMessages      Message[] @relation("MessageSender")
-  receivedMessages  Message[] @relation("MessageRecipient")
+  sentMessages     Message[] @relation("MessageSender")
+  receivedMessages Message[] @relation("MessageRecipient")
+
+  // ---------- PRIVATE NOTES PAD ----------
+  // Every note belongs to one person and every query is filtered by ownerId,
+  // which is taken from the session - never from the form.
+  personalNotes PersonalNote[]
 
   @@index([role])
   @@map("users")
@@ -235,28 +241,28 @@ model ContentSection {
 // This table controls Programs (/programs and the homepage preview).
 // ========================================
 model Program {
-  id              String    @id @default(cuid())
-  slug            String    @unique
-  title           String
-  category        String? // e.g. Education, Health, Women Empowerment
-  summary         String? // one or two lines shown on the card
-  description     String    @default("") // full details on the program page
-  objectives      String? // one objective per line
-  results         String? // results / impact achieved so far
-  targetGroup     String? // who the program is for
-  location        String?
-  startDate       DateTime?
-  endDate         DateTime?
-  status          String    @default("PLANNED") // PLANNED / ONGOING / COMPLETED / PAUSED
-  imageUrl        String?
-  isPublished     Boolean   @default(false)
-  featured        Boolean   @default(false) // show on the homepage
-  sortOrder       Int       @default(0)
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  category    String? // e.g. Education, Health, Women Empowerment
+  summary     String? // one or two lines shown on the card
+  description String    @default("") // full details on the program page
+  objectives  String? // one objective per line
+  results     String? // results / impact achieved so far
+  targetGroup String? // who the program is for
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  status      String    @default("PLANNED") // PLANNED / ONGOING / COMPLETED / PAUSED
+  imageUrl    String?
+  isPublished Boolean   @default(false)
+  featured    Boolean   @default(false) // show on the homepage
+  sortOrder   Int       @default(0)
   // Optional link to a project this program belongs to.
-  projectId       String?
-  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([isPublished, status])
   @@index([projectId])
@@ -271,30 +277,30 @@ model Program {
 //   kind = "WORK"    -> /our-works
 // ========================================
 model Project {
-  id             String    @id @default(cuid())
-  slug           String    @unique
-  title          String
-  kind           String    @default("PROJECT") // PROJECT or WORK
-  category       String?
-  summary        String?
-  description    String    @default("")
-  objectives     String? // one objective per line
-  activities     String? // one activity per line
-  results        String? // results achieved
-  impact         String? // impact / difference created
-  beneficiaries  String? // description of who benefited (no invented numbers)
-  location       String?
-  startDate      DateTime?
-  endDate        DateTime?
-  status         String    @default("PLANNED") // PLANNED / ONGOING / COMPLETED / PAUSED
-  imageUrl       String?
-  isPublished    Boolean   @default(false)
-  featured       Boolean   @default(false) // show on the homepage
-  sortOrder      Int       @default(0)
-  programs       Program[]
-  galleryImages  GalleryImage[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id            String         @id @default(cuid())
+  slug          String         @unique
+  title         String
+  kind          String         @default("PROJECT") // PROJECT or WORK
+  category      String?
+  summary       String?
+  description   String         @default("")
+  objectives    String? // one objective per line
+  activities    String? // one activity per line
+  results       String? // results achieved
+  impact        String? // impact / difference created
+  beneficiaries String? // description of who benefited (no invented numbers)
+  location      String?
+  startDate     DateTime?
+  endDate       DateTime?
+  status        String         @default("PLANNED") // PLANNED / ONGOING / COMPLETED / PAUSED
+  imageUrl      String?
+  isPublished   Boolean        @default(false)
+  featured      Boolean        @default(false) // show on the homepage
+  sortOrder     Int            @default(0)
+  programs      Program[]
+  galleryImages GalleryImage[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([kind, isPublished])
   @@map("projects")
@@ -305,22 +311,22 @@ model Project {
 // This table controls Events (/events and the homepage "Upcoming events").
 // ========================================
 model Event {
-  id               String    @id @default(cuid())
-  slug             String    @unique
+  id               String         @id @default(cuid())
+  slug             String         @unique
   title            String
   summary          String?
-  description      String    @default("")
+  description      String         @default("")
   startsAt         DateTime // date and time the event begins
   endsAt           DateTime?
   location         String?
   imageUrl         String?
   // Free text: how someone can register (phone number, form link...).
   registrationInfo String?
-  status           String    @default("UPCOMING") // UPCOMING / ONGOING / COMPLETED / CANCELLED
-  isPublished      Boolean   @default(false)
-  featured         Boolean   @default(false)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  status           String         @default("UPCOMING") // UPCOMING / ONGOING / COMPLETED / CANCELLED
+  isPublished      Boolean        @default(false)
+  featured         Boolean        @default(false)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
   galleryImages    GalleryImage[]
 
   @@index([isPublished, startsAt])
@@ -357,18 +363,18 @@ model NewsPost {
 // A photo can be linked to a program, project or event.
 // ========================================
 model GalleryAlbum {
-  id           String         @id @default(cuid())
-  slug         String         @unique
-  title        String
-  description  String?
+  id            String         @id @default(cuid())
+  slug          String         @unique
+  title         String
+  description   String?
   coverImageUrl String?
-  category     String?
-  eventDate    DateTime?
-  isPublished  Boolean        @default(true)
-  sortOrder    Int            @default(0)
-  images       GalleryImage[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  category      String?
+  eventDate     DateTime?
+  isPublished   Boolean        @default(true)
+  sortOrder     Int            @default(0)
+  images        GalleryImage[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@map("gallery_albums")
 }
@@ -399,11 +405,11 @@ model GalleryImage {
   //
   // Existing rows are untouched - the column simply appears with GALLERY, so
   // nothing disappears from the wall after the update.
-  placement   String        @default("GALLERY")
+  placement String @default("GALLERY")
 
-  sortOrder   Int           @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([albumId])
   @@index([isPublished])
@@ -417,13 +423,13 @@ model GalleryImage {
 // through the "isPublic" switch. Payment details are never stored here.
 // ========================================
 model Donor {
-  id          String   @id @default(cuid())
-  name        String // person or contact name
+  id           String  @id @default(cuid())
+  name         String // person or contact name
   organization String? // organization name (if it is an organization)
 
   // The donor's photo. The column keeps its old name (logoUrl) so that every
   // picture uploaded before this change still shows, without a data migration.
-  logoUrl     String?
+  logoUrl String?
 
   // ---------- DETAILS SHOWN ONLY AFTER A VISITOR CLICKS THE CARD ----------
   // These are never printed on the gallery card itself.
@@ -438,11 +444,11 @@ model Donor {
 
   description String?
 
-  isPublic    Boolean  @default(false) // false = kept private (internal record only)
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isPublic  Boolean  @default(false) // false = kept private (internal record only)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([isPublic])
   @@map("donors")
@@ -454,18 +460,18 @@ model Donor {
 // They are ONLY visible inside the Admin Panel - never on the public website.
 // ========================================
 model JoinApplication {
-  id              String   @id @default(cuid())
-  fullName        String
-  phone           String
-  email           String?
-  address         String?
-  areaOfInterest  String?
-  message         String?
-  extraInfo       String?
-  status          String   @default("NEW") // NEW / REVIEWING / APPROVED / REJECTED
-  adminNote       String? // internal note, never shown to the applicant
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  fullName       String
+  phone          String
+  email          String?
+  address        String?
+  areaOfInterest String?
+  message        String?
+  extraInfo      String?
+  status         String   @default("NEW") // NEW / REVIEWING / APPROVED / REJECTED
+  adminNote      String? // internal note, never shown to the applicant
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([status])
   @@map("join_applications")
@@ -497,28 +503,28 @@ model ContactMessage {
 // "amount" is stored in whole units of the currency (for example rupees).
 // ========================================
 model Donation {
-  id          String   @id @default(cuid())
-  donorName   String
-  donorEmail  String?
+  id         String  @id @default(cuid())
+  donorName  String
+  donorEmail String?
 
   // ---------- Added with the Donation management screens ----------
   // A DONATION IS NOT A MEMBER CONTRIBUTION. It lives in this table, has its own
   // status and its own totals, and is never added to the monthly fund figures.
   donorPhone   String?
   // ONE_TIME / MONTHLY / GENERAL / IN_KIND / OTHER
-  donationType String  @default("ONE_TIME")
+  donationType String    @default("ONE_TIME")
   purpose      String? // what the donor wanted it used for
   // PENDING / VERIFIED / REJECTED  (only VERIFIED counts as money received)
-  status       String  @default("PENDING")
+  status       String    @default("PENDING")
   remarks      String?
   verifiedById String?
   verifiedAt   DateTime?
 
-  amount      Int
-  currency    String   @default("NPR")
-  method      String   @default("BANK_TRANSFER")
-  reference   String? // receipt number or bank reference
-  receiptUrl  String? // payment screenshot, served through the guarded /api/files route
+  amount     Int
+  currency   String  @default("NPR")
+  method     String  @default("BANK_TRANSFER")
+  reference  String? // receipt number or bank reference
+  receiptUrl String? // payment screenshot, served through the guarded /api/files route
 
   // ---------- WHICH DONOR ACCOUNT MADE THIS GIFT ----------
   // Empty for an anonymous donation (the ordinary case: a visitor needs no
@@ -531,13 +537,13 @@ model Donation {
   // after. See model DonorAccount at the end of this file.
   donorAccountId String?
 
-  note        String?
-  receivedOn  DateTime @default(now())
-  recordedBy  String? // email of the admin who typed it in
+  note       String?
+  receivedOn DateTime @default(now())
+  recordedBy String? // email of the admin who typed it in
   // Soft delete: a donation is hidden, never really removed.
-  isDeleted   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([receivedOn])
   @@index([status, receivedOn])
@@ -572,9 +578,9 @@ model Donation {
 //   never written anywhere.
 // ========================================
 model DonorAccount {
-  id    String @id @default(cuid())
+  id    String  @id @default(cuid())
   name  String
-  email String @unique
+  email String  @unique
   phone String?
 
   passwordHash String
@@ -640,7 +646,7 @@ model DonorToken {
 
   expiresAt DateTime
   usedAt    DateTime?
-  attempts  Int      @default(0)
+  attempts  Int       @default(0)
 
   createdAt DateTime @default(now())
 
@@ -738,7 +744,7 @@ model ActivityLog {
 // switched off instead, so that old receipts keep pointing at a real record.
 // ========================================
 model Bank {
-  id            String   @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String // e.g. "NIC Asia Bank", "eSewa", "Khalti"
   accountName   String // name the account is held in
   accountNumber String
@@ -754,16 +760,16 @@ model Bank {
   //   KHALTI -> a Khalti wallet
   //   OTHER  -> anything else the organization uses
   // Existing rows automatically become "BANK", so nothing built earlier breaks.
-  methodType    String   @default("BANK")
+  methodType   String  @default("BANK")
   // A short label shown above the number, e.g. "eSewa ID", "Account number".
-  accountLabel  String?
+  accountLabel String?
   // The account members are asked to use first. Only one row should have this.
-  isDefault     Boolean  @default(false)
+  isDefault    Boolean @default(false)
 
-  isActive      Boolean  @default(true)
-  sortOrder     Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   payments FundPayment[]
 
@@ -816,14 +822,14 @@ model FundPayment {
   memberId String
   member   User   @relation("MemberPayments", fields: [memberId], references: [id], onDelete: Cascade)
 
-  amount        Int
-  currency      String @default("NPR")
-  paymentDate   DateTime // the day the member says they paid
-  method        String   @default("BANK_TRANSFER") // BANK_TRANSFER / QR / CASH / CHEQUE / ONLINE / OTHER
+  amount      Int
+  currency    String   @default("NPR")
+  paymentDate DateTime // the day the member says they paid
+  method      String   @default("BANK_TRANSFER") // BANK_TRANSFER / QR / CASH / CHEQUE / ONLINE / OTHER
 
   // Which bank the money went into.
-  bankId String?
-  bank   Bank?   @relation(fields: [bankId], references: [id], onDelete: SetNull)
+  bankId           String?
+  bank             Bank?   @relation(fields: [bankId], references: [id], onDelete: SetNull)
   // A copy of the bank name at the time of payment. If the bank is later
   // renamed or switched off, old receipts still show the correct name.
   bankNameSnapshot String?
@@ -844,12 +850,12 @@ model FundPayment {
   periodMonth    DateTime?
 
   // PENDING / APPROVED / REJECTED / CANCELLED
-  status     String  @default("PENDING")
-  reviewNote String? // why it was rejected, or an approval note
-  submittedAt DateTime @default(now())
-  reviewedAt  DateTime?
+  status       String    @default("PENDING")
+  reviewNote   String? // why it was rejected, or an approval note
+  submittedAt  DateTime  @default(now())
+  reviewedAt   DateTime?
   reviewedById String?
-  reviewedBy   User?   @relation("PaymentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedBy   User?     @relation("PaymentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   // ---------- DUPLICATE TRANSACTION PROTECTION ----------
   // txnKey is the value the database keeps unique.
@@ -865,9 +871,9 @@ model FundPayment {
 
   // Soft delete: financial rows are never really removed.
   // "isDeleted = true" hides the row from lists but keeps the audit trail.
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status, paymentDate])
   @@index([memberId, status])
@@ -896,10 +902,10 @@ model MonthlyContribution {
   // Always the FIRST day of the month, so each month appears exactly once.
   periodMonth    DateTime
   requiredAmount Int
-  paidAmount     Int    @default(0)
+  paidAmount     Int      @default(0)
 
   // PENDING / PARTIAL / PAID / OVERDUE / WAIVED
-  status String @default("PENDING")
+  status       String  @default("PENDING")
   waivedReason String?
   note         String?
 
@@ -954,30 +960,30 @@ model Expense {
   categoryId String?
   category   ExpenseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  amount        Int
-  currency      String   @default("NPR")
-  expenseDate   DateTime
-  paidTo        String? // vendor / person who received the money
-  method        String   @default("CASH") // CASH / BANK_TRANSFER / CHEQUE / ONLINE / OTHER
-  description   String?
-  receiptUrl    String? // bill or receipt picture
+  amount          Int
+  currency        String   @default("NPR")
+  expenseDate     DateTime
+  paidTo          String? // vendor / person who received the money
+  method          String   @default("CASH") // CASH / BANK_TRANSFER / CHEQUE / ONLINE / OTHER
+  description     String?
+  receiptUrl      String? // bill or receipt picture
   referenceNumber String?
 
   // PENDING / APPROVED / REJECTED
-  status      String    @default("PENDING")
-  reviewNote  String?
-  reviewedAt  DateTime?
+  status     String    @default("PENDING")
+  reviewNote String?
+  reviewedAt DateTime?
 
   addedById    String?
-  addedBy      User?    @relation("ExpenseAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+  addedBy      User?   @relation("ExpenseAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
   reviewedById String?
-  reviewedBy   User?    @relation("ExpenseReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedBy   User?   @relation("ExpenseReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   updatedById String?
 
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status, expenseDate])
   @@index([categoryId])
@@ -994,20 +1000,20 @@ model Expense {
 // A member only ever sees their own notifications (filtered by userId).
 // ========================================
 model Notification {
-  id      String @id @default(cuid())
-  userId  String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   title   String
   message String
   // INFO / SUCCESS / WARNING / ERROR - decides the colour of the badge.
-  type    String @default("INFO")
+  type    String  @default("INFO")
   // Optional page to open when the notification is clicked.
   link    String?
 
-  isRead  Boolean   @default(false)
-  readAt  DateTime?
-  createdAt DateTime @default(now())
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([userId, isRead])
   @@map("notifications")
@@ -1030,9 +1036,9 @@ model Notification {
 //   only once ("usedAt").
 // ========================================
 model VerificationToken {
-  id      String @id @default(cuid())
-  userId  String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // EMAIL_VERIFY / PASSWORD_RESET
   purpose String
@@ -1071,15 +1077,15 @@ model VerificationToken {
 // order they appear in inside the Admin Panel dropdown.
 // ========================================
 model KaryaSamitiPost {
-  id        String   @id @default(cuid())
+  id          String  @id @default(cuid())
   // The Nepali name shown on the public page, e.g. "अध्यक्ष".
-  name      String   @unique
+  name        String  @unique
   // Optional English name, for the English parts of the website.
-  nameEn    String?
+  nameEn      String?
   // Optional longer explanation of what the post is responsible for.
   description String?
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
 
   members KaryaSamitiMember[]
 
@@ -1121,7 +1127,7 @@ model KaryaSamitiMember {
   currentAddress String? // e.g. "काठमाडौं, नेपाल"
   photoUrl       String?
   // Lower numbers are shown first on the public page.
-  displayOrder   Int     @default(0)
+  displayOrder   Int              @default(0)
 
   // CURRENT = serving today (shown publicly)
   // FORMER  = served in the past (kept for the records, hidden by default)
@@ -1130,29 +1136,32 @@ model KaryaSamitiMember {
   isActive Boolean @default(true)
 
   // ---------- PRIVATE / ADMIN INFORMATION ----------
-  phone             String?
-  email             String?
-  permanentAddress  String?
-  dateOfBirth       DateTime?
-  citizenshipNo     String?
-  citizenshipDistrict String?
+  phone                String?
+  email                String?
+  permanentAddress     String?
+  dateOfBirth          DateTime?
+  citizenshipNo        String?
+  citizenshipDistrict  String?
   // The organization's own member number (used in reports and on paper).
-  memberCode        String?   @unique
+  memberCode           String?   @unique
   // Optional link to a login account, so the same person can sign in.
-  userId            String?   @unique
-  user              User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  joiningDate       DateTime?
+  userId               String?   @unique
+  user                 User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  joiningDate          DateTime?
   committeeJoiningDate DateTime?
-  internalNotes     String?
+  internalNotes        String?
 
   // ---------- AUDIT ----------
   createdById String?
   updatedById String?
 
   // Soft delete: a person is hidden instead of removed, so history survives.
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Responsibilities given by an administrator, shown in that person's panel.
+  duties CommitteeDuty[]
 
   @@index([status, displayOrder])
   @@index([isActive])
@@ -1190,7 +1199,7 @@ model Loan {
 
   // Whole rupees, same rule as every other money column in this project.
   principalAmount Int
-  currency        String   @default("NPR")
+  currency        String    @default("NPR")
   // OPTIONAL ON PURPOSE. A loan is recorded first and the money is handed over
   // later (approve -> pay out), so there is a perfectly normal moment when a
   // loan exists but no money has moved yet. Making this column required made
@@ -1198,39 +1207,39 @@ model Loan {
   // "Argument `givenDate` must not be null."
   givenDate       DateTime?
 
-  purpose         String? // why the member needed the money
+  purpose            String? // why the member needed the money
   // What the agreement says (amount, return plan, anything agreed verbally).
-  agreementNote   String?
+  agreementNote      String?
   // The uploaded physical agreement. PRIVATE - administrators only.
-  agreementUrl    String?
+  agreementUrl       String?
   // Optional extra supporting document, e.g. a citizenship copy.
-  supportingUrl   String?
+  supportingUrl      String?
   // When the money is expected back. Used to work out "Overdue".
   expectedReturnDate DateTime?
   // How many instalments were agreed, if any.
-  installments    Int?
+  installments       Int?
 
   // ---------- DATES OF EACH STEP ----------
   // The office often records a loan on paper first and enters it later, so each
   // step keeps its own date instead of one "created" date.
-  requestedDate   DateTime? // when the member asked for the money
+  requestedDate DateTime? // when the member asked for the money
   // approvedAt (below) is when a Super Administrator approved it
-  disbursedDate   DateTime? // when the money actually changed hands
+  disbursedDate DateTime? // when the money actually changed hands
 
   // ---------- INTEREST (only if the club charges it) ----------
   // Whole rupees, and 0 means "no interest". The total payable is NEVER stored:
   // it is principalAmount + interestAmount, worked out in lib/loan/calc.ts, so
   // there is only one version of that number.
-  interestAmount  Int @default(0)
+  interestAmount Int @default(0)
 
   // ---------- THE PHYSICAL AGREEMENT ----------
   // Whether the paper agreement has been signed, kept apart from whether the
   // file has been scanned, because those are two different facts.
-  agreementSigned Boolean @default(false)
+  agreementSigned Boolean   @default(false)
   agreementNo     String? // the number written on the paper
   agreementDate   DateTime?
   // NOT_REQUIRED / PENDING / SIGNED - and see "agreementUrl" above for the file.
-  agreementStatus String  @default("PENDING")
+  agreementStatus String    @default("PENDING")
 
   // Why a loan was refused (shown to the member, and kept for the audit trail).
   rejectionReason String?
@@ -1245,7 +1254,7 @@ model Loan {
   status String @default("PENDING")
 
   approvedById String?
-  approvedBy   User?   @relation("LoanApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedBy   User?     @relation("LoanApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
   approvedAt   DateTime?
 
   notes String?
@@ -1255,9 +1264,9 @@ model Loan {
   updatedById String?
 
   // Soft delete: a loan row is hidden, never really removed.
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   returns   LoanReturn[]
   documents LoanDocument[]
@@ -1282,21 +1291,21 @@ model LoanReturn {
   loanId String
   loan   Loan   @relation(fields: [loanId], references: [id], onDelete: Cascade)
 
-  amount     Int
-  returnDate DateTime
-  method     String   @default("CASH") // CASH / BANK_TRANSFER / CHEQUE / ONLINE / OTHER
+  amount          Int
+  returnDate      DateTime
+  method          String   @default("CASH") // CASH / BANK_TRANSFER / CHEQUE / ONLINE / OTHER
   referenceNumber String?
   // Picture or scan of the proof (receipt, deposit slip). Private.
-  proofUrl   String?
-  notes      String?
+  proofUrl        String?
+  notes           String?
 
   recordedById String?
   recordedBy   User?   @relation("LoanReturnRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
 
   // Soft delete: a wrongly typed return is hidden and the balance recalculated.
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([loanId, returnDate])
   @@map("loan_returns")
@@ -1316,9 +1325,9 @@ model LoanDocument {
   loanId String
   loan   Loan   @relation(fields: [loanId], references: [id], onDelete: Cascade)
 
-  title     String
-  fileUrl   String
-  kind      String   @default("AGREEMENT") // AGREEMENT / CITIZENSHIP / SCHEDULE / OTHER
+  title   String
+  fileUrl String
+  kind    String @default("AGREEMENT") // AGREEMENT / CITIZENSHIP / SCHEDULE / OTHER
 
   uploadedById String?
   createdAt    DateTime @default(now())
@@ -1372,9 +1381,9 @@ model DistrictActivity {
   createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: SetNull)
   updatedById String?
 
-  isDeleted Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([district, activityDate])
   @@index([status, activityDate])
@@ -1408,12 +1417,93 @@ model Message {
   recipient   User?   @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
 
   subject String?
+  // Empty for a voice message: the words live in audioUrl instead.
   body    String
 
+  // ---------- WHAT KIND OF MESSAGE IS THIS? ----------
+  // TEXT  = ordinary typed message
+  // VOICE = recorded audio (audioUrl and audioDuration are filled in)
+  // IMAGE = a picture or a receipt
+  // FILE  = any other document
+  kind String @default("TEXT")
+
+  audioUrl String?
+  // Length of the recording in seconds, so the player can show 0:07 / 0:07.
+  audioDuration Int?
+
   readAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([threadMemberId, createdAt])
   @@index([recipientId, readAt])
   @@map("messages")
+}
+
+// ========================================
+// KARYA SAMITI - ROLE & RESPONSIBILITIES
+// ========================================
+// One row = one duty an administrator gave to one committee member.
+//
+// The duty is NOT hard-coded to a post. An administrator writes what the
+// Treasurer, the Secretary or anybody else has to do, and can change it at any
+// time. That is the whole point: every committee changes, so the duties must be
+// editable from the Admin Panel and never from the code.
+//
+// WHO SEES IT
+//   The committee member it belongs to (matched through KaryaSamitiMember.userId)
+//   and the administrators. Nobody else.
+// ========================================
+model CommitteeDuty {
+  id String @id @default(cuid())
+
+  memberId String
+  member   KaryaSamitiMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  title        String
+  // What has to be done, in words the member can act on.
+  description  String?
+  // Private instructions from the office (e.g. "do not discuss the amount with
+  // anybody"). Shown to the assigned member and the administrators only.
+  instructions String?
+
+  deadline    DateTime?
+  // PENDING / IN_PROGRESS / COMPLETED
+  status      String    @default("PENDING")
+  completedAt DateTime?
+
+  createdById String?
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberId, status])
+  @@index([status, deadline])
+  @@map("committee_duties")
+}
+
+// ========================================
+// PERSONAL NOTES PAD
+// ========================================
+// A private notebook for one signed-in person (administrator or member).
+//
+// PRIVACY: every read and write is filtered by ownerId taken from the session.
+// There is no endpoint that returns another person's notes - not even for an
+// administrator. Deciding "who may read this" is a database rule here, not a
+// hidden button in the browser.
+// ========================================
+model PersonalNote {
+  id String @id @default(cuid())
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title   String
+  content String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId, updatedAt])
+  @@map("personal_notes")
 }
