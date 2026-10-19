@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       method: String(body?.method ?? 'BANK_TRANSFER').trim() || 'BANK_TRANSFER',
       reference: String(body?.reference ?? '').trim() || null,
       note: String(body?.note ?? '').trim() || null,
-      status: 'PENDING',
+      status: 'VERIFIED',
       recordedBy: auth.user.email,
     },
     select: { id: true, amount: true, status: true },
