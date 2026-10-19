@@ -218,14 +218,14 @@ export function AdminNav({
   const groups = NAV_GROUPS.filter((group) => !group.superAdminOnly || isSuperAdmin);
 
   return (
-    <nav aria-label="Admin panel menu" className="space-y-6">
+    <nav aria-label="Admin panel menu" className="space-y-4">
       {groups.map((group) => (
         <div key={group.title}>
-          <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-ink-400">
+          <p className="mb-1.5 px-2.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
             {group.title}
           </p>
 
-          <ul className="space-y-0.5">
+          <ul className="space-y-px">
             {group.links.map((link) => {
               const active = isActive(link.href);
               const badge = link.href === VERIFY_HREF ? pendingCount : 0;
@@ -236,11 +236,13 @@ export function AdminNav({
                     href={link.href}
                     active={active}
                     className={cn(
-                      'flex items-center gap-3 rounded-btn px-3 py-2 text-sm font-medium transition-colors',
+                      // Compact rows: smaller type and less padding, so the whole
+                      // menu fits on one screen without endless scrolling.
+                      'flex items-center gap-2 rounded-btn px-2.5 py-1.5 text-[13px] font-medium leading-tight transition-colors',
                       active ? 'bg-brand-600 text-white' : 'text-ink-700 hover:bg-ink-100',
                     )}
                   >
-                    <Icon name={link.icon} className="h-4 w-4 shrink-0" />
+                    <Icon name={link.icon} className="h-3.5 w-3.5 shrink-0" />
                     {/* The number is read out too, because the badge is only a
                         coloured circle otherwise. */}
                     <span className="truncate" aria-label={badge > 0 ? `${link.label}, ${badge} waiting` : undefined}>
