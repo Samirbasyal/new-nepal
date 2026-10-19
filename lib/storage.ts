@@ -400,14 +400,30 @@ export async function storeImage(
     // and the receipt still reaches the Admin Panel.
     const privateWrite = privateBlobWriteOptions();
 
-    const result = await put(key, bytes, {
-      // THE IMPORTANT LINE. A receipt is stored as a private blob, so Vercel
-      // itself refuses to hand it to anybody who does not hold the token. It can
-      // therefore never be opened by simply sharing a link.
-      ...(visibility === 'private' ? privateWrite : { access: 'public' as const }),
-      contentType: file.type,
-      addRandomSuffix: false,
-    });
+    let result: { url: string };
+    try {
+      result = await put(key, bytes, {
+        ...(visibility === 'private' ? privateWrite : { access: 'public' as const }),
+        contentType: file.type,
+        addRandomSuffix: false,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      // The connected Blob store is PRIVATE, so Vercel refuses a public write.
+      // Store the picture privately and hand back the guarded /api/files address
+      // instead of a public link. Uploads therefore keep working whichever kind
+      // of store the club connected.
+      if (!message.toLowerCase().includes('private store')) throw error;
+
+      await put(key, bytes, {
+        ...privateWrite,
+        contentType: file.type,
+        addRandomSuffix: false,
+      });
+
+      result = { url: urlForKey(key) };
+    }
 
     return {
       // The address the browser must use, and the one saved in the database.
