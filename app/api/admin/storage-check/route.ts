@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     );
 
     const file = new File([png], 'storage-check.png', { type: 'image/png' });
-    const stored = await storeImage(file, 'gallery');
+    const stored = await storeImage(file, 'photo');
 
     report.upload = 'ok';
     report.provider = stored.provider;
