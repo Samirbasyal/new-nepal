@@ -49,7 +49,7 @@ export function LogoutButton({
       className={cn('inline-flex items-center gap-2', className)}
     >
       <Icon name="logout" className="h-4 w-4" />
-      {busy ? 'Signing out…' : label}
+      {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : label}
     </button>
   );
 }

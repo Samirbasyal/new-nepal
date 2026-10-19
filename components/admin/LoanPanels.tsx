@@ -438,7 +438,7 @@ export function LoanReturnForm({ loanId, remaining }: { loanId: string; remainin
 
         <Button type="submit" variant="primary" disabled={busy}>
           {busy ? <Spinner /> : <Icon name="check-circle" className="h-4 w-4" />}
-          {busy ? 'Recording…' : 'Record this repayment'}
+          {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Record this repayment'}
         </Button>
       </form>
     </div>
@@ -546,7 +546,7 @@ export function AgreementUploader({
           onClick={() => inputRef.current?.click()}
         >
           {busy ? <Spinner /> : <Icon name="upload" className="h-4 w-4" />}
-          {busy ? 'Uploading…' : url ? 'Replace the agreement' : 'Upload the agreement'}
+          {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : url ? 'Replace the agreement' : 'Upload the agreement'}
         </Button>
 
         {url ? (

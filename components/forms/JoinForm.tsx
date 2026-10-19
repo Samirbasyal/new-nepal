@@ -165,7 +165,7 @@ export function JoinForm() {
         </p>
 
         <Button type="submit" size="lg" disabled={busy}>
-          {busy ? 'Sending…' : 'Submit application'}
+          {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Submit application'}
         </Button>
       </div>
     </form>

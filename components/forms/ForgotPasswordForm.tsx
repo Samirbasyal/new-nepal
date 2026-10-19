@@ -80,7 +80,7 @@ export function ForgotPasswordForm() {
           />
 
           <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy}>
-            {busy ? 'Sending…' : 'Send me a reset link'}
+            {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Send me a reset link'}
           </Button>
         </form>
       )}

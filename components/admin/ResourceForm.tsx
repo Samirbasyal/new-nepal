@@ -581,7 +581,7 @@ function ImageUploader({ onUploaded }: { onUploaded: (url: string) => void }) {
         )}
       >
         <Icon name="upload" className="h-3.5 w-3.5" />
-        {busy ? 'Uploading…' : 'Upload an image file'}
+        {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Upload an image file'}
 
         <input
           type="file"

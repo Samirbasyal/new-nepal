@@ -144,7 +144,7 @@ export function ResetPasswordForm({ initialToken }: { initialToken?: string }) {
       />
 
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy}>
-        {busy ? 'Saving…' : 'Save my new password'}
+        {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Save my new password'}
       </Button>
 
       <p className="text-center text-sm">

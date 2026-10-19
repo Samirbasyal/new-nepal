@@ -153,7 +153,7 @@ export function DonorVerifyForm({ email, next }: { email: string; next?: string 
           disabled={resending}
           className="font-semibold text-brand-700 hover:underline disabled:text-ink-400"
         >
-          {resending ? 'Sending…' : 'Send the code again'}
+          {resending ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Send the code again'}
         </button>
 
         <a href="/donor/login" className="text-ink-600 hover:text-brand-700">

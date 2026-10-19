@@ -257,7 +257,7 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues }) {
 
       <div className="flex items-center justify-end gap-3 border-t border-ink-100 pt-5">
         <Button type="submit" disabled={busy}>
-          {busy ? 'Saving…' : 'Save changes'}
+          {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Save changes'}
         </Button>
       </div>
     </form>

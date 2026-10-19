@@ -152,7 +152,7 @@ export function SettingsForm({
 
           <Button type="submit" variant="primary" disabled={saving}>
             <Icon name="save" className="h-4 w-4" />
-            {saving ? 'Saving…' : 'Save settings'}
+            {saving ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Save settings'}
           </Button>
         </div>
       </div>

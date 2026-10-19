@@ -119,7 +119,7 @@ export function GenerateMonthButton({
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="primary" size="sm" disabled={busy} onClick={generate}>
-          {busy ? 'Creating…' : 'Yes, create it'}
+          {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Yes, create it'}
         </Button>
         <Button
           type="button"

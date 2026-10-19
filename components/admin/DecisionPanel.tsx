@@ -161,7 +161,7 @@ export function DecisionPanel({
               disabled={busy}
               onClick={() => decide('reject')}
             >
-              {busy ? 'Saving…' : 'Confirm rejection'}
+              {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Confirm rejection'}
             </Button>
             <Button
               type="button"
@@ -199,7 +199,7 @@ export function DecisionPanel({
               onClick={() => decide('approve')}
             >
               <Icon name="check" className="h-4 w-4" />
-              {busy ? 'Saving…' : 'Yes, approve'}
+              {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Yes, approve'}
             </Button>
             <Button
               type="button"
@@ -222,7 +222,7 @@ export function DecisionPanel({
             onClick={() => (confirmApprove ? setConfirming(true) : decide('approve'))}
           >
             <Icon name="check" className="h-4 w-4" />
-            {busy ? 'Saving…' : 'Approve'}
+            {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Approve'}
           </Button>
           <Button
             type="button"

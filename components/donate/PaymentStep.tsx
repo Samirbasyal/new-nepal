@@ -605,7 +605,7 @@ export function PaymentStep({
             </Button>
 
             <Button type="button" variant="primary" size="lg" onClick={submit} disabled={busy}>
-              {busy ? 'Submitting…' : 'I Have Paid - Submit for Verification'}
+              {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'I Have Paid - Submit for Verification'}
               {busy ? <Icon name="refresh" className="h-4 w-4 animate-spin" /> : <Icon name="check-circle" className="h-4 w-4" />}
             </Button>
           </div>

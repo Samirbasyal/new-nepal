@@ -143,7 +143,7 @@ export function LoginForm({
       </div>
 
       <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy}>
-        {busy ? 'Signing in…' : isAdmin ? 'Sign in to Admin Panel' : 'Sign in'}
+        {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : isAdmin ? 'Sign in to Admin Panel' : 'Sign in'}
       </Button>
 
       {/* ---------- Links ---------- */}

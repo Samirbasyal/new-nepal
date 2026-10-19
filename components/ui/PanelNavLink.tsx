@@ -49,14 +49,13 @@ export function PanelNavLink({
 
     setPending(false);
 
-    // Bring the content area into view ONLY when it is out of sight. If the
-    // person can already see it, nothing moves - which is the whole point.
-    const content = document.getElementById('panel-content');
-    if (content) {
-      const box = content.getBoundingClientRect();
-      const outOfView = box.top < 0 || box.top > window.innerHeight * 0.6;
-      if (outOfView) content.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // NOTHING is scrolled here on purpose.
+    //
+    // The person clicked a menu item that was already on screen. Moving the page
+    // afterwards is what made the menu disappear and forced them to scroll again
+    // to find the same item. With scroll={false} above, the browser keeps the
+    // exact position, so the clicked item stays where the finger left it and the
+    // new section opens in the content area beside/below it.
   }, [pathname, pending]);
 
   // ---------- never leave the indicator spinning for ever ----------

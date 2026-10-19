@@ -415,7 +415,7 @@ export function DonationWizard({ prefill }: { prefill?: DonorPrefill }) {
               onClick={continueToPayment}
               disabled={busy}
             >
-              {busy ? 'Saving…' : 'Continue to Payment'}
+              {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Continue to Payment'}
               {busy ? null : <Icon name="chevron-right" className="h-4 w-4" />}
             </Button>
 

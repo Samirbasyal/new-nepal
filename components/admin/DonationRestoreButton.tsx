@@ -69,7 +69,7 @@ export function DonationRestoreButton({
         className="btn btn-outline btn-sm"
       >
         <Icon name={busy ? 'refresh' : 'refresh'} className={busy ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
-        {busy ? 'Restoring…' : 'Restore'}
+        {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Restore'}
       </button>
     </div>
   );

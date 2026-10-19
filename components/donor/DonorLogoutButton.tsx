@@ -41,7 +41,7 @@ export function DonorLogoutButton() {
       className="btn btn-outline btn-sm"
     >
       <Icon name={busy ? 'refresh' : 'logout'} className={busy ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
-      {busy ? 'Signing out…' : 'Sign out'}
+      {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Sign out'}
     </button>
   );
 }

@@ -134,7 +134,7 @@ export function ContactForm() {
         </p>
 
         <Button type="submit" size="lg" disabled={busy}>
-          {busy ? 'Sending…' : 'Send message'}
+          {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Send message'}
         </Button>
       </div>
     </form>
