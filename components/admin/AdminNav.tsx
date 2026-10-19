@@ -78,6 +78,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Women Empowered', href: '/admin/content-sections?group=WOMEN', icon: 'sparkles' },
       { label: 'Beneficiaries', href: '/admin/beneficiaries', icon: 'users' },
       { label: 'Donors & supporters', href: '/admin/donors', icon: 'heart' },
+      { label: 'Supporter donations', href: '/admin/donors/amounts', icon: 'banknote' },
     ],
   },
   {

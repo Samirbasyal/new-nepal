@@ -450,6 +450,12 @@ model Donor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // ---------- MONEY GIVEN BY THIS PERSON ----------
+  // The PROFILE lives here; each gift is a separate row in `donations`. That is
+  // what stops one donor's total being counted twice: the amount is never stored
+  // on the profile, it is always added up from the transactions.
+  donations Donation[] @relation("DonorDonations")
+
   @@index([isPublic])
   @@map("donors")
 }
@@ -536,6 +542,13 @@ model Donation {
   // it and nothing else joins through it, so there is no foreign key to look
   // after. See model DonorAccount at the end of this file.
   donorAccountId String?
+
+  // ---------- WHICH DONORS & SUPPORTERS PROFILE IS THIS? ----------
+  // Set from the Admin Panel when an administrator records a gift for a known
+  // supporter. Empty for gifts that arrived through the public form, which are
+  // matched by name and email instead.
+  donorId      String?
+  donorProfile Donor?  @relation("DonorDonations", fields: [donorId], references: [id], onDelete: SetNull)
 
   note       String?
   receivedOn DateTime @default(now())
