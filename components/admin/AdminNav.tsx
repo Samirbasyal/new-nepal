@@ -236,11 +236,23 @@ export function AdminNav({
     <nav aria-label="Admin panel menu" className="space-y-4">
       {groups.map((group) => (
         <div key={group.title}>
-          <p className="mb-1.5 px-2.5 text-[10px] font-bold uppercase tracking-wider text-ink-400">
-            {group.title}
-          </p>
+          <button
+            type="button"
+            onClick={() => toggleGroup(group.title)}
+            aria-expanded={Boolean(openGroups[group.title])}
+            className="mb-1 flex w-full items-center justify-between rounded-btn px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-400 hover:bg-ink-100"
+          >
+            <span>{group.title}</span>
+            <Icon
+              name="chevron-down"
+              className={cn(
+                'h-3 w-3 transition-transform',
+                openGroups[group.title] ? 'rotate-180' : '',
+              )}
+            />
+          </button>
 
-          <ul className="space-y-px">
+          <ul className={cn('space-y-px', !openGroups[group.title] && 'hidden')}>
             {group.links.map((link) => {
               const active = isActive(link.href);
               const badge = link.href === VERIFY_HREF ? pendingCount : 0;
