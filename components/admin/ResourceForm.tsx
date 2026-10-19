@@ -140,9 +140,14 @@ export function ResourceForm({
         | null;
 
       if (!response.ok || !payload || payload.ok !== true) {
+        // Say WHICH failure it is. A plain "try again" hid a real answer such as
+        // "This phone number is already used" or "HTTP 500", and people retried
+        // a save that had actually been written.
+        const known = payload && 'error' in payload ? payload.error : null;
         setError(
-          (payload && 'error' in payload && payload.error) ||
-            'Could not save your changes. Please try again.',
+          known
+            ? `${known} (HTTP ${response.status})`
+            : `Could not save your changes. Please try again. (HTTP ${response.status})`,
         );
         if (payload && 'fields' in payload && payload.fields) setFieldErrors(payload.fields);
         return;
