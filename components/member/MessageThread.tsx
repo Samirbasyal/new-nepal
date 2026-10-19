@@ -24,6 +24,9 @@ import { formatDateTime } from '@/lib/utils';
 
 type Message = {
   id: string;
+  kind?: string;
+  audioUrl?: string | null;
+  audioDuration?: number | null;
   subject: string | null;
   body: string;
   mine: boolean;
@@ -41,6 +44,14 @@ export function MessageThread() {
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
+
+  // ---------- voice recording ----------
+  const [recording, setRecording] = useState(false);
+  const [recSeconds, setRecSeconds] = useState(0);
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const startedAtRef = useRef(0);
 
   // ---------- load the conversation ----------
   const load = useCallback(async () => {
@@ -132,6 +143,100 @@ export function MessageThread() {
     }
   };
 
+  // ---------- record a voice message ----------
+  async function startRecording() {
+    setProblem(null);
+    setNotice(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setProblem('This browser cannot record audio. Please try Chrome or Safari on a phone.');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+
+      chunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => stream.getTracks().forEach((track) => track.stop());
+
+      recorder.start();
+      recorderRef.current = recorder;
+      startedAtRef.current = Date.now();
+      setRecSeconds(0);
+      setRecording(true);
+    } catch {
+      setProblem(
+        'The microphone could not be opened. Please allow microphone access in the browser and try again.',
+      );
+    }
+  }
+
+  async function stopAndSend() {
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+
+    const duration = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000));
+
+    setRecording(false);
+    recorderRef.current = null;
+    recorder.stop();
+
+    setVoiceBusy(true);
+
+    try {
+      // Give the recorder a moment to hand over the last chunk.
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+
+      if (blob.size > 4 * 1024 * 1024) {
+        setProblem('That recording is larger than 4 MB. Please record a shorter message.');
+        return;
+      }
+
+      const form = new FormData();
+      form.append('file', blob, 'voice.webm');
+      form.append('duration', String(duration));
+
+      const response = await fetch('/api/member/messages/voice', { method: 'POST', body: form });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok || !payload?.ok) {
+        setProblem(payload?.error ?? 'The voice message could not be sent. Please try again.');
+        return;
+      }
+
+      setMessages((current) => [...(current ?? []), payload.data as Message]);
+      setNotice('Voice message sent to the office.');
+    } catch {
+      setProblem('The voice message could not be sent. Please check your connection.');
+    } finally {
+      setVoiceBusy(false);
+    }
+  }
+
+  // Count the seconds, and stop by itself at three minutes.
+  useEffect(() => {
+    if (!recording) return;
+
+    const timer = window.setInterval(() => {
+      setRecSeconds((value) => {
+        if (value + 1 >= 180) {
+          void stopAndSend();
+          return 180;
+        }
+        return value + 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recording]);
+
   return (
     <div className="space-y-5">
       {/* ---------- the conversation ---------- */}
@@ -176,7 +281,19 @@ export function MessageThread() {
                 <p className="mt-2 text-sm font-medium text-ink-800">{message.subject}</p>
               ) : null}
 
-              <p className="mt-1 whitespace-pre-line text-sm text-ink-600">{message.body}</p>
+              {message.kind === 'VOICE' && message.audioUrl ? (
+                <div className="mt-2">
+                  <audio controls preload="metadata" src={message.audioUrl} className="w-full max-w-sm" />
+                  {message.audioDuration ? (
+                    <p className="mt-1 text-xs text-ink-400">
+                      Voice message · {Math.floor(message.audioDuration / 60)}:
+                      {String(message.audioDuration % 60).padStart(2, '0')}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-1 whitespace-pre-line text-sm text-ink-600">{message.body}</p>
+              )}
 
               {!message.mine && message.readAt ? (
                 <p className="mt-2 text-xs text-ink-400">Read</p>
@@ -237,7 +354,39 @@ export function MessageThread() {
           />
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {recording ? (
+            <button
+              type="button"
+              onClick={() => void stopAndSend()}
+              className="btn btn-primary btn-sm"
+            >
+              <span className="inline-flex items-center gap-2 text-accent-100" role="status">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-accent-300" />
+                Stop and send ({recSeconds}s)
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void startRecording()}
+              disabled={voiceBusy}
+              className="inline-flex items-center gap-2 rounded-btn border border-ink-300 px-3 py-2 text-sm font-semibold text-ink-700 hover:bg-ink-100 disabled:opacity-60"
+            >
+              {voiceBusy ? (
+                <span className="inline-flex items-center gap-2 text-accent-600" role="status">
+                  <Icon name="refresh" className="h-4 w-4 animate-spin" />
+                  Please wait…
+                </span>
+              ) : (
+                <>
+                  <Icon name="mic" className="h-4 w-4" />
+                  Record voice
+                </>
+              )}
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => void send()}

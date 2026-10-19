@@ -81,6 +81,10 @@ export async function GET(request: Request) {
         id: row.id,
         subject: row.subject,
         body: row.body,
+        // VOICE messages carry the recording instead of words.
+        kind: row.kind,
+        audioUrl: row.audioUrl,
+        audioDuration: row.audioDuration,
         mine: row.senderId === auth.user.id,
         senderName: row.sender?.name ?? 'The office',
         senderRole: row.sender?.role ?? 'ADMIN',
