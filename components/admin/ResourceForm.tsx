@@ -262,7 +262,7 @@ export function ResourceForm({
                 if (form) form.requestSubmit();
               }}
             >
-              {saving ? 'Saving…' : isNew ? `Add ${entityLabel.toLowerCase()}` : 'Save changes'}
+              {saving ? (<span className="inline-flex items-center gap-2 text-accent-100" role="status"><Icon name="refresh" className="h-4 w-4 animate-spin" />Please wait...</span>) : isNew ? `Add ${entityLabel.toLowerCase()}` : 'Save changes'}
             </Button>
           </div>
         </div>
