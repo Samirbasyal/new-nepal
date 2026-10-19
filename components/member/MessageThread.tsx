@@ -380,7 +380,7 @@ export function MessageThread() {
                 </span>
               ) : (
                 <>
-                  <Icon name="mic" className="h-4 w-4" />
+                  <Icon name="phone" className="h-4 w-4" />
                   Record voice
                 </>
               )}
