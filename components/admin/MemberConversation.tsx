@@ -306,12 +306,7 @@ export function MemberConversation({ memberId, memberName }: { memberId: string;
             className="btn btn-primary btn-sm"
             disabled={sending}
           >
-            {sending ? (
-              <>
-                <Icon name="refresh" className="h-4 w-4 animate-spin" />
-                Sending…
-              </>
-            ) : (
+            {sending ? (<span className="inline-flex items-center gap-2 text-accent-100" role="status"><Icon name="refresh" className="h-4 w-4 animate-spin" />Please wait...</span>) : (
               <>
                 <Icon name="mail" className="h-4 w-4" />
                 Send reply
