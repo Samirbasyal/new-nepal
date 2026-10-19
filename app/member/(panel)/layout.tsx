@@ -43,7 +43,7 @@ export default async function MemberPanelLayout({ children }: { children: React.
     : 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink-50">
+    <div className="flex min-h-screen flex-col bg-ink-50 lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       {/* ========================================
           PANEL HEADER
           ======================================== */}
@@ -76,24 +76,24 @@ export default async function MemberPanelLayout({ children }: { children: React.
       {/* ========================================
           PANEL BODY
           ======================================== */}
-      <div className="flex-1">
-        <Container className="py-8">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+      <div className="flex-1 lg:min-h-0">
+        <Container className="py-8 lg:h-full lg:min-h-0">
+          <div className="grid grid-cols-1 gap-8 lg:h-full lg:min-h-0 lg:grid-cols-12">
             {/* Menu (sidebar on desktop, button row on mobile) */}
-            <div className="lg:col-span-3 lg:sticky lg:top-20 self-start">
+            <div className="self-start lg:col-span-3 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2">
               <MemberNav memberName={user.name} pendingPayments={pendingPayments} />
             </div>
 
             {/* Page content. The id is the place the menu scrolls to after a
                 click - not the top of the document. */}
-            <div id="panel-content" className="min-w-0 scroll-mt-24 lg:col-span-9">
+            <div id="panel-content" className="min-w-0 lg:col-span-9 lg:h-full lg:min-h-0 lg:overflow-y-auto">
               {children}
             </div>
           </div>
         </Container>
       </div>
 
-      <footer className="border-t border-ink-200 bg-white py-5">
+      <footer className="border-t border-ink-200 bg-white py-5 lg:hidden">
         <Container className="text-center text-xs text-ink-500">
           {organization.name} · Member area · Signed in as {user.name}
         </Container>

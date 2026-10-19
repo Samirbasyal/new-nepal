@@ -78,7 +78,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
   const unreadNotifications = await unreadNotificationCount(user.id);
 
   return (
-    <div className="flex min-h-screen flex-col bg-ink-50">
+    <div className="flex min-h-screen flex-col bg-ink-50 lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       {/* ========================================
           ADMIN HEADER
           ======================================== */}
@@ -129,12 +129,12 @@ export default async function AdminPanelLayout({ children }: { children: React.R
       {/* ========================================
           PANEL BODY
           ======================================== */}
-      <div className="flex-1">
-        <Container className="py-8">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+      <div className="flex-1 lg:min-h-0">
+        <Container className="py-8 lg:h-full lg:min-h-0">
+          <div className="grid grid-cols-1 gap-8 lg:h-full lg:min-h-0 lg:grid-cols-12">
             {/* Sidebar (desktop only) */}
-            <aside className="hidden self-start lg:sticky lg:top-20 lg:col-span-3 lg:block">
-              <div className="sticky top-24">
+            <aside className="hidden self-start lg:col-span-3 lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2">
+              <div>
                 {/* The Super Admin only sections (Loan management) are left out
                     of the menu for everybody else. The pages themselves check
                     the role again on the server. */}
@@ -147,7 +147,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
             {/* The id is where the menu scrolls to after a click - the content,
                 not the top of the document. */}
-            <div id="panel-content" className="min-w-0 scroll-mt-24 lg:col-span-9">
+            <div id="panel-content" className="min-w-0 lg:col-span-9 lg:h-full lg:min-h-0 lg:overflow-y-auto">
               {/* Quick menu (mobile only) */}
               <div className="mb-6">
                 <AdminMobileNav
@@ -162,7 +162,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
         </Container>
       </div>
 
-      <footer className="border-t border-ink-200 bg-white py-5">
+      <footer className="border-t border-ink-200 bg-white py-5 lg:hidden">
         <Container className="text-center text-xs text-ink-500">
           {organization.name} · Administration area · Signed in as {user.name}
         </Container>

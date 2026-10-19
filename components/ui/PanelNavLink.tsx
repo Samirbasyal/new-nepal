@@ -53,7 +53,10 @@ export function PanelNavLink({
     // is sticky (see the panel layouts), so the item that was clicked does not
     // disappear while this happens.
     const content = document.getElementById('panel-content');
-    if (content) content.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Scroll ONLY the content box. Calling scrollIntoView() here moved the whole
+    // document instead, which shifted the sidebar with it. Browsers scroll the
+    // nearest scrollable ancestor, and on desktop that is this box.
+    if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Keep "Please wait..." for a moment after the route commits. The route
     // changes before the browser has painted the new page; clearing instantly
