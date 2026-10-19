@@ -15,7 +15,7 @@ import { fail, ok } from '@/lib/api/http';
 import { requireAdminApi } from '@/lib/api/guard';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { notifyUser } from '@/lib/notifications';
-import { isPersistentStorageConfigured } from '@/lib/storage';
+import { isPersistentStorageConfigured, privateBlobWriteOptions, urlForKey } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -80,7 +80,10 @@ export async function POST(request: Request) {
     const key = `voice/admin-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
 
     const blob = await put(key, Buffer.from(await file.arrayBuffer()), {
-      access: 'public',
+      // PRIVATE store: a voice message belongs to one member and the office.
+      // Vercel refuses to hand the file to anybody who does not hold the token,
+      // so the address cannot be opened by sharing a link.
+      ...privateBlobWriteOptions(),
       contentType: file.type,
       addRandomSuffix: false,
     });
@@ -92,7 +95,9 @@ export async function POST(request: Request) {
         recipientId: member.id,
         body: '',
         kind: 'VOICE',
-        audioUrl: blob.url,
+        // The guarded /api/files/... address, not the raw blob URL: playback is
+        // checked against the signed-in person first.
+        audioUrl: urlForKey(key) ?? blob.url,
         audioDuration: duration,
       },
       select: {
