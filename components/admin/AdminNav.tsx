@@ -240,7 +240,14 @@ export function AdminNav({
             type="button"
             onClick={() => toggleGroup(group.title)}
             aria-expanded={Boolean(openGroups[group.title])}
-            className="mb-1 flex w-full items-center justify-between rounded-btn px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-ink-400 hover:bg-ink-100"
+            className={cn(
+              // Green button, dark readable words. The open group turns solid
+              // green so it is obvious which one is showing its items.
+              'mb-1 flex w-full items-center justify-between rounded-btn border px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors',
+              openGroups[group.title]
+                ? 'border-brand-700 bg-brand-600 text-white'
+                : 'border-brand-200 bg-brand-50 text-brand-900 hover:bg-brand-100',
+            )}
           >
             <span>{group.title}</span>
             <Icon
