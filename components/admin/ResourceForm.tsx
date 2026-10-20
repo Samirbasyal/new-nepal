@@ -366,7 +366,16 @@ function FieldRenderer({
         required={field.required}
         hint={field.hint}
         error={error}
-        options={field.options ?? []}
+        options={
+          field.required
+            ? (field.options ?? [])
+            : [
+                // An optional drop-down MUST be able to go back to empty,
+                // otherwise a choice made once can never be cleared again.
+                { value: '', label: '— None —' },
+                ...(field.options ?? []),
+              ]
+        }
         value={String(value ?? '')}
         onChange={(event) => onChange(event.target.value)}
         className={spanClass}
@@ -404,6 +413,18 @@ function FieldRenderer({
 
         {/* Upload button (works while developing on your own computer) */}
         {field.uploadable ? <ImageUploader onUploaded={(url) => onChange(url)} /> : null}
+
+        {/* Remove a picture that was uploaded by mistake. It only clears the
+            address in the form; nothing is saved until Save is pressed. */}
+        {String(value ?? '').trim() !== '' ? (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="mt-2 text-xs font-semibold text-red-700 underline-offset-2 hover:underline"
+          >
+            Remove this photo
+          </button>
+        ) : null}
       </div>
     );
   }
