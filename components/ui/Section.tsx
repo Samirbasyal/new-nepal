@@ -1,3 +1,5 @@
+'use client';
+
 // ========================================
 // LAYOUT BUILDING BLOCKS
 // ========================================
@@ -116,6 +118,7 @@ export function PageHero({
   children?: ReactNode;
   icon?: IconName;
 }) {
+  const { tr } = useLang();
   return (
     <header className="relative overflow-hidden bg-brand-800 text-white">
       {/* Decorative background pattern (purely visual, hidden from screen readers) */}
@@ -131,18 +134,18 @@ export function PageHero({
         {eyebrow ? (
           <p className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-100">
             {icon ? <Icon name={icon} className="h-4 w-4" /> : null}
-            {eyebrow}
+            {tr(eyebrow)}
           </p>
         ) : null}
 
         {/* Every page has exactly one <h1> - good for SEO and screen readers. */}
         <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-          {title}
+          {tr(title)}
         </h1>
 
         {description ? (
           <p className="mt-4 max-w-3xl text-base leading-relaxed text-brand-50 sm:text-lg">
-            {description}
+            {tr(description)}
           </p>
         ) : null}
 
