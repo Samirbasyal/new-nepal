@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Members manager.
@@ -43,10 +45,10 @@ import { MEMBERSHIP_STATUS_OPTIONS, ROLE_OPTIONS } from '@/lib/constants';
 import { DISTRICT_OPTIONS } from '@/config/districts';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Members',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.members'), robots: { index: false, follow: false } };
+}
 
 const COLUMNS: ColumnConfig[] = [
   // The name opens that member's money history: their monthly fund, their loans
