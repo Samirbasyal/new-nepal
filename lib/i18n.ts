@@ -46,6 +46,8 @@ const en: Record<string, string> = {
   'donate.eyebrow': 'Support our mission',
   'donate.title': 'Support Our Mission',
   'donate.cta': 'Donate Now',
+  'cta.join': 'Join our community',
+  'cta.contact': 'Contact us',
 };
 
 const ne: Record<string, string> = {
@@ -82,6 +84,8 @@ const ne: Record<string, string> = {
   'donate.eyebrow': 'हाम्रो लक्ष्यमा सहयोग गर्नुहोस्',
   'donate.title': 'हाम्रो अभियानमा सहयोग',
   'donate.cta': 'अहिले सहयोग गर्नुहोस्',
+  'cta.join': 'हाम्रो समुदायमा सामेल हुनुहोस्',
+  'cta.contact': 'सम्पर्क गर्नुहोस्',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };

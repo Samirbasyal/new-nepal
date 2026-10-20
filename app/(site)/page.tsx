@@ -558,7 +558,7 @@ export default async function HomePage() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <ButtonLink href="/join" variant="accent" size="lg">
                 <Icon name="user-plus" className="h-5 w-5" />
-                Join our community
+                {t(lang, 'cta.join')}
               </ButtonLink>
 
               <ButtonLink href="/donate" variant="outline-light" size="lg">
@@ -568,7 +568,7 @@ export default async function HomePage() {
 
               <ButtonLink href="/contact" variant="outline-light" size="lg">
                 <Icon name="mail" className="h-5 w-5" />
-                Contact us
+                {t(lang, 'cta.contact')}
               </ButtonLink>
             </div>
 
