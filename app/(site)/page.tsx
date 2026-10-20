@@ -36,6 +36,8 @@ import { AlbumCard, BeneficiaryCard, EventCard, NewsCard } from '@/components/pu
 import { GalleryGrid } from '@/components/public/GalleryGrid';
 import { DonorGallery, type PublicDonor } from '@/components/public/DonorGallery';
 import { DonorAccountBand } from '@/components/public/DonorAccountBand';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
@@ -61,7 +63,9 @@ import { formatNumber } from '@/lib/utils';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // Load everything the homepage needs, in parallel.
+  
+  const lang = await getLanguage();
+// Load everything the homepage needs, in parallel.
   const [data, settings, womenContent, donors, focusRows, publicMembers, sliderImages] =
     await Promise.all([
     getHomepageData(),
@@ -248,7 +252,7 @@ export default async function HomePage() {
         <SectionHeading
           eyebrow="Programs and activities"
           icon="layers"
-          title="Recent Programs"
+          title={t(lang, 'home.programs')}
           description="Ongoing and past programs run together with the community."
         />
 
@@ -291,7 +295,7 @@ export default async function HomePage() {
         <SectionHeading
           eyebrow="Projects"
           icon="briefcase"
-          title="Projects and works"
+          title={t(lang, 'home.projects')}
           description="Longer-term projects and the day-to-day work behind them."
         />
 
@@ -329,7 +333,7 @@ export default async function HomePage() {
           While they are empty this whole block stays hidden, so the website
           never shows invented statistics.
           ======================================== */}
-      <StatGrid title="Our impact so far" />
+      <StatGrid title={t(lang, 'home.impact')} />
 
       {/* ========================================
           6. BENEFICIARIES
@@ -339,7 +343,7 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Beneficiaries"
             icon="users"
-            title="Who we serve"
+            title={t(lang, 'home.serve')}
             description="The groups of people our work is designed to support."
             align="center"
           />
@@ -413,7 +417,7 @@ export default async function HomePage() {
         <SectionHeading
           eyebrow="Events"
           icon="calendar"
-          title="Upcoming events"
+          title={t(lang, 'home.events')}
           description="Programs and gatherings open to the community."
         />
 
@@ -447,7 +451,7 @@ export default async function HomePage() {
         <SectionHeading
           eyebrow="News"
           icon="megaphone"
-          title="Latest news and notices"
+          title={t(lang, 'home.news')}
           description="Updates, announcements and stories from our work."
         />
 
@@ -482,7 +486,7 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Gallery"
             icon="image"
-            title="From our gallery"
+            title={t(lang, 'home.gallery')}
             description="Photographs from our activities and events."
           />
 
@@ -512,7 +516,7 @@ export default async function HomePage() {
           <SectionHeading
             eyebrow="Supporters"
             icon="heart"
-            title="Our Donors & Supporters"
+            title={t(lang, 'home.donors')}
             description="The people and organizations who make this work possible. Click a photo to read about their contribution."
             align="center"
           />

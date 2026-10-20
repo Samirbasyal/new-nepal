@@ -35,6 +35,14 @@ const en: Record<string, string> = {
   'hero.title': 'Welcome to Our Club',
   'hero.join': 'Join our community',
   'hero.explore': 'Explore our programs',
+  'home.programs': 'Recent Programs',
+  'home.projects': 'Projects and works',
+  'home.impact': 'Our impact so far',
+  'home.serve': 'Who we serve',
+  'home.events': 'Upcoming events',
+  'home.news': 'Latest news and notices',
+  'home.gallery': 'From our gallery',
+  'home.donors': 'Our Donors & Supporters',
 };
 
 const ne: Record<string, string> = {
@@ -60,6 +68,14 @@ const ne: Record<string, string> = {
   'hero.title': 'हाम्रो क्लबमा स्वागत छ',
   'hero.join': 'हाम्रो समुदायमा सामेल हुनुहोस्',
   'hero.explore': 'हाम्रा कार्यक्रम हेर्नुहोस्',
+  'home.programs': 'पछिल्ला कार्यक्रमहरू',
+  'home.projects': 'परियोजना तथा कामहरू',
+  'home.impact': 'हाम्रो प्रभाव',
+  'home.serve': 'हामी कसलाई सेवा दिन्छौं',
+  'home.events': 'आउँदै गरेका कार्यक्रम',
+  'home.news': 'पछिल्ला समाचार तथा सूचना',
+  'home.gallery': 'हाम्रो ग्यालरीबाट',
+  'home.donors': 'हाम्रा सहयोगीहरू',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };
