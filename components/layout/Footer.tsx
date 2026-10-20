@@ -12,6 +12,8 @@
 // ========================================
 
 import Link from 'next/link';
+import { t, tHref } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { LogoMark } from '@/components/layout/Logo';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Section';
@@ -29,6 +31,7 @@ const SOCIAL_FIELDS: { key: string; label: string; icon: IconName }[] = [
 ];
 
 export async function Footer() {
+  const lang = await getLanguage();
   const settings = await getSettings();
 
   const orgName = setting(settings, 'org.name', organization.name);
@@ -83,7 +86,7 @@ export async function Footer() {
 
           {/* ---------- Column 2: quick links ---------- */}
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wide text-white">Explore</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-white">{t(lang, 'footer.explore')}</h2>
             <ul className="mt-4 space-y-2.5">
               {navPrimary.map((item) => (
                 <li key={item.href}>
@@ -91,7 +94,7 @@ export async function Footer() {
                     href={item.href}
                     className="text-sm text-brand-100 transition-colors hover:text-white hover:underline"
                   >
-                    {item.label}
+                    {tHref(lang, item.href, item.label)}
                   </Link>
                 </li>
               ))}
@@ -118,7 +121,7 @@ export async function Footer() {
                     href={item.href}
                     className="text-sm text-brand-100 transition-colors hover:text-white hover:underline"
                   >
-                    {item.label}
+                    {tHref(lang, item.href, item.label)}
                   </Link>
                 </li>
               ))}

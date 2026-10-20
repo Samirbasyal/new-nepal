@@ -30,6 +30,7 @@ const en: Record<string, string> = {
   'nav.donate': 'Donate',
   'nav.login': 'Member Login',
   'nav.privacy': 'Privacy',
+  'footer.explore': 'Explore',
 };
 
 const ne: Record<string, string> = {
@@ -50,6 +51,7 @@ const ne: Record<string, string> = {
   'nav.donate': 'सहयोग गर्नुहोस्',
   'nav.login': 'सदस्य लगइन',
   'nav.privacy': 'गोपनीयता',
+  'footer.explore': 'अन्वेषण',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };
