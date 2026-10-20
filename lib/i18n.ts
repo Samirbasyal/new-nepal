@@ -72,6 +72,17 @@ const en: Record<string, string> = {
   'donors.eyebrow': 'Supporters',
   'contact.eyebrow': 'Contact',
   'contact.title': 'Contact us',
+  'member.dashboard': 'Dashboard',
+  'member.profile': 'My profile',
+  'member.tasks': 'My tasks',
+  'member.duties': 'My responsibilities',
+  'member.fund': 'Monthly fund',
+  'member.fundPay': 'Pay fund',
+  'member.fundHistory': 'Fund history',
+  'member.loans': 'My loans',
+  'member.notifications': 'Notifications',
+  'member.messages': 'Messages',
+  'member.notes': 'My notes',
 };
 
 const ne: Record<string, string> = {
@@ -134,6 +145,17 @@ const ne: Record<string, string> = {
   'donors.eyebrow': 'सहयोगीहरू',
   'contact.eyebrow': 'सम्पर्क',
   'contact.title': 'सम्पर्क गर्नुहोस्',
+  'member.dashboard': 'ड्यासबोर्ड',
+  'member.profile': 'मेरो प्रोफाइल',
+  'member.tasks': 'मेरा कामहरू',
+  'member.duties': 'मेरो जिम्मेवारी',
+  'member.fund': 'मासिक कोष',
+  'member.fundPay': 'कोष भुक्तानी',
+  'member.fundHistory': 'कोष इतिहास',
+  'member.loans': 'मेरा ऋणहरू',
+  'member.notifications': 'सूचनाहरू',
+  'member.messages': 'सन्देशहरू',
+  'member.notes': 'मेरा नोटहरू',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };
@@ -157,6 +179,17 @@ export const NAV_KEY_BY_HREF: Record<string, string> = {
   '/donate': 'nav.donate',
   '/member/login': 'nav.login',
   '/privacy': 'nav.privacy',
+  '/member/dashboard': 'member.dashboard',
+  '/member/profile': 'member.profile',
+  '/member/tasks': 'member.tasks',
+  '/member/duties': 'member.duties',
+  '/member/fund': 'member.fund',
+  '/member/fund/pay': 'member.fundPay',
+  '/member/fund/history': 'member.fundHistory',
+  '/member/loans': 'member.loans',
+  '/member/notifications': 'member.notifications',
+  '/member/messages': 'member.messages',
+  '/member/notes': 'member.notes',
 };
 
 /** Translate one key. Falls back to English, then to the key itself. */

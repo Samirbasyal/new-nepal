@@ -19,6 +19,7 @@
 import Link from 'next/link';
 import { requireMember } from '@/lib/auth/guards';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
+import { getLanguage } from '@/lib/i18n-server';
 import { MemberNav } from '@/components/member/MemberNav';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { LogoMark } from '@/components/layout/Logo';
@@ -32,6 +33,7 @@ export default async function MemberPanelLayout({ children }: { children: React.
   // ---------- SERVER-SIDE AUTHORIZATION ----------
   // Not signed in? -> redirected to /member/login
   const user = await requireMember();
+  const lang = await getLanguage();
 
   // ---------- Is a payment waiting for approval? ----------
   // Read from the database on EVERY page of the panel, so the badge cannot be
@@ -81,7 +83,7 @@ export default async function MemberPanelLayout({ children }: { children: React.
           <div className="grid grid-cols-1 gap-8 lg:h-full lg:min-h-0 lg:grid-cols-12">
             {/* Menu (sidebar on desktop, button row on mobile) */}
             <div className="self-start lg:col-span-3 lg:h-full lg:min-h-0 lg:min-w-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-2">
-              <MemberNav memberName={user.name} pendingPayments={pendingPayments} />
+              <MemberNav memberName={user.name} lang={lang} pendingPayments={pendingPayments} />
             </div>
 
             {/* Page content. The id is the place the menu scrolls to after a

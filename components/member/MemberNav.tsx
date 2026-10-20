@@ -17,6 +17,7 @@ import { usePathname } from 'next/navigation';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { PanelNavLink } from '@/components/ui/PanelNavLink';
+import { tHref, type Lang } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 // Every entry in the member menu. Add a page in app/member/(panel)/ and add
@@ -58,9 +59,11 @@ const MEMBER_LINKS: { label: string; href: string; icon: IconName }[] = [
 
 export function MemberNav({
   memberName,
+  lang,
   pendingPayments = 0,
 }: {
   memberName: string;
+  lang: Lang;
   /** How many fund payments this member has waiting for approval. */
   pendingPayments?: number;
 }) {
@@ -98,7 +101,7 @@ export function MemberNav({
             )}
           >
             <Icon name={item.icon} className="h-4 w-4" />
-            {item.label}
+            {tHref(lang, item.href, item.label)}
             {item.href === '/member/fund/pay' && pendingPayments > 0 ? (
               <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 {pendingPayments}
@@ -162,7 +165,7 @@ export function MemberNav({
                     )}
                   >
                     <Icon name={item.icon} className="h-4 w-4" />
-                    {item.label}
+                    {tHref(lang, item.href, item.label)}
                     {item.href === '/member/fund/pay' && pendingPayments > 0 ? (
                       <span className="ml-auto rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
                         {pendingPayments}
