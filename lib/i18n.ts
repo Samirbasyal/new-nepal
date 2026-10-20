@@ -90,6 +90,40 @@ const en: Record<string, string> = {
   'admin.g.fund': 'Fund management',
   'admin.g.field': 'Field work',
   'admin.g.records': 'Records & settings',
+  '/admin/dashboard': 'Dashboard',
+  '/admin/notifications': 'Notifications',
+  '/admin/programs': 'Programs',
+  '/admin/projects': 'Projects & Our Works',
+  '/admin/events': 'Events',
+  '/admin/news': 'News & Notices',
+  '/admin/gallery': 'Gallery',
+  '/admin/content-sections': 'Content sections',
+  '/admin/beneficiaries': 'Beneficiaries',
+  '/admin/donors': 'Donors & supporters',
+  '/admin/donors/amounts': 'Supporter donations',
+  '/admin/members': 'Members',
+  '/admin/karya-samiti': 'Karya Samiti',
+  '/admin/karya-samiti/duties': 'Committee responsibilities',
+  '/admin/karya-samiti/role-duties': 'Duties of each post',
+  '/admin/karya-samiti/posts': 'Committee posts',
+  '/admin/tasks': 'Member tasks',
+  '/admin/applications': 'Join applications',
+  '/admin/messages': 'Contact messages',
+  '/admin/member-messages': 'Messages from members',
+  '/admin/fund': 'Fund dashboard',
+  '/admin/fund/collections': 'Monthly fund records',
+  '/admin/fund/contributions': 'Monthly tracking',
+  '/admin/fund/expenses': 'Expenses',
+  '/admin/fund/banks': 'Payment settings & QR',
+  '/admin/fund/categories': 'Fund categories',
+  '/admin/fund/reports': 'Reports & export',
+  '/admin/loans': 'Loan management',
+  '/admin/donations': 'Donation records',
+  '/admin/notes': 'My notes',
+  '/admin/language': 'Language settings',
+  '/admin/settings': 'Website settings',
+  '/admin/activity': 'Activity log',
+  '/admin/districts': 'District activities',
 };
 
 const ne: Record<string, string> = {
@@ -170,6 +204,40 @@ const ne: Record<string, string> = {
   'admin.g.fund': 'कोष व्यवस्थापन',
   'admin.g.field': 'फिल्ड कार्य',
   'admin.g.records': 'अभिलेख तथा सेटिङ',
+  '/admin/dashboard': 'ड्यासबोर्ड',
+  '/admin/notifications': 'सूचनाहरू',
+  '/admin/programs': 'कार्यक्रमहरू',
+  '/admin/projects': 'परियोजना तथा कामहरू',
+  '/admin/events': 'कार्यक्रम/उत्सव',
+  '/admin/news': 'समाचार तथा सूचना',
+  '/admin/gallery': 'ग्यालरी',
+  '/admin/content-sections': 'सामग्री खण्डहरू',
+  '/admin/beneficiaries': 'लाभग्राहीहरू',
+  '/admin/donors': 'सहयोगीहरू',
+  '/admin/donors/amounts': 'सहयोगी चन्दा',
+  '/admin/members': 'सदस्यहरू',
+  '/admin/karya-samiti': 'कार्य समिति',
+  '/admin/karya-samiti/duties': 'समिति जिम्मेवारी',
+  '/admin/karya-samiti/role-duties': 'पद अनुसार जिम्मेवारी',
+  '/admin/karya-samiti/posts': 'समिति पदहरू',
+  '/admin/tasks': 'सदस्य कामहरू',
+  '/admin/applications': 'सदस्यता आवेदन',
+  '/admin/messages': 'सम्पर्क सन्देश',
+  '/admin/member-messages': 'सदस्यका सन्देश',
+  '/admin/fund': 'कोष ड्यासबोर्ड',
+  '/admin/fund/collections': 'मासिक कोष अभिलेख',
+  '/admin/fund/contributions': 'मासिक ट्र्याकिङ',
+  '/admin/fund/expenses': 'खर्चहरू',
+  '/admin/fund/banks': 'भुक्तानी सेटिङ तथा QR',
+  '/admin/fund/categories': 'कोष श्रेणीहरू',
+  '/admin/fund/reports': 'रिपोर्ट तथा निर्यात',
+  '/admin/loans': 'ऋण व्यवस्थापन',
+  '/admin/donations': 'चन्दा अभिलेख',
+  '/admin/notes': 'मेरा नोटहरू',
+  '/admin/language': 'भाषा सेटिङ',
+  '/admin/settings': 'वेबसाइट सेटिङ',
+  '/admin/activity': 'गतिविधि लग',
+  '/admin/districts': 'जिल्ला गतिविधि',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };
@@ -215,6 +283,10 @@ export function t(lang: Lang, key: string): string {
 export function tHref(lang: Lang, href: string, fallback: string): string {
   const key = NAV_KEY_BY_HREF[href];
   return key ? t(lang, key) : fallback;
+}
+
+export function tx(lang: Lang, key: string, fallback: string): string {
+  return DICTIONARIES[lang]?.[key] ?? DICTIONARIES.en[key] ?? fallback;
 }
 
 export function isLang(value: unknown): value is Lang {

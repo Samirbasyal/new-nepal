@@ -30,7 +30,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { PanelNavLink } from '@/components/ui/PanelNavLink';
-import { t, type Lang } from '@/lib/i18n';
+import { t, tx, type Lang } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 type NavGroup = {
@@ -297,8 +297,8 @@ export function AdminNav({
                     <Icon name={link.icon} className="h-3.5 w-3.5 shrink-0" />
                     {/* The number is read out too, because the badge is only a
                         coloured circle otherwise. */}
-                    <span className="truncate" aria-label={badge > 0 ? `${link.label}, ${badge} waiting` : undefined}>
-                      {link.label}
+                    <span className="truncate" aria-label={badge > 0 ? `${tx(lang, link.href, link.label)}, ${badge} waiting` : undefined}>
+                      {tx(lang, link.href, link.label)}
                     </span>
                     <CountBadge count={badge} active={active} />
                   </PanelNavLink>
