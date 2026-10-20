@@ -31,6 +31,7 @@ import { contact as defaultContact, organization as defaultOrganization, social 
 // ========================================
 export const SETTING_DEFINITIONS = [
   // --- Organization identity ---
+  { key: 'site.language', label: 'Website language (en / ne)', group: 'ORGANIZATION', default: 'en', type: 'text' },
   { key: 'org.name', label: 'Organization name', group: 'ORGANIZATION', default: defaultOrganization.name, type: 'text' },
   { key: 'org.tagline', label: 'Tagline (one line)', group: 'ORGANIZATION', default: defaultOrganization.tagline, type: 'text' },
   { key: 'org.description', label: 'Short description', group: 'ORGANIZATION', default: defaultOrganization.description, type: 'textarea' },

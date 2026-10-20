@@ -173,6 +173,7 @@ const NAV_GROUPS: NavGroup[] = [
       // the fund menu on purpose, because donation money is not member fund.
       { label: 'Donation records', href: '/admin/donations', icon: 'heart' },
       { label: 'My notes', href: '/admin/notes', icon: 'file-text' },
+      { label: 'Language settings', href: '/admin/language', icon: 'globe' },
       { label: 'Website settings', href: '/admin/settings', icon: 'settings' },
       { label: 'Activity log', href: '/admin/activity', icon: 'activity' },
     ],
