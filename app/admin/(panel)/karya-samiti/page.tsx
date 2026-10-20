@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls Karya Samiti (कार्य समिति) management.
@@ -32,10 +34,10 @@ import { KARYA_STATUS_OPTIONS } from '@/lib/karya/schemas';
 import { getKaryaPosts } from '@/lib/karya/queries';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Karya Samiti',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.karya'), robots: { index: false, follow: false } };
+}
 
 const COLUMNS: ColumnConfig[] = [
   { name: 'photoUrl', label: 'Photo', type: 'image' },

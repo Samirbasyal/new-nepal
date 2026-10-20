@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - DONATION RECORDS
 // ========================================
@@ -44,10 +46,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Donation records',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.donations'), robots: { index: false, follow: false } };
+}
 
 /** A friendly name for one donation type. */
 function typeLabel(value: string | null | undefined): string {

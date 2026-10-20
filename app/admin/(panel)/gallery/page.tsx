@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Gallery manager.
@@ -23,10 +25,10 @@ import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { cn } from '@/lib/utils';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Gallery',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.gallery'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // LOOK-UP LISTS FOR THE PHOTO FORM
