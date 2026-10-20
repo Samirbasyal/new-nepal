@@ -24,6 +24,7 @@ import { cache } from 'react';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth/guards';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
+import { getLanguage } from '@/lib/i18n-server';
 import { AdminMobileNav, AdminNav } from '@/components/admin/AdminNav';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { LogoMark } from '@/components/layout/Logo';
@@ -70,6 +71,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
   // Signed in as MEMBER  -> redirected to /unauthorized
   // Only ADMIN continues past this line.
   const user = await requireAdmin();
+  const lang = await getLanguage();
 
   const pendingCount = await countPendingPayments();
 
@@ -141,7 +143,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                 <AdminNav
                   isSuperAdmin={isSuperAdminRole(user.role)}
                   pendingCount={pendingCount}
-                />
+                 lang={lang} />
               </div>
             </aside>
 

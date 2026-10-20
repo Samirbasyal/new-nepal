@@ -83,6 +83,13 @@ const en: Record<string, string> = {
   'member.notifications': 'Notifications',
   'member.messages': 'Messages',
   'member.notes': 'My notes',
+  'admin.g.overview': 'Overview',
+  'admin.g.content': 'Website content',
+  'admin.g.people': 'People',
+  'admin.g.inbox': 'Inbox',
+  'admin.g.fund': 'Fund management',
+  'admin.g.field': 'Field work',
+  'admin.g.records': 'Records & settings',
 };
 
 const ne: Record<string, string> = {
@@ -156,6 +163,13 @@ const ne: Record<string, string> = {
   'member.notifications': 'सूचनाहरू',
   'member.messages': 'सन्देशहरू',
   'member.notes': 'मेरा नोटहरू',
+  'admin.g.overview': 'सिंहावलोकन',
+  'admin.g.content': 'वेबसाइट सामग्री',
+  'admin.g.people': 'व्यक्तिहरू',
+  'admin.g.inbox': 'इनबक्स',
+  'admin.g.fund': 'कोष व्यवस्थापन',
+  'admin.g.field': 'फिल्ड कार्य',
+  'admin.g.records': 'अभिलेख तथा सेटिङ',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };

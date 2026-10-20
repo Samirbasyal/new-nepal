@@ -30,6 +30,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { PanelNavLink } from '@/components/ui/PanelNavLink';
+import { t, type Lang } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 type NavGroup = {
@@ -201,10 +202,22 @@ function CountBadge({ count, active }: { count: number; active: boolean }) {
   );
 }
 
+const GROUP_KEY: Record<string, string> = {
+  Overview: 'admin.g.overview',
+  'Website content': 'admin.g.content',
+  People: 'admin.g.people',
+  Inbox: 'admin.g.inbox',
+  'Fund management': 'admin.g.fund',
+  'Field work': 'admin.g.field',
+  'Records & settings': 'admin.g.records',
+};
+
 export function AdminNav({
   isSuperAdmin = false,
   pendingCount = 0,
+  lang,
 }: {
+  lang: Lang;
   isSuperAdmin?: boolean;
   /** How many payments are waiting for verification. 0 hides the badge. */
   pendingCount?: number;
@@ -250,7 +263,7 @@ export function AdminNav({
                 : 'border-brand-200 bg-brand-50 text-brand-900 hover:bg-brand-100',
             )}
           >
-            <span>{group.title}</span>
+            <span>{GROUP_KEY[group.title] ? t(lang, GROUP_KEY[group.title]) : group.title}</span>
             <Icon
               name="chevron-down"
               className={cn(
