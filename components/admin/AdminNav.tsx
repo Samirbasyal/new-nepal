@@ -226,11 +226,11 @@ export function AdminNav({
 
   useEffect(() => {
     if (!activeGroup) return;
-    setOpenGroups((current) => (current[activeGroup] ? current : { ...current, [activeGroup]: true }));
+    setOpenGroups({ [activeGroup]: true });
   }, [activeGroup]);
 
   const toggleGroup = (title: string) =>
-    setOpenGroups((current) => ({ ...current, [title]: !current[title] }));
+    setOpenGroups((current) => (current[title] ? {} : { [title]: true }));
 
   return (
     <nav aria-label="Admin panel menu" className="space-y-4">
@@ -276,7 +276,7 @@ export function AdminNav({
                       // Selected item: a light green tint, not a solid block, so the
                       // sidebar stays calm and the yellow group button stands out.
                       active
-                        ? 'bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-200'
+                        ? 'border-l-4 border-accent-500 bg-brand-50 pl-1.5 font-semibold text-brand-900'
                         : 'text-ink-700 hover:bg-ink-100',
                     )}
                   >
