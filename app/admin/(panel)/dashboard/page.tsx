@@ -22,6 +22,8 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatDateTime, formatNumber } from '@/lib/utils';
 import { organization } from '@/config/site';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 
 export const dynamic = 'force-dynamic';
 
