@@ -31,6 +31,10 @@ const en: Record<string, string> = {
   'nav.login': 'Member Login',
   'nav.privacy': 'Privacy',
   'footer.explore': 'Explore',
+  'hero.eyebrow': 'Community-based youth organization',
+  'hero.title': 'Welcome to Our Club',
+  'hero.join': 'Join our community',
+  'hero.explore': 'Explore our programs',
 };
 
 const ne: Record<string, string> = {
@@ -52,6 +56,10 @@ const ne: Record<string, string> = {
   'nav.login': 'सदस्य लगइन',
   'nav.privacy': 'गोपनीयता',
   'footer.explore': 'अन्वेषण',
+  'hero.eyebrow': 'समुदायमा आधारित युवा संस्था',
+  'hero.title': 'हाम्रो क्लबमा स्वागत छ',
+  'hero.join': 'हाम्रो समुदायमा सामेल हुनुहोस्',
+  'hero.explore': 'हाम्रा कार्यक्रम हेर्नुहोस्',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };

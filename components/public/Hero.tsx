@@ -32,14 +32,18 @@ const NEW_TITLE = 'Welcome to Our Club';
 const NEW_SUBTITLE =
   'We are a community youth organization working together for equality, dignity, social justice, and sustainable community development in Bajhang, Nepal.';
 
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
+
 export async function Hero({ photos = [] }: { photos?: SliderPhoto[] }) {
+  const lang = await getLanguage();
   const settings = await getSettings();
 
   const storedTitle = setting(settings, 'home.heroTitle');
   const storedSubtitle = setting(settings, 'home.heroSubtitle');
   const imageUrl = setting(settings, 'home.heroImageUrl', '');
 
-  const title = !storedTitle || storedTitle.trim() === LEGACY_TITLE ? NEW_TITLE : storedTitle;
+  const title = !storedTitle || storedTitle.trim() === LEGACY_TITLE ? t(lang, 'hero.title') : storedTitle;
 
   const subtitle =
     !storedSubtitle || storedSubtitle.trim() === organization.tagline ? NEW_SUBTITLE : storedSubtitle;
@@ -64,7 +68,7 @@ export async function Hero({ photos = [] }: { photos?: SliderPhoto[] }) {
           <div className="lg:col-span-7">
             <p className="eyebrow mb-4 text-accent-300">
               <Icon name="heart-handshake" className="h-4 w-4" />
-              Community-based youth organization
+              {t(lang, 'hero.eyebrow')}
             </p>
 
             {/* The one and only <h1> on the homepage */}
@@ -79,12 +83,12 @@ export async function Hero({ photos = [] }: { photos?: SliderPhoto[] }) {
             {/* ---------- Main call-to-action buttons ---------- */}
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/join" className="btn btn-accent btn-lg">
-                Join our community
+                {t(lang, 'hero.join')}
                 <Icon name="arrow-right" className="h-5 w-5" />
               </Link>
 
               <Link href="/programs" className="btn btn-outline-light btn-lg">
-                Explore our programs
+                {t(lang, 'hero.explore')}
               </Link>
 
               <Link
