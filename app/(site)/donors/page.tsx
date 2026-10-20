@@ -20,6 +20,8 @@
 // ========================================
 
 import type { Metadata } from 'next';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -36,7 +38,9 @@ export const metadata: Metadata = {
 };
 
 export default async function DonorsPage() {
-  const donors = await getPublicDonors();
+  
+  const lang = await getLanguage();
+const donors = await getPublicDonors();
 
   // ========================================
   // ONLY THESE FIELDS LEAVE THE SERVER
@@ -56,9 +60,9 @@ export default async function DonorsPage() {
   return (
     <>
       <PageHero
-        eyebrow="Supporters"
+        eyebrow={t(lang, 'donors.eyebrow')}
         icon="heart"
-        title="Our Donors & Supporters"
+        title={t(lang, 'home.donors')}
         description="With sincere thanks to the people and organizations who make this work possible. Click a photo to read about their contribution."
       />
 

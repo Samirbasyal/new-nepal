@@ -20,6 +20,8 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { AlbumCard } from '@/components/public/Cards';
 import { GalleryGrid } from '@/components/public/GalleryGrid';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -39,7 +41,9 @@ export default async function GalleryPage({
 }: {
   searchParams: Promise<{ album?: string }>;
 }) {
-  const params = await searchParams;
+  
+  const lang = await getLanguage();
+const params = await searchParams;
   const albumSlug = params.album?.trim() || undefined;
 
   const [albums, allPhotos] = await Promise.all([
@@ -61,9 +65,9 @@ export default async function GalleryPage({
   return (
     <>
       <PageHero
-        eyebrow="Gallery"
+        eyebrow={t(lang, 'gallery.eyebrow')}
         icon="image"
-        title={selectedAlbum ? selectedAlbum.title : 'Gallery'}
+        title={selectedAlbum ? selectedAlbum.title : t(lang, 'gallery.eyebrow')}
         description={
           selectedAlbum?.description ||
           'Photographs from our activities, events and everyday work in the community.'
@@ -140,9 +144,9 @@ export default async function GalleryPage({
       {albums.length > 0 && !selectedAlbum ? (
         <Section muted>
           <SectionHeading
-            eyebrow="Albums"
+            eyebrow={t(lang, 'gallery.albumsEyebrow')}
             icon="folder"
-            title="Browse by album"
+            title={t(lang, 'gallery.albums')}
             description="Photos grouped by activity, event or year."
           />
 

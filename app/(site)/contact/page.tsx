@@ -18,6 +18,8 @@
 // ========================================
 
 import type { Metadata } from 'next';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { ContactForm } from '@/components/forms/ContactForm';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { PageHero, Section } from '@/components/ui/Section';
@@ -42,7 +44,9 @@ const SOCIAL_LINKS: { key: string; label: string; icon: IconName }[] = [
 ];
 
 export default async function ContactPage() {
-  const settings = await getSettings();
+  
+  const lang = await getLanguage();
+const settings = await getSettings();
 
   const orgName = setting(settings, 'org.name', organization.name);
   const address = setting(settings, 'contact.address');
@@ -61,9 +65,9 @@ export default async function ContactPage() {
   return (
     <>
       <PageHero
-        eyebrow="Contact"
+        eyebrow={t(lang, 'contact.eyebrow')}
         icon="mail"
-        title="Contact us"
+        title={t(lang, 'contact.title')}
         description="We would be glad to hear from you - whether you want to volunteer, support our work, or simply ask a question."
       />
 

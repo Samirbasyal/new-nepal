@@ -66,6 +66,12 @@ const en: Record<string, string> = {
   'common.more': 'More',
   'programs.eyebrow': 'Programs',
   'programs.title': 'Our programs',
+  'gallery.eyebrow': 'Gallery',
+  'gallery.albums': 'Browse by album',
+  'gallery.albumsEyebrow': 'Albums',
+  'donors.eyebrow': 'Supporters',
+  'contact.eyebrow': 'Contact',
+  'contact.title': 'Contact us',
 };
 
 const ne: Record<string, string> = {
@@ -122,6 +128,12 @@ const ne: Record<string, string> = {
   'common.more': 'अझै',
   'programs.eyebrow': 'कार्यक्रमहरू',
   'programs.title': 'हाम्रा कार्यक्रमहरू',
+  'gallery.eyebrow': 'ग्यालरी',
+  'gallery.albums': 'एल्बम अनुसार हेर्नुहोस्',
+  'gallery.albumsEyebrow': 'एल्बमहरू',
+  'donors.eyebrow': 'सहयोगीहरू',
+  'contact.eyebrow': 'सम्पर्क',
+  'contact.title': 'सम्पर्क गर्नुहोस्',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };
