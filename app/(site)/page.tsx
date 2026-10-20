@@ -214,15 +214,15 @@ export default async function HomePage() {
               </div>
             ) : (
             <div className="card p-6">
-              <h3 className="text-base font-bold text-ink-900">Our main areas of work</h3>
+              <h3 className="text-base font-bold text-ink-900">{t(lang, 'home.areas')}</h3>
 
               <ul className="mt-4 space-y-3">
                 {[
-                  { icon: 'book' as const, title: 'Education', text: 'Learning support for children and young people.' },
-                  { icon: 'stethoscope' as const, title: 'Health', text: 'Awareness and community health activities.' },
-                  { icon: 'heart-handshake' as const, title: 'Women empowerment', text: 'Skills, confidence and livelihood support.' },
-                  { icon: 'leaf' as const, title: 'Environment', text: 'Cleaner, greener and safer neighbourhoods.' },
-                  { icon: 'users' as const, title: 'Youth leadership', text: 'Giving young people a voice and a role.' },
+                  { icon: 'book' as const, title: t(lang, 'focus.edu'), text: t(lang, 'focus.eduText') },
+                  { icon: 'stethoscope' as const, title: t(lang, 'focus.health'), text: t(lang, 'focus.healthText') },
+                  { icon: 'heart-handshake' as const, title: t(lang, 'focus.women'), text: t(lang, 'focus.womenText') },
+                  { icon: 'leaf' as const, title: t(lang, 'focus.env'), text: t(lang, 'focus.envText') },
+                  { icon: 'users' as const, title: t(lang, 'focus.youth'), text: t(lang, 'focus.youthText') },
                 ].map((item) => (
                   <li key={item.title} className="flex gap-3">
                     <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-btn bg-brand-50 text-brand-600">

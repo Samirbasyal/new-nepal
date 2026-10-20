@@ -48,6 +48,17 @@ const en: Record<string, string> = {
   'donate.cta': 'Donate Now',
   'cta.join': 'Join our community',
   'cta.contact': 'Contact us',
+  'home.areas': 'Our main areas of work',
+  'focus.edu': 'Education',
+  'focus.eduText': 'Learning support for children and young people.',
+  'focus.health': 'Health',
+  'focus.healthText': 'Awareness and community health activities.',
+  'focus.women': 'Women empowerment',
+  'focus.womenText': 'Skills, confidence and livelihood support.',
+  'focus.env': 'Environment',
+  'focus.envText': 'Cleaner, greener and safer neighbourhoods.',
+  'focus.youth': 'Youth leadership',
+  'focus.youthText': 'Giving young people a voice and a role.',
 };
 
 const ne: Record<string, string> = {
@@ -86,6 +97,17 @@ const ne: Record<string, string> = {
   'donate.cta': 'अहिले सहयोग गर्नुहोस्',
   'cta.join': 'हाम्रो समुदायमा सामेल हुनुहोस्',
   'cta.contact': 'सम्पर्क गर्नुहोस्',
+  'home.areas': 'हाम्रा मुख्य कार्यक्षेत्रहरू',
+  'focus.edu': 'शिक्षा',
+  'focus.eduText': 'बालबालिका तथा युवालाई पढाइ सहयोग।',
+  'focus.health': 'स्वास्थ्य',
+  'focus.healthText': 'सचेतना तथा सामुदायिक स्वास्थ्य कार्यक्रम।',
+  'focus.women': 'महिला सशक्तीकरण',
+  'focus.womenText': 'सीप, आत्मविश्वास र जीविकोपार्जन सहयोग।',
+  'focus.env': 'वातावरण',
+  'focus.envText': 'सफा, हरित र सुरक्षित बस्ती।',
+  'focus.youth': 'युवा नेतृत्व',
+  'focus.youthText': 'युवालाई आवाज र भूमिका दिने।',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };
