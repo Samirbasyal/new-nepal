@@ -59,6 +59,11 @@ const en: Record<string, string> = {
   'focus.envText': 'Cleaner, greener and safer neighbourhoods.',
   'focus.youth': 'Youth leadership',
   'focus.youthText': 'Giving young people a voice and a role.',
+  'about.who': 'Who we are',
+  'about.values': 'Core values, what we do and how we do it',
+  'about.impact': 'Our impact',
+  'about.more': 'Further information',
+  'common.more': 'More',
 };
 
 const ne: Record<string, string> = {
@@ -108,6 +113,11 @@ const ne: Record<string, string> = {
   'focus.envText': 'सफा, हरित र सुरक्षित बस्ती।',
   'focus.youth': 'युवा नेतृत्व',
   'focus.youthText': 'युवालाई आवाज र भूमिका दिने।',
+  'about.who': 'हामी को हौं',
+  'about.values': 'मूल मूल्य, हामी के गर्छौं र कसरी गर्छौं',
+  'about.impact': 'हाम्रो प्रभाव',
+  'about.more': 'थप जानकारी',
+  'common.more': 'अझै',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };

@@ -25,6 +25,8 @@ import { ButtonLink } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHero, Section, SectionHeading, CardGrid } from '@/components/ui/Section';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { ContentSectionGrid, ContentSectionView } from '@/components/public/ContentSectionView';
 import { StatGrid } from '@/components/public/StatGrid';
 import { getContentByGroup, getPublishedCounts } from '@/lib/data/public';
@@ -40,7 +42,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  const [sections, settings, counts] = await Promise.all([
+  
+  const lang = await getLanguage();
+const [sections, settings, counts] = await Promise.all([
     getContentByGroup('ABOUT'),
     getSettings(),
     getPublishedCounts(),
@@ -97,7 +101,7 @@ export default async function AboutPage() {
               <ContentSectionView section={whoWeAre} showHeading />
             ) : (
               <div>
-                <h2 className="font-display text-2xl font-bold text-ink-900">Who we are</h2>
+                <h2 className="font-display text-2xl font-bold text-ink-900">{t(lang, 'about.who')}</h2>
                 <p className="mt-4 text-base leading-relaxed text-ink-600">{orgDescription}</p>
                 <p className="mt-4 text-sm italic text-ink-400">
                   Add the full organization introduction in Admin Panel → Content sections
@@ -232,7 +236,7 @@ export default async function AboutPage() {
           <SectionHeading
             eyebrow="How we work"
             icon="shield-check"
-            title="Core values, what we do and how we do it"
+            title={t(lang, 'about.values')}
             align="center"
           />
 
@@ -248,14 +252,14 @@ export default async function AboutPage() {
       {/* ========================================
           IMPACT NUMBERS (hidden while empty)
           ======================================== */}
-      <StatGrid title="Our impact" showHeading />
+      <StatGrid title={t(lang, 'about.impact')} showHeading />
 
       {/* ========================================
           ANY OTHER ABOUT BLOCKS ADDED BY THE ADMINISTRATOR
           ======================================== */}
       {otherSections.length > 0 ? (
         <Section>
-          <SectionHeading eyebrow="More" title="Further information" />
+          <SectionHeading eyebrow={t(lang, 'common.more')} title={t(lang, 'about.more')} />
           <CardGrid columns={2}>
             {otherSections.map((section) => (
               <div key={section.id} className="card p-6">
