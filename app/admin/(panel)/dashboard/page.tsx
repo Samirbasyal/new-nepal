@@ -27,10 +27,10 @@ import { getLanguage } from '@/lib/i18n-server';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Admin dashboard',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.dashboard'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // READ THE REAL COUNTS
