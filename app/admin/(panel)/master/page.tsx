@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // SUPER ADMIN - MASTER DASHBOARD
 // ========================================
@@ -37,10 +39,10 @@ import { readSettingValue } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Master dashboard',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.master'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // ONE CARD

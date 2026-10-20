@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - PAYMENT SETTINGS AND QR CODES
 // ========================================
@@ -34,10 +36,10 @@ import type { FieldConfig, ColumnConfig } from '@/components/admin/types';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Payment settings and QR codes',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundBanks'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // THE FORM

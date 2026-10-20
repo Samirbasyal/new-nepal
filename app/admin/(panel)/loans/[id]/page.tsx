@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // SUPER ADMIN PANEL - ONE LOAN, COMPLETE RECORD
 // ========================================
@@ -39,10 +41,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Loan record',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.loanRecord'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // STATUS BADGES

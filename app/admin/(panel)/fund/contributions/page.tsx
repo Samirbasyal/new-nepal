@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - MONTHLY CONTRIBUTION TRACKING
 // ========================================
@@ -33,10 +35,10 @@ import { Icon } from '@/components/ui/Icon';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Monthly tracking',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundContributions'), robots: { index: false, follow: false } };
+}
 
 export default async function AdminContributionsPage({
   searchParams,

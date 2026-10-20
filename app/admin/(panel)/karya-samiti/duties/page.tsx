@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - COMMITTEE RESPONSIBILITIES
 // ========================================
@@ -20,10 +22,10 @@ import { DUTY_STATUS_OPTIONS } from '@/lib/karya/schemas';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Committee responsibilities',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.karyaDuties'), robots: { index: false, follow: false } };
+}
 
 const COLUMNS: ColumnConfig[] = [
   { name: 'title', label: 'Responsibility' },

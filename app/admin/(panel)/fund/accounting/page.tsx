@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // SUPER ADMIN - MONTHLY COLLECTION ACCOUNTING
 // ========================================
@@ -38,10 +40,10 @@ import { readSettingValue } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Monthly collection accounting',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundAccounting'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // ONE CARD

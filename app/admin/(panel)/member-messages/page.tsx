@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - MESSAGES FROM MEMBERS
 // ========================================
@@ -30,10 +32,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Messages from members',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.memberMessages'), robots: { index: false, follow: false } };
+}
 
 export default async function AdminMemberMessagesPage({
   searchParams,

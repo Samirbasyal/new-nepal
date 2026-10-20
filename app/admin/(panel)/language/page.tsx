@@ -9,10 +9,13 @@
 import type { Metadata } from 'next';
 import { requireAdmin } from '@/lib/auth/guards';
 import { getLanguage } from '@/lib/i18n-server';
-import { LANGUAGES } from '@/lib/i18n';
+import { LANGUAGES, t } from '@/lib/i18n';
 import { LanguageForm } from '@/components/admin/LanguageForm';
 
-export const metadata: Metadata = { title: 'Language settings' };
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.language'), robots: { index: false, follow: false } };
+}
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLanguagePage() {

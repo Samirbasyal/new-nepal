@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - NOTIFICATIONS
 // ========================================
@@ -22,10 +24,10 @@ import { NotificationCentre } from '@/components/shared/NotificationCentre';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Notifications',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.notifications'), robots: { index: false, follow: false } };
+}
 
 export default async function AdminNotificationsPage() {
   await requireAdmin();

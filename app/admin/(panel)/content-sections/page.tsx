@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Content Sections manager.
@@ -32,10 +34,10 @@ import { CONTENT_GROUP_OPTIONS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Content sections',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.contentSections'), robots: { index: false, follow: false } };
+}
 
 const COLUMNS: ColumnConfig[] = [
   { name: 'title', label: 'Heading' },

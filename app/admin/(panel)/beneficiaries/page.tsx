@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Beneficiaries manager.
@@ -20,10 +22,10 @@ import { ResourceManager } from '@/components/admin/ResourceManager';
 import { SELECTABLE_ICONS } from '@/components/ui/Icon';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Beneficiaries',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.beneficiaries'), robots: { index: false, follow: false } };
+}
 
 const COLUMNS: ColumnConfig[] = [
   { name: 'name', label: 'Group' },

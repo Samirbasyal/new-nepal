@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - DISTRICT WORK (77 DISTRICTS)
 // ========================================
@@ -43,10 +45,10 @@ import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'District activities',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.districts'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // ONE SUMMARY CARD

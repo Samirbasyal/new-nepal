@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - PERMANENT DUTIES FOR A POST
 // ========================================
@@ -18,10 +20,10 @@ import { ResourceManager } from '@/components/admin/ResourceManager';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Role responsibilities',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.roleDuties'), robots: { index: false, follow: false } };
+}
 
 const COLUMNS: ColumnConfig[] = [
   { name: 'postTitle', label: 'Post' },

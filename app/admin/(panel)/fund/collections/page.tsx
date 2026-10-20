@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - MONTHLY FUND RECORDS
 // ========================================
@@ -41,10 +43,10 @@ import { readSettingValue } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Monthly fund records',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundCollections'), robots: { index: false, follow: false } };
+}
 
 /** The member dropdown and the bank dropdown are loaded from the database. */
 async function getOptions() {

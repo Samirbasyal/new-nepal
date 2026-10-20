@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - FUND & EXPENSE CATEGORIES
 // ========================================
@@ -24,10 +26,10 @@ import { SectionHeading } from '@/components/ui/Section';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Fund categories',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundCategories'), robots: { index: false, follow: false } };
+}
 
 const CATEGORY_FIELDS: FieldConfig[] = [
   { name: 'name', label: 'Name', type: 'text', required: true, span: 2 },

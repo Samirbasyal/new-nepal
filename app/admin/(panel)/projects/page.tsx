@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Projects & Our Works manager.
@@ -16,10 +18,10 @@ import { ResourceManager } from '@/components/admin/ResourceManager';
 import { PROJECT_KIND_OPTIONS, PROJECT_STATUS_OPTIONS } from '@/lib/constants';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Projects and Our Works',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.projects'), robots: { index: false, follow: false } };
+}
 
 const COLUMNS: ColumnConfig[] = [
   { name: 'title', label: 'Title' },

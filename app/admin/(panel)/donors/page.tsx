@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - DONORS & SUPPORTERS
 // ========================================
@@ -19,10 +21,10 @@ import { ResourceManager } from '@/components/admin/ResourceManager';
 import { AddSupporterWithAmount } from '@/components/admin/AddSupporterWithAmount';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Donors and supporters',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.donors'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // THE TABLE

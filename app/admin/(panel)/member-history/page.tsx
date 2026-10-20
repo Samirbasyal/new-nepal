@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - ONE MEMBER'S FINANCIAL HISTORY
 // ========================================
@@ -42,10 +44,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Member financial history',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.memberHistory'), robots: { index: false, follow: false } };
+}
 
 /** The colours of a status badge, written out in full for the styling tool. */
 const STATUS_CLASSES: Record<string, string> = {

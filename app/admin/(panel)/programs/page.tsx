@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Programs manager.
@@ -18,10 +20,10 @@ import { PROGRAM_STATUS_OPTIONS } from '@/lib/constants';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Programs',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.programs'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // READ THE LIST OF PROJECTS

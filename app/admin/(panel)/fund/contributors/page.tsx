@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // SUPER ADMIN - MEMBER-WISE CONTRIBUTION REPORT
 // ========================================
@@ -40,10 +42,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Member contribution report',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundContributors'), robots: { index: false, follow: false } };
+}
 
 // The five states a month's contribution can be in (see prisma/schema.prisma ->
 // MonthlyContribution).

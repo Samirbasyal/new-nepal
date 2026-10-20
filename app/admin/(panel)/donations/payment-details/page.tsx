@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - BANK, QR AND eSEWA DETAILS
 // ========================================
@@ -28,10 +30,10 @@ import { getSettings } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Bank and QR details',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.paymentDetails'), robots: { index: false, follow: false } };
+}
 
 export default async function DonationPaymentDetailsPage() {
   const settings = await getSettings();

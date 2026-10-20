@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - SUPPORTERS AND THEIR DONATIONS
 // ========================================
@@ -25,10 +27,10 @@ import { DonorTotals, type DonorTotalRow } from '@/components/admin/DonorTotals'
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Supporter donations',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.supporterDonations'), robots: { index: false, follow: false } };
+}
 
 export default async function AdminDonorAmountsPage() {
   await requireAdmin();

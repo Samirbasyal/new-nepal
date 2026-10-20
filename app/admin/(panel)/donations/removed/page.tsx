@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - REMOVED DONATIONS
 // ========================================
@@ -31,10 +33,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Removed donations',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.removedDonations'), robots: { index: false, follow: false } };
+}
 
 export default async function RemovedDonationsPage() {
   const rows = isDatabaseConfigured()

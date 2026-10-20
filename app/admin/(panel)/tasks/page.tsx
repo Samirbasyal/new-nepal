@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Member Tasks manager.
@@ -18,10 +20,10 @@ import { TASK_PRIORITY_OPTIONS, TASK_STATUS_OPTIONS } from '@/lib/constants';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
-export const metadata: Metadata = {
-  title: 'Member tasks',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.tasks'), robots: { index: false, follow: false } };
+}
 
 // NOTE: "assignedTo.name" reads the name from the related member record.
 // lib/api/resources.ts loads the related user with  include: { assignedTo: ... }

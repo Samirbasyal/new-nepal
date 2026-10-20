@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - ONE DONATION, IN FULL
 // ========================================
@@ -41,10 +43,10 @@ import { formatDate, formatDateTime } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Donation record',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.donationRecord'), robots: { index: false, follow: false } };
+}
 
 function labelOf(options: { value: string; label: string }[], value: string | null | undefined): string {
   return options.find((option) => option.value === String(value ?? ''))?.label ?? String(value ?? '-');

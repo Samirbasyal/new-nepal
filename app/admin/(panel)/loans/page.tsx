@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // SUPER ADMIN PANEL - LOAN MANAGEMENT
 // ========================================
@@ -36,10 +38,10 @@ import type { ColumnConfig, FieldConfig } from '@/components/admin/types';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Loan management',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.loans'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // THE OVERVIEW CARDS

@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - EXPENSES
 // ========================================
@@ -22,10 +24,10 @@ import { EXPENSE_STATUS_OPTIONS, EXPENSE_METHOD_OPTIONS } from '@/lib/constants'
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Expenses',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.expenses'), robots: { index: false, follow: false } };
+}
 
 async function getCategoryOptions() {
   if (!isDatabaseConfigured()) return [];

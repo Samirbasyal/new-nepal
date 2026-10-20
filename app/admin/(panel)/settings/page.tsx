@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL
 // This code controls the Website Settings page.
@@ -31,10 +33,10 @@ import { Icon } from '@/components/ui/Icon';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Website settings',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.settings'), robots: { index: false, follow: false } };
+}
 
 // ========================================
 // EXTRA EXPLANATIONS SHOWN UNDER EACH GROUP TITLE

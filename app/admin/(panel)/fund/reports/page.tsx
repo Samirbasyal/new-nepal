@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - FUND REPORTS & EXPORT
 // ========================================
@@ -25,10 +27,10 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Fund reports',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundReports'), robots: { index: false, follow: false } };
+}
 
 const REPORTS: { value: string; label: string; description: string; icon: IconName }[] = [
   {

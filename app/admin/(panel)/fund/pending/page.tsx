@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // ADMIN PANEL - PAYMENT VERIFICATION QUEUE
 // ========================================
@@ -68,10 +70,10 @@ import { Icon } from '@/components/ui/Icon';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Payment verification',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'admin.fundPending'), robots: { index: false, follow: false } };
+}
 
 // ---------- Small helpers (kept out of the component body) ----------
 
