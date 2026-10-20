@@ -9,6 +9,7 @@
 //   <PageHero>           -> the coloured banner at the top of inner pages
 // ========================================
 
+import { useLang } from '@/components/ui/LangProvider';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Icon, type IconName } from '@/components/ui/Icon';
@@ -70,6 +71,8 @@ export function SectionHeading({
   className?: string;
   icon?: IconName;
 }) {
+  // Words passed in English are translated here; already-translated words pass through.
+  const { tr } = useLang();
   return (
     <div
       className={cn(
@@ -81,17 +84,17 @@ export function SectionHeading({
       {eyebrow ? (
         <p className={cn('eyebrow mb-2', align === 'center' && 'justify-center')}>
           {icon ? <Icon name={icon} className="h-4 w-4" /> : null}
-          {eyebrow}
+          {tr(eyebrow)}
         </p>
       ) : null}
 
       {/* One <h2> per section keeps the heading order correct for accessibility. */}
       <h2 className="font-display text-2xl font-bold leading-tight text-ink-900 sm:text-3xl lg:text-4xl">
-        {title}
+        {tr(title)}
       </h2>
 
       {description ? (
-        <p className="mt-3 text-base leading-relaxed text-ink-600 sm:text-lg">{description}</p>
+        <p className="mt-3 text-base leading-relaxed text-ink-600 sm:text-lg">{tr(description)}</p>
       ) : null}
     </div>
   );

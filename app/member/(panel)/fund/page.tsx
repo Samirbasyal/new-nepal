@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // MEMBER PANEL - MONTHLY FUND
 // ========================================
@@ -36,10 +38,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Monthly fund',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'member.fund'), robots: { index: false, follow: false } };
+}
 
 export default async function MemberFundPage() {
   const user = await requireMember();

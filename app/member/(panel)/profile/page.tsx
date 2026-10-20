@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // MEMBER PANEL
 // This code controls the "My profile" page.
@@ -23,10 +25,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'My profile',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'member.profile'), robots: { index: false, follow: false } };
+}
 
 export default async function MemberProfilePage() {
   const user = await requireMember();

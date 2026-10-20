@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // MEMBER PANEL - MY FUND HISTORY
 // ========================================
@@ -23,10 +25,10 @@ import { StatusChip } from '@/components/admin/FundCharts';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'My fund history',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'member.fundHistory'), robots: { index: false, follow: false } };
+}
 
 export default async function MemberFundHistoryPage() {
   const user = await requireMember();

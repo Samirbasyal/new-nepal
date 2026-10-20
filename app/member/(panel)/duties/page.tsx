@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // MEMBER PANEL - YOUR ROLE & RESPONSIBILITIES
 // ========================================
@@ -21,10 +23,10 @@ import { DutyList, type MemberDuty } from '@/components/member/DutyList';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Your role & responsibilities',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'member.duties'), robots: { index: false, follow: false } };
+}
 
 export default async function MemberDutiesPage() {
   const user = await requireMember();

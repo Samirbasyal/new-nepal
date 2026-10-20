@@ -46,7 +46,6 @@ const WORDS: Record<string, string> = {
   Deadline: 'म्याद',
   Description: 'विवरण',
   Designation: 'पदनाम',
-  Details: 'विवरण',
   District: 'जिल्ला',
   Donor: 'दाता',
   Due: 'बाँकी',
@@ -173,6 +172,79 @@ const PHRASES: Record<string, string> = {
   'Change the values you need and save.': 'आवश्यक विवरण परिवर्तन गरेर सुरक्षित गर्नुहोस्।',
   'Upload an image file': 'फोटो फाइल अपलोड गर्नुहोस्',
 
+  'Member panel':
+    'सदस्य प्यानल',
+  'Monthly fund':
+    'मासिक कोष',
+  'Your contribution, your history and your payment button.':
+    'तपाईंको योगदान, तपाईंको इतिहास र भुक्तानी बटन।',
+  'Pay your contribution':
+    'तपाईंको योगदान तिर्नुहोस्',
+  'My fund history':
+    'मेरो कोष इतिहास',
+  'Every payment you have submitted, and what happened to it.':
+    'तपाईंले पेस गर्नुभएको हरेक भुक्तानी र त्यसको अवस्था।',
+  'My loans':
+    'मेरा ऋणहरू',
+  'Money borrowed from the organization and what has been repaid so far. This is kept completely separate from your monthly fund.':
+    'संस्थाबाट लिएको ऋण र हालसम्म तिरेको रकम। यो तपाईंको मासिक कोषभन्दा पूर्ण रूपमा अलग राखिएको छ।',
+  'Your own notebook for plans, reminders and meeting preparation. Only you can read these notes.':
+    'योजना, सम्झाउनी र बैठकको तयारीका लागि तपाईंको आफ्नै नोटबुक। यी नोट केवल तपाईंले मात्र पढ्न सक्नुहुन्छ।',
+  'Notifications':
+    'सूचनाहरू',
+  'Monthly fund reminders, payment decisions, loan news and notices from the office - all in one place.':
+    'मासिक कोषको सम्झाउनी, भुक्तानी निर्णय, ऋण समाचार र कार्यालयका सूचना - सबै एकै ठाउँमा।',
+  'Messages with the office':
+    'कार्यालयसँगको सन्देश',
+  'Ask about your membership, your monthly contribution, a loan or anything else. Only you and the office can read this.':
+    'सदस्यता, मासिक योगदान, ऋण वा अन्य कुरा सोध्नुहोस्। यो केवल तपाईं र कार्यालयले मात्र पढ्न सक्नुहुन्छ।',
+  'Your Role & Responsibilities':
+    'तपाईंको भूमिका र जिम्मेवारी',
+  'You are not on the committee list yet':
+    'तपाईं अझै समिति सूचीमा छैनन्',
+  'You have no tasks at the moment':
+    'अहिले तपाईंलाई कुनै कार्य तोकिएको छैन',
+  'No tasks assigned to you':
+    'तपाईंलाई कुनै कार्य तोकिएको छैन',
+  'When an administrator gives you a task it will appear here.':
+    'प्रशासकले तपाईंलाई कार्य दिएपछि यहाँ देखिनेछ।',
+  'When an administrator assigns you a task it will appear here, and you will be able to mark your progress.':
+    'प्रशासकले तपाईंलाई कार्य तोकेपछि यहाँ देखिनेछ र तपाईंले प्रगति अद्यावधिक गर्न सक्नुहुनेछ।',
+  'You have no loans':
+    'तपाईंसँग कुनै ऋण छैन',
+  'When the organization records a loan for you, it appears here with the repayment history.':
+    'संस्थाले तपाईंको नाममा ऋण अभिलेख गरेपछि त्यो तिरेको इतिहाससहित यहाँ देखिनेछ।',
+  'You have not submitted a payment yet':
+    'तपाईंले अझै कुनै भुक्तानी पेस गर्नुभएको छैन',
+  'Use the Pay monthly fund button to record your first contribution.':
+    'पहिलो योगदान अभिलेख गर्न "मासिक कोष भुक्तानी" बटन प्रयोग गर्नुहोस्।',
+  'When you pay your monthly contribution it will appear here with its status.':
+    'तपाईंले मासिक योगदान तिरेपछि त्यो स्थितिसहित यहाँ देखिनेछ।',
+  'No payments yet':
+    'अझै कुनै भुक्तानी छैन',
+  'Your membership is pending':
+    'तपाईंको सदस्यता स्वीकृतिको प्रतीक्षामा छ',
+  'Your membership is not active':
+    'तपाईंको सदस्यता सक्रिय छैन',
+  'Private':
+    'निजी',
+  'Verify your email address':
+    'आफ्नो इमेल ठेगाना प्रमाणित गर्नुहोस्',
+  'This one step keeps the member records accurate and stops strangers creating accounts.':
+    'यही एक कदमले सदस्य अभिलेख सही राख्छ र अपरिचित व्यक्तिलाई खाता खोल्नबाट रोक्छ।',
+  'Use the link from your email, or the 6 digit code, and type the password you want.':
+    'इमेलमा आएको लिङ्क वा ६ अंकको कोड प्रयोग गरेर आफ्नो इच्छाको पासवर्ड लेख्नुहोस्।',
+  'Choose a new password':
+    'नयाँ पासवर्ड छान्नुहोस्',
+  'We will email you a link to choose a new one. It expires after 30 minutes.':
+    'नयाँ पासवर्ड छान्नको लागि हामी इमेलमा लिङ्क पठाउँछौं। त्यो ३० मिनेटपछि अमान्य हुन्छ।',
+  'Forgot your password?':
+    'पासवर्ड बिर्सनुभयो?',
+  'Direct registration is not available':
+    'सिधै दर्ता उपलब्ध छैन',
+  'Please pay first, then submit this form':
+    'पहिले भुक्तानी गर्नुहोस्, त्यसपछि यो फारम पेस गर्नुहोस्',
+
   // ---------- Page titles ----------
   'Donors & supporters': 'दाता र सहयोगीहरू',
   'Donation records': 'चन्दा अभिलेख',
@@ -192,15 +264,12 @@ const PHRASES: Record<string, string> = {
   'Messages from members': 'सदस्यका सन्देशहरू',
   'Member tasks': 'सदस्य कार्यहरू',
   'Member contribution report': 'सदस्य योगदान प्रतिवेदन',
-  'Members': 'सदस्यहरू',
   'Karya Samiti': 'कार्य समिति',
   'Master dashboard': 'मास्टर ड्यासबोर्ड',
   'My notes': 'मेरा नोटहरू',
-  Notifications: 'सूचनाहरू',
   'Payment activity': 'भुक्तानी गतिविधि',
   'Payment settings and QR codes': 'भुक्तानी सेटिङ र QR कोड',
   'Payment verification': 'भुक्तानी प्रमाणीकरण',
-  'Programs': 'कार्यक्रमहरू',
   'Projects & Our Works': 'परियोजना र हाम्रा कामहरू',
   'Projects & works': 'परियोजना र कामहरू',
   'Removed donations': 'हटाइएका चन्दा',
@@ -465,7 +534,6 @@ const PHRASES: Record<string, string> = {
   Paid: 'तिरिएको',
   Unpaid: 'नतिरिएको',
   Partial: 'आंशिक',
-  Active: 'सक्रिय',
   Inactive: 'निष्क्रिय',
   Draft: 'मस्यौदा',
   Archived: 'संग्रहित',
@@ -477,7 +545,6 @@ const PHRASES: Record<string, string> = {
   Completed: 'सम्पन्न',
   Cancelled: 'रद्द',
   Income: 'आम्दानी',
-  Expense: 'खर्च',
   Cash: 'नगद',
   Bank: 'बैंक',
   'All records': 'सबै अभिलेख',

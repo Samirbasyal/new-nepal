@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // MEMBER PANEL - MY LOANS
 // ========================================
@@ -38,10 +40,10 @@ import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'My loans',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'member.loans'), robots: { index: false, follow: false } };
+}
 
 /** The colours of the status badge, written out in full for the styling tool. */
 const STATUS_CLASSES: Record<string, string> = {

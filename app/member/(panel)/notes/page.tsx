@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // MEMBER PANEL - MY NOTES
 // ========================================
@@ -16,10 +18,10 @@ import { Alert } from '@/components/ui/Alert';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'My notes',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'member.notes'), robots: { index: false, follow: false } };
+}
 
 export default async function MemberNotesPage() {
   const user = await requireMember();

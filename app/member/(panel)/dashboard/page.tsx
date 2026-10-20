@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 // MEMBER PANEL
 // This code controls the Member Dashboard.
@@ -31,10 +33,10 @@ import { formatDate, formatDateTime, truncate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: 'Member dashboard',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const lang = await getLanguage();
+  return { title: t(lang, 'member.dashboard'), robots: { index: false, follow: false } };
+}
 
 export default async function MemberDashboardPage() {
   // The server guard gives us the signed-in member (and redirects if not signed in).
