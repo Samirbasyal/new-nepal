@@ -13,6 +13,8 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { ProgramCard } from '@/components/public/ProgramCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Pagination } from '@/components/ui/Pagination';
@@ -35,7 +37,9 @@ export default async function ProgramsPage({
   // In Next.js 15 the search parameters arrive as a Promise.
   searchParams: Promise<{ page?: string; category?: string }>;
 }) {
-  const params = await searchParams;
+  
+  const lang = await getLanguage();
+const params = await searchParams;
   const page = parsePage(params.page);
   const category = params.category?.trim() || undefined;
 
@@ -47,9 +51,9 @@ export default async function ProgramsPage({
   return (
     <>
       <PageHero
-        eyebrow="Programs"
+        eyebrow={t(lang, 'programs.eyebrow')}
         icon="layers"
-        title="Our programs"
+        title={t(lang, 'programs.title')}
         description="Programs and activities carried out together with the community."
       />
 

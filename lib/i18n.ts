@@ -64,6 +64,8 @@ const en: Record<string, string> = {
   'about.impact': 'Our impact',
   'about.more': 'Further information',
   'common.more': 'More',
+  'programs.eyebrow': 'Programs',
+  'programs.title': 'Our programs',
 };
 
 const ne: Record<string, string> = {
@@ -118,6 +120,8 @@ const ne: Record<string, string> = {
   'about.impact': 'हाम्रो प्रभाव',
   'about.more': 'थप जानकारी',
   'common.more': 'अझै',
+  'programs.eyebrow': 'कार्यक्रमहरू',
+  'programs.title': 'हाम्रा कार्यक्रमहरू',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };
