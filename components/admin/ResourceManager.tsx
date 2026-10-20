@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
+import { useLang } from '@/components/ui/LangProvider';
 import { Icon } from '@/components/ui/Icon';
 import { StatusBadge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -90,6 +91,7 @@ export function ResourceManager({
   const [rows, setRows] = useState<AdminRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const { lang, tr } = useLang();
   const [loading, setLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
 
@@ -400,14 +402,14 @@ export function ResourceManager({
           ======================================== */}
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink-900">{title}</h1>
-          {description ? <p className="mt-1 text-sm text-ink-600">{description}</p> : null}
+          <h1 className="font-display text-2xl font-bold text-ink-900">{tr(title)}</h1>
+          {description ? <p className="mt-1 text-sm text-ink-600">{tr(description)}</p> : null}
         </div>
 
         {canCreate ? (
           <Button variant="primary" onClick={() => setEditing(null)}>
             <Icon name="plus" className="h-4 w-4" />
-            Add new
+            {tr('Add new')}
           </Button>
         ) : null}
       </header>
@@ -440,7 +442,7 @@ export function ResourceManager({
             type="search"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder={`Search ${title.toLowerCase()}...`}
+            placeholder={`${tr('Search')} ${tr(title).toLowerCase()}...`}
             className="input pl-9"
             aria-label={`Search ${title}`}
           />
@@ -448,7 +450,7 @@ export function ResourceManager({
 
         {statusOptions && statusField ? (
           <label className="flex items-center gap-2 text-sm text-ink-600">
-            <span className="whitespace-nowrap">Filter:</span>
+            <span className="whitespace-nowrap">{tr('Filter')}:</span>
             <select
               value={status}
               onChange={(event) => {
@@ -457,7 +459,7 @@ export function ResourceManager({
               }}
               className="input py-2"
             >
-              <option value="">All</option>
+              <option value="">{tr('All')}</option>
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -469,7 +471,7 @@ export function ResourceManager({
 
         <Button variant="outline" onClick={() => void load()} disabled={loading}>
           <Icon name="refresh" className="h-4 w-4" />
-          Refresh
+          {tr('Refresh')}
         </Button>
       </div>
 
@@ -477,31 +479,31 @@ export function ResourceManager({
           THE TABLE
           ======================================== */}
       {listError ? (
-        <Alert tone="error" title="Could not load this list">
+        <Alert tone="error" title={tr('Could not load this list')}>
           {listError}
         </Alert>
       ) : null}
 
       {loading ? (
         <div className="card p-10 text-center">
-          <p className="text-sm text-ink-500">Loading…</p>
+          <p className="text-sm text-ink-500">{tr('Loading')}…</p>
         </div>
       ) : rows.length === 0 ? (
         <EmptyState
           icon="folder"
-          title={search || status ? 'No matching records' : `No ${title.toLowerCase()} yet`}
+          title={search || status ? tr('No matching records') : `${tr(title)}: ${tr('Nothing has been recorded here yet.')}`}
           description={
             search || status
-              ? 'Try a different search word, or clear the filter to see everything.'
+              ? tr('Try a different search word, or clear the filter to see everything.')
               : canCreate
                 ? `Press "Add new" to create the first one. Nothing appears on the public website until you switch on "Published".`
-                : 'Nothing has been recorded here yet.'
+                : tr('Nothing has been recorded here yet.')
           }
           action={
             canCreate && !search && !status ? (
               <Button variant="primary" onClick={() => setEditing(null)}>
                 <Icon name="plus" className="h-4 w-4" />
-                Add new
+                {tr('Add new')}
               </Button>
             ) : undefined
           }
@@ -518,10 +520,10 @@ export function ResourceManager({
                       key={column.name}
                       className={column.hideOnMobile ? 'hidden lg:table-cell' : undefined}
                     >
-                      {column.label}
+                      {tr(column.label)}
                     </th>
                   ))}
-                  <th className="text-right">Actions</th>
+                  <th className="text-right">{tr('Actions')}</th>
                 </tr>
               </thead>
 
@@ -552,7 +554,7 @@ export function ResourceManager({
                               type="button"
                               onClick={() => setEditing(row)}
                               className="rounded-btn p-2 text-ink-600 hover:bg-brand-50 hover:text-brand-700"
-                              title="Edit"
+                              title={tr('Edit')}
                               aria-label={`Edit ${String(row.title ?? row.name ?? '')}`}
                             >
                               <Icon name="edit" className="h-4 w-4" />
@@ -565,7 +567,7 @@ export function ResourceManager({
                               onClick={() => void remove(row)}
                               disabled={busy}
                               className="rounded-btn p-2 text-ink-600 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                              title="Delete"
+                              title={tr('Delete')}
                               aria-label={`Delete ${String(row.title ?? row.name ?? '')}`}
                             >
                               <Icon name="trash" className="h-4 w-4" />
@@ -583,7 +585,7 @@ export function ResourceManager({
           {/* ---------- Footer with the record count and paging ---------- */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-200 bg-ink-50 px-4 py-3">
             <p className="text-xs text-ink-500">
-              Showing {rows.length} of {total} {total === 1 ? 'record' : 'records'}
+              {lang === 'ne' ? 'कुल' : 'Showing'} {rows.length} {lang === 'ne' ? '/' : 'of'} {total} {lang === 'ne' ? '' : total === 1 ? 'record' : 'records'}
               {totalPages > 1 ? ` · page ${page} of ${totalPages}` : ''}
             </p>
 
@@ -596,7 +598,7 @@ export function ResourceManager({
                   className="btn btn-outline btn-sm"
                 >
                   <Icon name="chevron-left" className="h-4 w-4" />
-                  Previous
+                  {tr('Previous')}
                 </button>
 
                 <button
@@ -605,7 +607,7 @@ export function ResourceManager({
                   disabled={page >= totalPages || loading}
                   className="btn btn-outline btn-sm"
                 >
-                  Next
+                  {tr('Next')}
                   <Icon name="chevron-right" className="h-4 w-4" />
                 </button>
               </div>
@@ -617,10 +619,7 @@ export function ResourceManager({
       {/* ========================================
           HELP NOTE
           ======================================== */}
-      <p className="text-xs text-ink-500">
-        Everything you change here is saved to the database immediately and appears on the public
-        website as soon as it is published. You do not need to edit any code.
-      </p>
+      <p className="text-xs text-ink-500">{tr('Everything you change here is saved to the database immediately and appears on the public website as soon as it is published. You do not need to edit any code.')}</p>
 
       {/* ========================================
           THE EDIT / CREATE PANEL

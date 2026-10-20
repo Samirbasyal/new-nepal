@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth/guards';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
 import { getLanguage } from '@/lib/i18n-server';
+import { LangProvider } from '@/components/ui/LangProvider';
 import { AdminMobileNav, AdminNav } from '@/components/admin/AdminNav';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { LogoMark } from '@/components/layout/Logo';
@@ -158,7 +159,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                 />
               </div>
 
-              {children}
+              <LangProvider lang={lang}>{children}</LangProvider>
             </div>
           </div>
         </Container>

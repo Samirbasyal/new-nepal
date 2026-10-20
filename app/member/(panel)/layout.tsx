@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { requireMember } from '@/lib/auth/guards';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { getLanguage } from '@/lib/i18n-server';
+import { LangProvider } from '@/components/ui/LangProvider';
 import { MemberNav } from '@/components/member/MemberNav';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { LogoMark } from '@/components/layout/Logo';
@@ -89,7 +90,7 @@ export default async function MemberPanelLayout({ children }: { children: React.
             {/* Page content. The id is the place the menu scrolls to after a
                 click - not the top of the document. */}
             <div id="panel-content" className="min-w-0 lg:col-span-9 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
-              {children}
+              <LangProvider lang={lang}>{children}</LangProvider>
             </div>
           </div>
         </Container>

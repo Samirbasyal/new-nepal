@@ -19,6 +19,7 @@
 
 import { useState } from 'react';
 import { Alert } from '@/components/ui/Alert';
+import { useLang } from '@/components/ui/LangProvider';
 import { Button } from '@/components/ui/Button';
 import { CheckboxField, SelectField, TextField, TextareaField } from '@/components/forms/Field';
 import { Icon } from '@/components/ui/Icon';
@@ -95,6 +96,7 @@ export function ResourceForm({
   const [values, setValues] = useState<Record<string, string | boolean>>(() =>
     buildInitialValues(fields, row, defaults ?? {}),
   );
+  const { tr } = useLang();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -187,12 +189,12 @@ export function ResourceForm({
         <div className="flex items-start justify-between gap-4 border-b border-ink-200 px-5 py-4 sm:px-6">
           <div>
             <h2 className="text-lg font-bold text-ink-900">
-              {isNew ? `Add ${entityLabel.toLowerCase()}` : `Edit ${entityLabel.toLowerCase()}`}
+              {isNew ? `${tr('Add new record')}: ${tr(entityLabel)}` : `${tr('Edit record')}: ${tr(entityLabel)}`}
             </h2>
             <p className="mt-0.5 text-xs text-ink-500">
               {isNew
-                ? 'Fill in the details and save. Nothing is shown on the public website until you switch on "Published".'
-                : 'Change the values you need and save.'}
+                ? tr('Fill in the details and save. Nothing is shown on the public website until you switch on "Published".')
+                : tr('Change the values you need and save.')}
             </p>
           </div>
 
@@ -224,7 +226,7 @@ export function ResourceForm({
               <div key={sectionName}>
                 {sectionName !== '__main' ? (
                   <h3 className="mb-3 border-b border-ink-100 pb-2 text-sm font-bold text-ink-900">
-                    {sectionName}
+                    {tr(sectionName)}
                   </h3>
                 ) : null}
 
@@ -249,11 +251,11 @@ export function ResourceForm({
 
         {/* Footer buttons */}
         <div className="flex items-center justify-between gap-3 border-t border-ink-200 bg-ink-50 px-5 py-4 sm:px-6">
-          <p className="text-xs text-ink-500">Fields marked * are required.</p>
+          <p className="text-xs text-ink-500">{tr('Fields marked * are required.')}</p>
 
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose} disabled={saving}>
-              Cancel
+              {tr('Cancel')}
             </Button>
             <Button
               type="submit"
@@ -267,7 +269,7 @@ export function ResourceForm({
                 if (form) form.requestSubmit();
               }}
             >
-              {saving ? (<span className="inline-flex items-center gap-2 text-accent-100" role="status"><Icon name="refresh" className="h-4 w-4 animate-spin" />Please wait...</span>) : isNew ? `Add ${entityLabel.toLowerCase()}` : 'Save changes'}
+              {saving ? (<span className="inline-flex items-center gap-2 text-accent-100" role="status"><Icon name="refresh" className="h-4 w-4 animate-spin" />Please wait...</span>) : isNew ? `${tr('Add new record')}: ${tr(entityLabel)}` : tr('Save changes')}
             </Button>
           </div>
         </div>
@@ -551,6 +553,7 @@ function makeStartingPassword(): string {
 function ImageUploader({ onUploaded }: { onUploaded: (url: string) => void }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const { tr } = useLang();
 
   async function handleFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -607,7 +610,7 @@ function ImageUploader({ onUploaded }: { onUploaded: (url: string) => void }) {
         )}
       >
         <Icon name="upload" className="h-3.5 w-3.5" />
-        {busy ? (<span className="text-accent-100" role="status">Please wait...</span>) : 'Upload an image file'}
+        {busy ? (<span className="text-accent-100" role="status">{tr('Please wait…')}</span>) : tr('Upload an image file')}
 
         <input
           type="file"
