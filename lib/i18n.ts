@@ -43,6 +43,9 @@ const en: Record<string, string> = {
   'home.news': 'Latest news and notices',
   'home.gallery': 'From our gallery',
   'home.donors': 'Our Donors & Supporters',
+  'donate.eyebrow': 'Support our mission',
+  'donate.title': 'Support Our Mission',
+  'donate.cta': 'Donate Now',
 };
 
 const ne: Record<string, string> = {
@@ -76,6 +79,9 @@ const ne: Record<string, string> = {
   'home.news': 'पछिल्ला समाचार तथा सूचना',
   'home.gallery': 'हाम्रो ग्यालरीबाट',
   'home.donors': 'हाम्रा सहयोगीहरू',
+  'donate.eyebrow': 'हाम्रो लक्ष्यमा सहयोग गर्नुहोस्',
+  'donate.title': 'हाम्रो अभियानमा सहयोग',
+  'donate.cta': 'अहिले सहयोग गर्नुहोस्',
 };
 
 const DICTIONARIES: Record<Lang, Record<string, string>> = { en, ne };

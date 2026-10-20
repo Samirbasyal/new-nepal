@@ -15,6 +15,9 @@ import { ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Container } from '@/components/ui/Section';
 
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
+
 const REASONS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'book',
@@ -38,7 +41,8 @@ const REASONS: { icon: IconName; title: string; text: string }[] = [
   },
 ];
 
-export function DonateBand() {
+export async function DonateBand() {
+  const lang = await getLanguage();
   return (
     <section className="relative overflow-hidden bg-brand-800 text-white">
       <div
@@ -56,11 +60,11 @@ export function DonateBand() {
           <div className="lg:col-span-5">
             <p className="eyebrow mb-3 text-accent-300">
               <Icon name="heart" className="h-4 w-4" />
-              Support our mission
+              {t(lang, 'donate.eyebrow')}
             </p>
 
             <h2 className="font-display text-2xl font-bold leading-tight sm:text-3xl">
-              Support Our Mission
+              {t(lang, 'donate.title')}
             </h2>
 
             <p className="mt-4 text-base leading-relaxed text-brand-100">
@@ -71,7 +75,7 @@ export function DonateBand() {
             <div className="mt-7 flex flex-wrap gap-3">
               <ButtonLink href="/donate" variant="accent" size="lg">
                 <Icon name="heart" className="h-5 w-5" />
-                Donate Now
+                {t(lang, 'donate.cta')}
               </ButtonLink>
 
               <ButtonLink href="/contact" variant="outline-light" size="lg">
