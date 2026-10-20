@@ -12,8 +12,11 @@
 
 import { NavbarShell } from '@/components/layout/NavbarShell';
 import { navigationActions, mobileMenuExtras, navMore, navPrimary } from '@/config/site';
+import { getLanguage } from '@/lib/i18n-server';
+import { tHref } from '@/lib/i18n';
 
 export async function Navbar() {
+  const lang = await getLanguage();
   // NOTE: the visitor's login state is read inside NavbarShell's parent layout
   // through getCurrentUser(). We import it lazily here to keep this component
   // usable even when the database is not reachable.
