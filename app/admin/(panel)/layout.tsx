@@ -137,7 +137,14 @@ export default async function AdminPanelLayout({ children }: { children: React.R
           <div className="grid grid-cols-1 gap-8 lg:h-full lg:min-h-0 lg:grid-cols-12">
             {/* Sidebar (desktop only) */}
             <aside className="hidden self-start lg:col-span-3 lg:block lg:h-full lg:min-h-0 lg:min-w-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-2">
-              <div>
+              <div className="rounded-2xl bg-[#0b1727] px-3 py-4 shadow-sm">
+                {/* Who this panel belongs to, repeated at the top of the menu the way the approved design shows it. */}
+                <div className="mb-4 flex items-center gap-2.5 px-1">
+                  <LogoMark size={30} />
+                  <span className="text-[12.5px] font-bold leading-tight text-white">
+                    {organization.name}
+                  </span>
+                </div>
                 {/* The Super Admin only sections (Loan management) are left out
                     of the menu for everybody else. The pages themselves check
                     the role again on the server. */}

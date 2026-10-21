@@ -194,7 +194,7 @@ function CountBadge({ count, active }: { count: number; active: boolean }) {
     <span
       className={cn(
         'ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums',
-        active ? 'bg-white text-brand-700' : 'bg-amber-500 text-white',
+        active ? 'bg-white text-blue-700' : 'bg-amber-500 text-white',
       )}
     >
       {count > 99 ? '99+' : count}
@@ -257,10 +257,10 @@ export function AdminNav({
             className={cn(
               // Green button, dark readable words. The open group turns solid
               // green so it is obvious which one is showing its items.
-              'mb-1 flex w-full items-center justify-between rounded-btn border px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors',
+              'mb-1 flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide transition-colors',
               openGroups[group.title]
-                ? 'border-accent-500 bg-accent-400 text-ink-900 shadow-sm'
-                : 'border-brand-200 bg-brand-50 text-brand-900 hover:bg-brand-100',
+                ? 'text-white'
+                : 'text-slate-400 hover:text-white',
             )}
           >
             <span>{GROUP_KEY[group.title] ? t(lang, GROUP_KEY[group.title]) : group.title}</span>
@@ -286,12 +286,12 @@ export function AdminNav({
                     className={cn(
                       // Compact rows: smaller type and less padding, so the whole
                       // menu fits on one screen without endless scrolling.
-                      'flex items-center gap-2 rounded-btn px-2.5 py-1.5 text-[13px] font-medium leading-tight transition-colors',
+                      'flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium leading-tight transition-colors',
                       // Selected item: a light green tint, not a solid block, so the
                       // sidebar stays calm and the yellow group button stands out.
                       active
-                        ? 'border-l-4 border-accent-500 bg-brand-50 pl-1.5 font-semibold text-brand-900'
-                        : 'text-ink-700 hover:bg-ink-100',
+                        ? 'bg-blue-600 font-semibold text-white shadow-sm'
+                        : 'text-slate-300 hover:bg-white/10 hover:text-white',
                     )}
                   >
                     <Icon name={link.icon} className="h-3.5 w-3.5 shrink-0" />

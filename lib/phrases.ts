@@ -245,6 +245,62 @@ const PHRASES: Record<string, string> = {
   'Please pay first, then submit this form':
     'पहिले भुक्तानी गर्नुहोस्, त्यसपछि यो फारम पेस गर्नुहोस्',
 
+  'Language Settings':
+    'भाषा सेटिङ',
+  'Website Language':
+    'वेबसाइटको भाषा',
+  'Choose the language that will be displayed on the entire website for all users.':
+    'सबै प्रयोगकर्ताका लागि वेबसाइटभरि देखाइने भाषा छान्नुहोस्।',
+  'Active Website Language':
+    'हाल सक्रिय भाषा',
+  'Save Changes':
+    'परिवर्तन सुरक्षित गर्नुहोस्',
+  'Language updated successfully!':
+    'भाषा सफलतापूर्वक अद्यावधिक भयो!',
+  'The website language has been changed to':
+    'वेबसाइटको भाषा परिवर्तन भई',
+  'Could not save the language.':
+    'भाषा सुरक्षित गर्न सकिएन।',
+  'Could not reach the server. Please check your connection and try again.':
+    'सर्भरसँग जोडिन सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।',
+  'Set the global language for the entire website. This will be applied to all users.':
+    'सम्पूर्ण वेबसाइटको भाषा यहाँबाट तोक्नुहोस्। यो सबै प्रयोगकर्तामा लागू हुन्छ।',
+  'Admin Panel Language Settings':
+    'एडमिन प्यानल भाषा सेटिङ',
+  'One switch for the public website and every panel.':
+    'सार्वजनिक वेबसाइट र सबै प्यानलका लागि एउटै सेटिङ।',
+  'Admin can select Nepali or English':
+    'एडमिनले नेपाली वा अंग्रेजी छान्न सक्ने',
+  'Global setting for all users':
+    'सबै प्रयोगकर्ताका लागि साझा सेटिङ',
+  'Saved in database':
+    'डेटाबेसमा सुरक्षित',
+  'Changes apply immediately':
+    'परिवर्तन तुरुन्तै लागू हुने',
+  'Only authorized admins can change':
+    'अधिकार प्राप्त एडमिनले मात्र परिवर्तन गर्न सक्ने',
+  'Currently live:':
+    'हाल लागू:',
+  'This is a single global setting: every visitor, member and administrator sees the website in the language chosen here. It is stored in the database, so it stays the same after a refresh, a sign-out or a new deployment.':
+    'यो एउटै साझा सेटिङ हो: यहाँ छानिएको भाषामै सबै आगन्तुक, सदस्य र एडमिनले वेबसाइट देख्छन्। यो डेटाबेसमा सुरक्षित हुने हुँदा पेज रिफ्रेस, लगआउट वा नयाँ डिप्लोयपछि पनि यथावत् रहन्छ।',
+
+  'Community Support':
+    'सामुदायको सहयोग',
+  'Our work brings positive change in the community.':
+    'हाम्रो कामले समुदायमा सकारात्मक परिवर्तन ल्याउँछ।',
+  'Social Equality':
+    'सामाजिक समानता',
+  'Support for the rights and dignity of the Dalit community.':
+    'दलित समुदायको अधिकार र सम्मानका लागि सहयोग।',
+  'Education & Awareness':
+    'शिक्षा र जनचेतना',
+  'Education and awareness builds a better future.':
+    'शिक्षा र चेतनाले समृद्ध भविष्य निर्माण गर्छ।',
+  'Women Empowerment':
+    'महिला सशक्तिकरण',
+  'Support and protection for women affected by violence.':
+    'हिंसा प्रभावित महिलाको सहयोग र संरक्षण।',
+
   // ---------- Page titles ----------
   'Donors & supporters': 'दाता र सहयोगीहरू',
   'Donation records': 'चन्दा अभिलेख',

@@ -7,7 +7,8 @@
 // code organised in folders WITHOUT adding "/site" to the web address.
 // So app/(site)/about/page.tsx is simply  /about
 //
-// This layout adds the two elements that every public page shares:
+// This layout adds the elements that every public page shares:
+//   - the language, so any card or label can translate itself
 //   - the NAVBAR at the top
 //   - the FOOTER at the bottom
 //
@@ -17,6 +18,8 @@
 
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { LangProvider } from '@/components/ui/LangProvider';
+import { getLanguage } from '@/lib/i18n-server';
 
 // Public pages read live data from the database, so the pages inside this
 // layout are rendered freshly on every visit instead of being frozen at
@@ -24,15 +27,20 @@ import { Footer } from '@/components/layout/Footer';
 // database has been connected.
 export const dynamic = 'force-dynamic';
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  // The one language setting for the whole website. It is read on the server,
+  // so the first paint already has the right words and there is no flash of
+  // English before Nepali appears.
+  const lang = await getLanguage();
+
   return (
-    <>
+    <LangProvider lang={lang}>
       {/*
         Accessibility: a keyboard-only visitor can press TAB once and jump
         straight to the page content, skipping the menu.
       */}
       <a href="#main-content" className="skip-link">
-        Skip to main content
+        {lang === 'ne' ? 'मुख्य सामग्रीमा जानुहोस्' : 'Skip to main content'}
       </a>
 
       <Navbar />
@@ -43,6 +51,6 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       </main>
 
       <Footer />
-    </>
+    </LangProvider>
   );
 }

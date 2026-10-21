@@ -16,6 +16,14 @@ import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 export async function getLanguage(): Promise<Lang> {
   noStore();
 
+  // OPTIONAL OVERRIDE - for previewing only.
+  // Setting SITE_LANGUAGE_OVERRIDE=ne (or en) in the hosting environment shows
+  // the whole website in that language without touching the saved setting. It is
+  // read from the server environment, so no visitor can change it from a
+  // browser, and leaving it unset keeps the administrator's choice in charge.
+  const override = process.env.SITE_LANGUAGE_OVERRIDE;
+  if (isLang(override)) return override;
+
   if (!isDatabaseConfigured()) return 'en';
 
   try {
