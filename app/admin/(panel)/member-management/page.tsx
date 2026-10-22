@@ -23,7 +23,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth/guards';
-import { isDatabaseConfigured } from '@/lib/prisma';
+import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { listMemberManagement } from '@/lib/members/service';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { Alert } from '@/components/ui/Alert';
@@ -71,6 +71,27 @@ export default async function MemberManagementPage({
     page: Number.isFinite(page) ? page : 1,
     pageSize: 20,
   });
+
+  // ---------- the full ranking for the month ----------
+  // The three names above the table are only a headline. This is the whole
+  // ordered list, so the office can read the month end to end.
+  const ranking = isDatabaseConfigured()
+    ? await prisma.performanceEvaluation
+        .findMany({
+          where: { periodMonth: data.month, status: 'PUBLISHED' },
+          orderBy: [{ rank: 'asc' }, { overall: 'desc' }],
+          take: 50,
+          select: {
+            id: true,
+            rank: true,
+            overall: true,
+            memberProfile: {
+              select: { designation: true, user: { select: { name: true } } },
+            },
+          },
+        })
+        .catch(() => [])
+    : [];
 
   const cards = [
     { label: 'Registered members', value: data.stats.totalMembers, icon: 'users' as const, href: undefined },
@@ -143,6 +164,47 @@ export default async function MemberManagementPage({
               </li>
             ))}
           </ol>
+        </div>
+      ) : null}
+
+      {/* ---------- the month's ranking ---------- */}
+      {ranking.length > 0 ? (
+        <div className="card overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-200 px-4 py-3">
+            <h2 className="text-sm font-bold text-ink-900">
+              Ranking - {data.month}
+            </h2>
+            <Link
+              href="/admin/member-management/report"
+              className="text-xs font-semibold text-brand-700 hover:underline"
+            >
+              Open printable report
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[520px] text-sm">
+              <thead>
+                <tr className="border-b border-ink-200 bg-ink-50 text-left text-[11px] uppercase tracking-wide text-ink-500">
+                  <th className="px-4 py-2 font-semibold">Rank</th>
+                  <th className="px-4 py-2 font-semibold">Member</th>
+                  <th className="px-4 py-2 font-semibold">Post</th>
+                  <th className="px-4 py-2 text-right font-semibold">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranking.map((row) => (
+                  <tr key={row.id} className="border-b border-ink-100 last:border-0">
+                    <td className="px-4 py-2 font-semibold text-ink-900">{row.rank ?? '-'}</td>
+                    <td className="px-4 py-2 text-ink-800">{row.memberProfile.user.name}</td>
+                    <td className="px-4 py-2 text-ink-600">{row.memberProfile.designation ?? '-'}</td>
+                    <td className="px-4 py-2 text-right font-semibold text-ink-900">
+                      {row.overall === null ? '-' : row.overall.toFixed(1)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : null}
 

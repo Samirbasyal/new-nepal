@@ -71,6 +71,19 @@ export default async function MemberFilePage({
     },
   });
 
+  // The full history per task, newest first - shown as a small list under each
+  // task in the member file.
+  const historyByTask = new Map<string, { status: string; at: string; by: string }[]>();
+  for (const row of taskUpdates) {
+    const list = historyByTask.get(row.taskId) ?? [];
+    list.push({
+      status: row.status,
+      at: row.createdAt.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }),
+      by: row.by?.name ?? 'the office',
+    });
+    historyByTask.set(row.taskId, list);
+  }
+
   const lastUpdateByTask = new Map<string, string>();
   for (const row of taskUpdates) {
     if (lastUpdateByTask.has(row.taskId)) continue;
@@ -126,6 +139,7 @@ export default async function MemberFilePage({
           completedAt: row.completedAt ? row.completedAt.toISOString() : null,
           createdAt: row.createdAt.toISOString(),
           lastUpdate: lastUpdateByTask.get(row.id) ?? null,
+          history: historyByTask.get(row.id) ?? [],
         }))}
         evaluations={file.profile.evaluations.map((row) => ({
           id: row.id,

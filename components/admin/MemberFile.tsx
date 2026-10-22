@@ -37,6 +37,8 @@ type MonthlyTask = {
   createdAt: string;
   /** The most recent status change, e.g. "DONE - 22 Oct 2026 by the member". */
   lastUpdate?: string | null;
+  /** Every status change, newest first. */
+  history?: { status: string; at: string; by: string }[];
 };
 
 type Evaluation = {
@@ -533,6 +535,22 @@ export function MemberFile({
                       <p className="mt-0.5 text-[11px] text-ink-400">
                         Last update: {task.lastUpdate}
                       </p>
+                    ) : null}
+
+                    {task.history && task.history.length > 0 ? (
+                      <details className="mt-1.5">
+                        <summary className="cursor-pointer text-[11px] font-semibold text-brand-700">
+                          History ({task.history.length})
+                        </summary>
+                        <ol className="mt-1.5 space-y-1 border-l border-ink-200 pl-3">
+                          {task.history.map((entry, index) => (
+                            <li key={index} className="text-[11px] text-ink-500">
+                              <span className="font-semibold text-ink-700">{entry.status}</span> -{' '}
+                              {entry.at} by {entry.by}
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
                     ) : null}
                   </div>
 

@@ -185,7 +185,9 @@ export default async function AdminDashboardPage() {
     { label: 'Events', value: counts.events, href: '/admin/events', icon: 'calendar', note: counts.eventsDraft > 0 ? `${counts.eventsDraft} draft` : undefined },
     { label: 'News & notices', value: counts.news, href: '/admin/news', icon: 'megaphone', note: counts.newsDraft > 0 ? `${counts.newsDraft} draft` : undefined },
     { label: 'Gallery photos', value: counts.photos, href: '/admin/gallery', icon: 'image' },
-    { label: 'Members', value: counts.members, href: '/admin/members', icon: 'users', note: `${counts.admins} admin` },
+    // Straight to the working list (duties, tasks, scores, ranking) rather than the
+    // account screen - that is what an administrator opens the dashboard for.
+    { label: 'Members', value: counts.members, href: '/admin/member-management', icon: 'users', note: 'duties · tasks · ranking' },
     { label: 'Donors & supporters', value: counts.donors, href: '/admin/donors', icon: 'heart' },
     { label: 'Beneficiary groups', value: counts.beneficiaries, href: '/admin/beneficiaries', icon: 'target' },
     { label: 'Join applications', value: counts.applicationsTotal, href: '/admin/applications', icon: 'user-plus', note: counts.applicationsNew > 0 ? `${counts.applicationsNew} new` : undefined },
