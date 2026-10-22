@@ -106,7 +106,6 @@ export async function Footer() {
             <h2 className="text-sm font-bold uppercase tracking-wide text-white">Get involved</h2>
             <ul className="mt-4 space-y-2.5">
               {[
-                { label: 'Join Community', href: '/join' },
                 { label: 'Donate', href: '/donate' },
                 { label: 'Our Works', href: '/our-works' },
                 { label: 'Impact', href: '/impact' },
@@ -114,7 +113,8 @@ export async function Footer() {
                 { label: 'Donors', href: '/donors' },
                 { label: 'Gallery', href: '/gallery' },
                 { label: 'Contact', href: '/contact' },
-                { label: 'Member Login', href: '/member/portal' },
+                // The member portal is reached through More -> Display -> Member
+                // view, so it is not repeated here (see config/site.ts).
               ].map((item) => (
                 <li key={item.href}>
                   <Link

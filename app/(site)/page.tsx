@@ -571,10 +571,9 @@ export default async function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <ButtonLink href="/join" variant="accent" size="lg">
-                <Icon name="user-plus" className="h-5 w-5" />
-                {t(lang, 'cta.join')}
-              </ButtonLink>
+              {/* The old "Join our community" button pointed at the removed join
+                  form. Membership is now reached only through More -> Display ->
+                  Member view, so the home page does not compete with it. */}
 
               <ButtonLink href="/donate" variant="outline-light" size="lg">
                 <Icon name="heart" className="h-5 w-5" />
@@ -588,10 +587,11 @@ export default async function HomePage() {
             </div>
 
             <p className="mt-6 text-xs text-brand-200">
-              Already a member?{' '}
-              <Link href="/member/portal?tab=login" className="font-semibold text-white underline">
-                Sign in to your member panel
-              </Link>
+              Looking for your member account? Open{' '}
+              <Link href="/display" className="font-semibold text-white underline">
+                Display
+              </Link>{' '}
+              and use the Member view button.
             </p>
           </div>
         </Container>

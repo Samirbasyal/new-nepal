@@ -56,6 +56,21 @@ const nextConfig = {
   },
 
   // ========================================
+  // OLD ADDRESSES
+  // ========================================
+  // /join used to be the "Join our community" volunteer form. That page is gone -
+  // membership now has one road in: More -> Display -> Member view - but the
+  // address is still in older links and in search results, so it forwards instead
+  // of returning "page not found".
+  //
+  // The redirect is handled by the router BEFORE any page renders, which is why it
+  // answers with a real 308 instead of a page that then redirects itself.
+  // ========================================
+  async redirects() {
+    return [{ source: '/join', destination: '/display', permanent: false }];
+  },
+
+  // ========================================
   // BUILD SETTINGS
   // The ESLint check is run separately with "npm run lint" so that a lint
   // warning never blocks a deployment on Vercel.
