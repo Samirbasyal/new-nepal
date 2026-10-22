@@ -26,8 +26,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const COLUMNS: ColumnConfig[] = [
+  { name: 'memberName', label: 'Member' },
+  { name: 'memberEmail', label: 'Email' },
   { name: 'postTitle', label: 'Post' },
   { name: 'description', label: 'Responsibility' },
+  { name: 'memberPhone', label: 'Phone', hideOnMobile: true },
   { name: 'sortOrder', label: 'Order', hideOnMobile: true },
 ];
 
@@ -50,7 +53,57 @@ export default async function AdminRoleDutiesPage() {
 
   const postOptions = titles.map((title) => ({ value: title, label: title }));
 
+  // ---------- who the duty can be given to ----------
+  // Only real member accounts: the email is the link between this row and the
+  // member panel, so a duty sent to an address with no account would vanish.
+  const accounts = isDatabaseConfigured()
+    ? await prisma.user
+        .findMany({
+          where: { role: 'MEMBER', isActive: true },
+          select: { name: true, email: true, phone: true },
+          orderBy: { name: 'asc' },
+          take: 500,
+        })
+        .catch(() => [])
+    : [];
+
+  const memberOptions = accounts.map((account) => ({
+    value: account.email,
+    label: `${account.name} - ${account.email}`,
+  }));
+
   const FIELDS: FieldConfig[] = [
+    // ---------- WHO ----------
+    {
+      name: 'memberEmail',
+      label: 'Member email (required)',
+      type: 'select',
+      required: true,
+      options: memberOptions,
+      hint:
+        memberOptions.length === 0
+          ? 'No member accounts yet. Add a member first (Members page), then come back.'
+          : 'The account this duty belongs to. This is what makes it appear in their member panel.',
+      section: 'Who this duty belongs to',
+    },
+    {
+      name: 'memberName',
+      label: 'Member name (required)',
+      type: 'text',
+      required: true,
+      hint: 'Written on the row too, so the office can read it without opening the account.',
+      section: 'Who this duty belongs to',
+    },
+    {
+      name: 'memberPhone',
+      label: 'Phone number (required)',
+      type: 'text',
+      required: true,
+      placeholder: '98XXXXXXXX',
+      section: 'Who this duty belongs to',
+    },
+
+    // ---------- WHAT ----------
     {
       name: 'postTitle',
       label: 'Post (पद)',
@@ -61,7 +114,7 @@ export default async function AdminRoleDutiesPage() {
         postOptions.length === 0
           ? 'Add a committee post first (Committee posts page).'
           : 'Exactly the post name used on the committee members.',
-      section: 'Permanent duty',
+      section: 'The duty',
     },
     {
       name: 'description',
@@ -69,14 +122,14 @@ export default async function AdminRoleDutiesPage() {
       type: 'textarea',
       required: true,
       hint: 'Write one duty as one sentence, e.g. "संस्थाको नेतृत्व गर्ने र सम्पूर्ण कार्यको निगरानी गर्ने।"',
-      section: 'Permanent duty',
+      section: 'The duty',
     },
     {
       name: 'sortOrder',
       label: 'Order',
       type: 'number',
       hint: 'Lower numbers are listed first.',
-      section: 'Permanent duty',
+      section: 'The duty',
     },
   ];
 

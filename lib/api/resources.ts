@@ -973,6 +973,119 @@ export const RESOURCES: Record<string, ResourceConfig> = {
   },
 
   // ========================================
+  // DUTIES OF EACH POST (Admin -> Karya Samiti -> Role duties)
+  // ========================================
+  // WHAT THIS TABLE IS
+  //   Lines like "अध्यक्ष: संस्थाको नेतृत्व गर्ने". Each line is tied to ONE member
+  //   account by EMAIL, which is how the member panel knows whose duties these are.
+  //
+  // WHY THE EMAIL IS CHECKED HERE
+  //   A duty addressed to an address that has no account would be written into the
+  //   database and then never appear anywhere - a silent failure. So the server
+  //   looks the account up first and refuses the row if it is missing.
+  //
+  // OLDER ROWS (no memberUserId)
+  //   They belong to the POST, and are shown to everybody who holds that post. The
+  //   member panel reads both kinds (see app/member/(panel)/duties/page.tsx).
+  'roleduties': {
+    key: 'roleduties',
+    label: 'Duties of each post',
+    entity: 'Role responsibility',
+    delegate: prismaModel('committeeRoleDuty'),
+    createSchema: roleDutySchema,
+    updateSchema: roleDutySchema.partial(),
+    searchFields: ['postTitle', 'description', 'memberEmail', 'memberName', 'memberPhone'],
+    statusField: 'isActive',
+    orderBy: [{ postTitle: 'asc' }, { sortOrder: 'asc' }],
+    custom: {
+      async create(data, currentUser) {
+        const email = String(data.memberEmail ?? '').trim().toLowerCase();
+        const account = await prisma.user.findUnique({
+          where: { email },
+          select: { id: true, name: true, phone: true },
+        });
+
+        if (!account) {
+          throw new UserFacingError(
+            'No member account uses this email address. Add the member first, or correct the address.',
+            400,
+          );
+        }
+
+        const row = await prisma.committeeRoleDuty.create({
+          data: {
+            postTitle: String(data.postTitle),
+            description: String(data.description),
+            sortOrder: Number(data.sortOrder ?? 0),
+            isActive: data.isActive === undefined ? true : Boolean(data.isActive),
+            memberEmail: email,
+            memberUserId: account.id,
+            // The form's name and phone win; the account fills any gap.
+            memberName: data.memberName ? String(data.memberName) : account.name,
+            memberPhone: data.memberPhone ? String(data.memberPhone) : account.phone,
+          },
+        });
+
+        await writeActivity({
+          actorId: currentUser.id,
+          actorName: currentUser.name,
+          action: 'CREATE',
+          entity: 'Role responsibility',
+          entityId: row.id,
+          detail: `${row.postTitle}: duty for ${row.memberName} (${email})`,
+        });
+
+        return row;
+      },
+
+      async update(id, data, currentUser) {
+        const before = await prisma.committeeRoleDuty.findUnique({ where: { id } });
+        if (!before) throw new UserFacingError('This responsibility no longer exists.', 404);
+
+        const patch: Record<string, unknown> = {};
+        if (data.postTitle !== undefined) patch.postTitle = String(data.postTitle);
+        if (data.description !== undefined) patch.description = String(data.description);
+        if (data.sortOrder !== undefined) patch.sortOrder = Number(data.sortOrder);
+        if (data.isActive !== undefined) patch.isActive = Boolean(data.isActive);
+        if (data.memberName !== undefined) patch.memberName = String(data.memberName);
+        if (data.memberPhone !== undefined) patch.memberPhone = String(data.memberPhone);
+
+        // Re-point the duty if the email changed.
+        if (data.memberEmail !== undefined) {
+          const email = String(data.memberEmail).trim().toLowerCase();
+          const account = await prisma.user.findUnique({
+            where: { email },
+            select: { id: true, name: true, phone: true },
+          });
+          if (!account) {
+            throw new UserFacingError(
+              'No member account uses this email address. Add the member first, or correct the address.',
+              400,
+            );
+          }
+          patch.memberEmail = email;
+          patch.memberUserId = account.id;
+          if (data.memberName === undefined) patch.memberName = account.name;
+          if (data.memberPhone === undefined) patch.memberPhone = account.phone;
+        }
+
+        const row = await prisma.committeeRoleDuty.update({ where: { id }, data: patch });
+
+        await writeActivity({
+          actorId: currentUser.id,
+          actorName: currentUser.name,
+          action: 'UPDATE',
+          entity: 'Role responsibility',
+          entityId: id,
+          detail: `${row.postTitle}: duty for ${row.memberName ?? 'the post'} was changed`,
+        });
+
+        return row;
+      },
+    },
+  },
+
+  // ========================================
   // KARYA SAMITI - POSTS / POSITIONS
   // ========================================
   // à¤…à¤§à¥à¤¯à¤•à¥à¤·, à¤‰à¤ªà¤¾à¤§à¥à¤¯à¤•à¥à¤·, à¤¸à¤šà¤¿à¤µ... The organization may add any position it needs.

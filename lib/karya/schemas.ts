@@ -180,8 +180,25 @@ export const DUTY_STATUS_OPTIONS = [
 // PERMANENT DUTIES FOR A POST
 // ========================================
 // One row = one duty line for a post (e.g. अध्यक्ष).
+// ========================================
+// DUTIES OF EACH POST
+// ========================================
+// A duty line belongs to ONE member, and the EMAIL is the key that connects it to
+// their account (and therefore to their member panel). Name and phone are stored
+// on the row as well, so the office can read it without opening the account.
+//
+// The email is validated as an address here; whether an ACCOUNT exists for it is
+// checked in the resource's custom.create (lib/api/resources.ts), which can reach
+// the database.
 export const roleDutySchema = z.object({
   postTitle: requiredText('Post', 2, 120),
+  memberEmail: z
+    .string({ required_error: 'Member email is required.' })
+    .trim()
+    .toLowerCase()
+    .email('Please enter a valid email address.'),
+  memberName: requiredText('Name', 2, 160),
+  memberPhone: requiredText('Phone number', 6, 30),
   description: requiredText('Responsibility', 3, 600),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),
   isActive: z.boolean().default(true),

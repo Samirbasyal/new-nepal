@@ -61,13 +61,25 @@ export default async function MemberDutiesPage() {
   // ---------- permanent duties that come with the POST ----------
   // Matched on the post title, so nothing has to be assigned by hand. Whoever
   // becomes अध्यक्ष sees the अध्यक्ष list on the day they are recorded.
-  const permanentRows = committeeMember
-    ? await prisma.committeeRoleDuty.findMany({
-        where: { postTitle: committeeMember.postTitle, isActive: true },
-        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-        select: { description: true },
-      })
-    : [];
+  //
+  // TWO WAYS A DUTY CAN BE MINE
+  //   1. It was written for MY EMAIL (Admin -> Duties of each post -> member email).
+  //      That is the normal way now: one person, one row.
+  //   2. It carries no member at all (older rows) and the post title matches mine,
+  //      so everybody holding that post sees it.
+  const myPost = committeeMember?.postTitle ?? null;
+
+  const permanentRows = await prisma.committeeRoleDuty.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { memberUserId: user.id },
+        ...(myPost ? [{ memberUserId: null, postTitle: myPost }] : []),
+      ],
+    },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    select: { description: true },
+  });
 
   const permanent = permanentRows.map((row) => row.description);
 
@@ -114,6 +126,27 @@ export default async function MemberDutiesPage() {
                   <p className="text-sm font-semibold text-ink-900">{duty.title}</p>
                 ) : null}
                 <p className="mt-1 text-sm leading-relaxed text-ink-700">{duty.description}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* ---------- duties written for THIS person by email ---------- */}
+      {/* Shown here when the member has no committee record; when they do,
+          DutyList already carries the same lines. */}
+      {!committeeMember && permanent.length > 0 ? (
+        <section className="mb-8 rounded-card border border-ink-200 bg-white p-5">
+          <h2 className="text-base font-bold text-ink-900">Duties of your post</h2>
+          <p className="mt-1 text-xs text-ink-500">
+            Written for you by the office. These come with your post - they have no deadline and
+            they do not expire.
+          </p>
+          <ul className="mt-4 space-y-2">
+            {permanent.map((line) => (
+              <li key={line} className="flex gap-2 text-sm leading-relaxed text-ink-700">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
+                <span>{line}</span>
               </li>
             ))}
           </ul>
