@@ -159,6 +159,13 @@ model User {
   // which is taken from the session - never from the form.
   personalNotes PersonalNote[]
 
+  // ---------- MEMBERSHIP REQUESTS ----------
+  // The request this account came from (one per account, empty for accounts an
+  // administrator typed in by hand or created before this feature existed).
+  membershipRequest MembershipRequest? @relation("MembershipRequestApplicant")
+  // Requests this administrator approved or rejected (audit trail).
+  reviewedMembershipRequests MembershipRequest[] @relation("MembershipRequestReviewer")
+
   @@index([role])
   @@map("users")
 }
@@ -1658,4 +1665,94 @@ model PerformanceEvaluation {
   @@unique([memberProfileId, periodMonth])
   @@index([periodMonth, overall])
   @@map("performance_evaluations")
+}
+
+// ========================================
+// MEMBERSHIP REQUESTS (PUBLIC REGISTRATION -> ADMIN APPROVAL -> ACTIVATION)
+// ========================================
+// THE WHOLE POINT OF THIS TABLE
+//   Until now only an administrator could create a member account. That kept the
+//   register accurate, but it also meant a person who wanted to join had no way
+//   of asking except a phone call.
+//
+//   This table is the missing step, and it is deliberately NOT an account:
+//
+//     1. A visitor fills in the request form on /member/portal.
+//        -> ONE row here, status PENDING. No user row, no password, no access.
+//     2. Every administrator sees it in  Admin Panel -> Member registration
+//        requests, with a number on the menu.
+//     3. An administrator approves or rejects it. Nothing happens to the site
+//        until they do - there is no automatic approval anywhere in the code.
+//     4. On approval a single-use activation link is created (stored here only as
+//        a SHA-256 fingerprint - see lib/membership/tokens.ts). The link is
+//        emailed if a mail server is configured; if it is not, the administrator
+//        is SHOWN the link and can pass it on, instead of the site pretending an
+//        email went out.
+//     5. The applicant opens the link, chooses their OWN password, and only then
+//        is the User row created (role MEMBER, email proven, profile ACTIVE).
+//
+//   So the password is never chosen by an administrator, never emailed, and a
+//   pending or rejected applicant has no account to sign in with at all.
+//
+// WHY "userId" IS UNIQUE
+//   It is what makes approval idempotent: one request can only ever produce one
+//   account, even if an administrator presses Approve twice or two administrators
+//   press it at the same moment.
+// ========================================
+model MembershipRequest {
+  id String @id @default(cuid())
+
+  // ---------- WHAT THE APPLICANT TYPED ----------
+  fullName       String
+  email          String // lower-cased before saving, so duplicates are caught
+  mobileNumber   String
+  currentAddress String
+  dateOfBirth    DateTime? // optional on purpose - people often leave it out
+  occupation     String? // optional
+  reasonForJoining String // why they want to join, short answer
+  requestLetter  String // the longer letter, multiline
+  profilePhotoUrl String? // optional; public Blob/local storage
+
+  // ---------- THE DECISION ----------
+  // PENDING / APPROVED / REJECTED  (nothing else is ever written here)
+  status          String    @default("PENDING")
+  // Shown to the applicant when they ask about the decision; optional.
+  rejectionReason String?
+  // Internal note for the office. Never shown to the applicant.
+  adminNote       String?
+
+  submittedAt  DateTime  @default(now())
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   User?     @relation("MembershipRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  // ---------- "HAS AN ADMINISTRATOR LOOKED AT THIS YET?" ----------
+  // Empty means the request is still new. The menu badge counts these, and the
+  // moment an administrator opens the application it is stamped - so the number
+  // goes down because somebody actually read it, not because a page was opened.
+  adminReadAt DateTime?
+
+  // ---------- ACTIVATION (created only on approval) ----------
+  // Fingerprint of the secret in the emailed link. The real secret is never
+  // stored, so reading this table cannot produce a working link.
+  activationTokenHash String?   @unique
+  activationExpiresAt DateTime?
+  activationSentAt    DateTime? // when we tried to send it
+  // True only when a real mail server ACCEPTED the message. The admin screen uses
+  // this to decide whether to show the link for hand delivery.
+  activationEmailSent Boolean   @default(false)
+  // Stamped when the applicant finished choosing a password. A used link cannot
+  // be replayed.
+  activatedAt         DateTime?
+
+  // ---------- THE ACCOUNT THIS REQUEST PRODUCED ----------
+  userId String? @unique
+  user   User?   @relation("MembershipRequestApplicant", fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, submittedAt])
+  @@index([email])
+  @@map("membership_requests")
 }

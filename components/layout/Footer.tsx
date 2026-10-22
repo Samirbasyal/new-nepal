@@ -114,7 +114,7 @@ export async function Footer() {
                 { label: 'Donors', href: '/donors' },
                 { label: 'Gallery', href: '/gallery' },
                 { label: 'Contact', href: '/contact' },
-                { label: 'Member Login', href: '/member/login' },
+                { label: 'Member Login', href: '/member/portal' },
               ].map((item) => (
                 <li key={item.href}>
                   <Link

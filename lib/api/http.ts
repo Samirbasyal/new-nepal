@@ -47,9 +47,29 @@ export function notFound(message = 'The requested item could not be found.') {
   return fail(message, 404);
 }
 
-/** 500 - something unexpected went wrong. */
-export function serverError(message = 'Something went wrong. Please try again.') {
-  return fail(message, 500);
+/**
+ * 500 - something unexpected went wrong.
+ *
+ * Two ways of calling it, because both are in use across the project:
+ *
+ *   serverError()                       -> the standard sentence
+ *   serverError('Could not save X.')    -> a specific sentence
+ *   serverError(error, 'Could not ...') -> a specific sentence, AND the real
+ *                                          error is printed in the server log
+ *
+ * The third form used to fail to compile ("Expected 0-1 arguments") because this
+ * function only accepted the message. Keeping the error in the log matters: a
+ * vague sentence in the browser is fine, but somebody has to be able to find out
+ * what actually broke.
+ */
+export function serverError(
+  messageOrError: unknown = 'Something went wrong. Please try again.',
+  message?: string,
+) {
+  if (typeof messageOrError === 'string') return fail(messageOrError, 500);
+
+  console.error('[api] unexpected error:', messageOrError);
+  return fail(message ?? 'Something went wrong. Please try again.', 500);
 }
 
 // ========================================

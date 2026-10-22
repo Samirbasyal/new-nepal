@@ -76,6 +76,13 @@ export async function middleware(request: NextRequest) {
     // reset-password were treated as panel pages and redirected everything to
     // the sign-in page.
     const OPEN_PAGES = [
+      // The one public membership page: request membership, or sign in.
+      '/member/portal',
+      // The activation link in the approval email. The person opening it has an
+      // approved application but no account yet, so it has to work signed out.
+      '/member/activate',
+      // Older addresses, now forwards to /member/portal. Kept open so an old
+      // bookmark is forwarded rather than bounced to a sign-in page it cannot use.
       '/member/login',
       '/member/register',
       '/member/verify-email',
@@ -86,7 +93,8 @@ export async function middleware(request: NextRequest) {
     const isOpenPage = OPEN_PAGES.includes(pathname);
 
     if (!isOpenPage && !session) {
-      const loginUrl = new URL('/member/login', request.url);
+      const loginUrl = new URL('/member/portal', request.url);
+      loginUrl.searchParams.set('tab', 'login');
       loginUrl.searchParams.set('notice', 'login-required');
       loginUrl.searchParams.set('next', `${pathname}${search}`);
       return NextResponse.redirect(loginUrl);
@@ -100,9 +108,17 @@ export async function middleware(request: NextRequest) {
     // signed-in member onwards. The verify, forgot and reset pages are left
     // alone on purpose: a link from an email must always open, even on a
     // browser where somebody happens to be signed in.
-    if (session && (pathname === '/member/login' || pathname === '/member/register')) {
+    if (
+      session &&
+      (pathname === '/member/portal' || pathname === '/member/login' || pathname === '/member/register')
+    ) {
       return NextResponse.redirect(new URL('/member/dashboard', request.url));
     }
+
+    // NOTE: /member/activate is deliberately NOT in that list. Somebody who is
+    // already signed in may still be finishing an activation on a shared computer
+    // (for example after helping a family member), and bouncing them away would
+    // leave the new account half-created.
   }
 
   return NextResponse.next();

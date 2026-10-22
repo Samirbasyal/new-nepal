@@ -136,8 +136,8 @@ export default async function MembersPage() {
                 <Icon name="user-plus" className="h-4 w-4" />
                 Join community
               </ButtonLink>
-              <ButtonLink href="/member/register" variant="outline">
-                Create an account
+              <ButtonLink href="/member/portal?tab=register" variant="outline">
+                Request membership
               </ButtonLink>
             </div>
           </div>

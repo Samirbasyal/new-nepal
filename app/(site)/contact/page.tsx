@@ -190,7 +190,7 @@ const settings = await getSettings();
                 <p className="mt-2 text-sm text-ink-600">
                   Sign in to your member panel to see notices, programs, events and your tasks.
                 </p>
-                <a href="/member/login" className="btn btn-outline mt-4 w-full">
+                <a href="/member/portal?tab=login" className="btn btn-outline mt-4 w-full">
                   <Icon name="log-in" className="h-4 w-4" />
                   Member sign in
                 </a>

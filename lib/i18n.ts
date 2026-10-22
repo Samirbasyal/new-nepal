@@ -101,6 +101,7 @@ const en: Record<string, string> = {
   'admin.superAdmin': 'Super Admin',
   'admin.administrator': 'Administrator',
   'admin.members': 'Members',
+  'admin.memberRequests': 'Member registration requests',
   'admin.karya': 'Karya Samiti',
   'admin.donations': 'Donation records',
   'admin.gallery': 'Gallery',
@@ -266,6 +267,7 @@ const ne: Record<string, string> = {
   'admin.superAdmin': 'सुपर एडमिन',
   'admin.administrator': 'एडमिन',
   'admin.members': 'सदस्यहरू',
+  'admin.memberRequests': 'सदस्यता अनुरोधहरू',
   'admin.karya': 'कार्य समिति',
   'admin.donations': 'चन्दा अभिलेख',
   'admin.gallery': 'ग्यालरी',
@@ -362,6 +364,10 @@ export const NAV_KEY_BY_HREF: Record<string, string> = {
   '/join': 'nav.join',
   '/donate': 'nav.donate',
   '/member/login': 'nav.login',
+  // The one public membership page (register + login tabs). The old /member/login
+  // and /member/register addresses forward here, so they keep the same label.
+  '/member/portal': 'nav.login',
+  '/admin/member-requests': 'admin.memberRequests',
   '/privacy': 'nav.privacy',
   '/member/dashboard': 'member.dashboard',
   '/member/profile': 'member.profile',

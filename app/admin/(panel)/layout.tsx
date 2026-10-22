@@ -41,6 +41,7 @@ import { Container } from '@/components/ui/Section';
 import { isSuperAdminRole } from '@/lib/constants';
 import { organization } from '@/config/site';
 import { unreadNotificationCount } from '@/lib/notifications';
+import { countPendingRequests } from '@/lib/membership/service';
 import { NotificationBell } from '@/components/admin/NotificationBell';
 import { t } from '@/lib/i18n';
 
@@ -85,6 +86,11 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
   const pendingCount = await countPendingPayments();
 
+  // How many people are waiting to be let in. 0 is a perfectly normal answer and
+  // simply hides the badge; the nav keeps this number up to date by itself after
+  // the first paint (see components/admin/AdminNav.tsx).
+  const pendingRequests = await countPendingRequests();
+
   // The bell in the header. Loaded on the server so the number is right on the
   // very first paint, then kept fresh by the component itself.
   const unreadNotifications = await unreadNotificationCount(user.id);
@@ -103,7 +109,12 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
         {/* The menu scrolls on its own, so a long list never moves the page */}
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-6">
-          <AdminNav isSuperAdmin={isSuperAdmin} pendingCount={pendingCount} lang={lang} />
+          <AdminNav
+            isSuperAdmin={isSuperAdmin}
+            pendingCount={pendingCount}
+            pendingRequests={pendingRequests}
+            lang={lang}
+          />
         </div>
       </aside>
 
@@ -162,7 +173,11 @@ export default async function AdminPanelLayout({ children }: { children: React.R
         >
           {/* Quick menu (mobile only) */}
           <div className="mb-6 lg:hidden">
-            <AdminMobileNav isSuperAdmin={isSuperAdmin} pendingCount={pendingCount} />
+            <AdminMobileNav
+              isSuperAdmin={isSuperAdmin}
+              pendingCount={pendingCount}
+              pendingRequests={pendingRequests}
+            />
           </div>
 
           <LangProvider lang={lang}>{children}</LangProvider>

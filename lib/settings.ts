@@ -112,7 +112,11 @@ export const SETTING_DEFINITIONS = [
 
   // --- Join Community page ---
   { key: 'join.intro', label: 'Join Community page introduction', group: 'JOIN', default: 'Become part of our community. Fill in the form and our team will contact you.', type: 'textarea' },
-  { key: 'join.registrationEnabled', label: 'Allow public member registration (true / false)', group: 'JOIN', default: 'false', type: 'text' },
+  // NOTE: this switch only affects the OLD direct-registration endpoint
+  // (/api/auth/register), which stays closed. It does NOT switch off the
+  // membership request form on /member/portal: that form never creates an
+  // account by itself, an administrator has to approve every request first.
+  { key: 'join.registrationEnabled', label: 'Allow direct self-registration (legacy endpoint - leave false)', group: 'JOIN', default: 'false', type: 'text' },
 
   // --- Fund Management (Donation & Fund System) ---
   // These values drive the monthly fund calculation and the member payment

@@ -109,13 +109,14 @@ export const navMore = navigation.filter((item) => 'group' in item);
 // Links shown as buttons on the right side of the navbar.
 export const navigationActions = [
   { label: 'Donate', href: '/donate', style: 'accent' as const },
-  { label: 'Member Login', href: '/member/login', style: 'outline' as const },
+  // The one public membership page: register a request, or sign in.
+  { label: 'Member Login', href: '/member/portal', style: 'outline' as const },
 ];
 
 // Links shown in the mobile menu's bottom section.
 export const mobileMenuExtras = [
   { label: 'Donate', href: '/donate' },
-  { label: 'Member Login', href: '/member/login' },
+  { label: 'Member Login', href: '/member/portal' },
   { label: 'Join Community', href: '/join' },
 ];
 

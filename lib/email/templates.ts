@@ -187,3 +187,94 @@ export function buildNotificationEmail(input: {
 
   return { subject, text, html };
 }
+
+// ========================================
+// 4. "YOUR MEMBERSHIP REQUEST WAS APPROVED"
+// ========================================
+// Sent at the moment an administrator approves a registration request.
+//
+// WHAT THIS EMAIL CARRIES, AND WHAT IT DOES NOT
+//   It carries ONE single-use link. It does NOT carry a password: the applicant
+//   chooses their own, which is the only way the office can honestly say it has
+//   never seen it.
+//
+//   If the club has no mail server set up, this email is never sent - and the
+//   Admin Panel shows the same link so an administrator can pass it on by hand.
+//   Nothing pretends the message arrived.
+// ========================================
+export function buildMembershipApprovedEmail(input: {
+  applicantName: string;
+  link: string;
+  expiresMinutes: number;
+}): BuiltEmail {
+  const subject = `Your membership request was approved - ${organization.name}`;
+  const days = Math.max(1, Math.round(input.expiresMinutes / (60 * 24)));
+
+  const text = [
+    `Namaste ${input.applicantName},`,
+    '',
+    `Good news - the committee has approved your request to join ${organization.name}.`,
+    '',
+    'To finish, open this link and choose your own password:',
+    input.link,
+    '',
+    `The link can be used once and stops working after ${days} day(s).`,
+    'If it expires, ask the office for a new one - they can create another in a moment.',
+    '',
+    'Nobody at the club can see your password, and no password is ever sent by email.',
+    '',
+    organization.name,
+  ].join('\n');
+
+  const html = wrap(
+    'Your membership request was approved',
+    `Namaste ${input.applicantName}, the committee has approved your request to join ${organization.name}. One step is left: choose your own password.`,
+    button(input.link, 'Activate my account') +
+      `<p style="margin:0 0 18px;font-size:13px;color:#3d4b47;">The link can be used <strong>once</strong> and stops working after <strong>${days} day(s)</strong>. If it has expired, ask the office for a new one.</p>` +
+      linkFallback(input.link),
+    `No password is ever sent by email, and nobody at the club can see the password you choose.<br /><br />${signOff()}`,
+  );
+
+  return { subject, text, html };
+}
+
+// ========================================
+// 5. "YOUR MEMBERSHIP REQUEST WAS NOT ACCEPTED"
+// ========================================
+// Optional and courteous: a person who took the time to write a letter deserves
+// an answer rather than silence. The reason is whatever the administrator typed,
+// and it is left out completely when they did not type one.
+// ========================================
+export function buildMembershipRejectedEmail(input: {
+  applicantName: string;
+  reason?: string | null;
+}): BuiltEmail {
+  const subject = `About your membership request - ${organization.name}`;
+
+  const reasonText = input.reason ? `\nReason given by the office:\n${input.reason}\n` : '';
+
+  const text = [
+    `Namaste ${input.applicantName},`,
+    '',
+    `Thank you for asking to join ${organization.name}.`,
+    'The committee has reviewed your request and is not able to accept it at this time.',
+    reasonText,
+    'You are welcome to contact the office if you would like to talk about it.',
+    '',
+    organization.name,
+  ]
+    .filter((line) => line !== undefined)
+    .join('\n');
+
+  const html = wrap(
+    'About your membership request',
+    `Namaste ${input.applicantName}, thank you for asking to join ${organization.name}. The committee has reviewed your request and is not able to accept it at this time.`,
+    (input.reason
+      ? `<div style="margin:0 0 18px;padding:14px 16px;background:#fdf3f2;border-left:3px solid #c0392b;border-radius:8px;font-size:13px;line-height:1.6;color:#3d4b47;"><strong>Reason given by the office</strong><br />${input.reason}</div>`
+      : '') +
+      `<p style="margin:0 0 18px;font-size:13px;color:#3d4b47;">You are welcome to contact the office if you would like to talk about it.</p>`,
+    `${signOff()}`,
+  );
+
+  return { subject, text, html };
+}

@@ -50,6 +50,15 @@ type NavGroup = {
 /** The link that carries the "payments waiting" badge. */
 const VERIFY_HREF = '/admin/fund/pending';
 
+/**
+ * The link that carries the "membership requests waiting" badge.
+ *
+ * The number next to it is the count of PENDING requests, refreshed every half
+ * minute from /api/admin/membership-requests/pending-count. It is a signpost, not
+ * a permission: the page and every action behind it are guarded on the server.
+ */
+const REQUESTS_HREF = '/admin/member-requests';
+
 const NAV_GROUPS: NavGroup[] = [
   {
     // ========================================
@@ -87,6 +96,13 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'People',
     links: [
       { label: 'Members', href: '/admin/members', icon: 'users' },
+      // ========================================
+      // MEMBER REGISTRATION REQUESTS
+      // ========================================
+      // The queue of people who asked to join from /member/portal. It sits right
+      // under Members because approving one is the step that eventually creates a
+      // member - but a request is NOT an account, and this screen says so.
+      { label: 'Member registration requests', href: REQUESTS_HREF, icon: 'user-plus' },
       // ========================================
       // KARYA SAMITI (à¤•à¤¾à¤°à¥à¤¯ à¤¸à¤®à¤¿à¤¤à¤¿)
       // ========================================
@@ -215,14 +231,51 @@ const GROUP_KEY: Record<string, string> = {
 export function AdminNav({
   isSuperAdmin = false,
   pendingCount = 0,
+  pendingRequests = 0,
   lang,
 }: {
   lang: Lang;
   isSuperAdmin?: boolean;
   /** How many payments are waiting for verification. 0 hides the badge. */
   pendingCount?: number;
+  /** How many membership requests are waiting. 0 hides the badge. */
+  pendingRequests?: number;
 }) {
   const pathname = usePathname();
+
+  // ---------- the live number of membership requests ----------
+  // The layout renders the first number on the server, so it is right on the very
+  // first paint. After that this keeps it honest without a page reload: somebody
+  // sending a request from their phone makes the badge appear on this screen too.
+  const [liveRequests, setLiveRequests] = useState(pendingRequests);
+
+  useEffect(() => {
+    setLiveRequests(pendingRequests);
+  }, [pendingRequests]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const check = async () => {
+      try {
+        const response = await fetch('/api/admin/membership-requests/pending-count', {
+          cache: 'no-store',
+        });
+        if (!response.ok) return;
+
+        const payload = (await response.json()) as { ok: true; data: { pending: number } };
+        if (!cancelled && payload.ok === true) setLiveRequests(payload.data.pending);
+      } catch {
+        /* a failed poll is not worth telling anybody about - the next one fixes it */
+      }
+    };
+
+    const timer = setInterval(check, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
 
   const isActive = (href: string) => {
     const base = href.split('?')[0];
@@ -276,7 +329,12 @@ export function AdminNav({
           <ul className={cn('space-y-px', !openGroups[group.title] && 'hidden')}>
             {group.links.map((link) => {
               const active = isActive(link.href);
-              const badge = link.href === VERIFY_HREF ? pendingCount : 0;
+              const badge =
+                link.href === VERIFY_HREF
+                  ? pendingCount
+                  : link.href === REQUESTS_HREF
+                    ? liveRequests
+                    : 0;
 
               return (
                 <li key={link.href}>
@@ -320,9 +378,11 @@ export function AdminNav({
 export function AdminMobileNav({
   isSuperAdmin = false,
   pendingCount = 0,
+  pendingRequests = 0,
 }: {
   isSuperAdmin?: boolean;
   pendingCount?: number;
+  pendingRequests?: number;
 }) {
   const pathname = usePathname();
 
@@ -338,6 +398,9 @@ export function AdminMobileNav({
     { label: 'News', href: '/admin/news', icon: 'megaphone' as const },
     { label: 'Gallery', href: '/admin/gallery', icon: 'image' as const },
     { label: 'Members', href: '/admin/members', icon: 'users' as const },
+    // The join-up queue. On a phone this is the list an administrator is most
+    // likely to check after somebody says "I sent the form", so it gets a chip.
+    { label: 'Requests', href: REQUESTS_HREF, icon: 'user-plus' as const },
     { label: 'Joins', href: '/admin/applications', icon: 'user-plus' as const },
     { label: 'Messages', href: '/admin/messages', icon: 'mail' as const },
     // Loans are Super Admin only, so the chip is only offered to them.
@@ -354,7 +417,12 @@ export function AdminMobileNav({
     >
       {QUICK_LINKS.map((link) => {
         const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
-        const badge = link.href === VERIFY_HREF ? pendingCount : 0;
+        const badge =
+          link.href === VERIFY_HREF
+            ? pendingCount
+            : link.href === REQUESTS_HREF
+              ? pendingRequests
+              : 0;
 
         return (
           <PanelNavLink

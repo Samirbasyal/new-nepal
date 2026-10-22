@@ -80,6 +80,13 @@ export function LoginForm({
         <Alert tone="success">You have been signed out safely.</Alert>
       ) : null}
 
+      {/* Arriving from the activation link: the account has just been created. */}
+      {notice === 'activated' ? (
+        <Alert tone="success">
+          Your account is ready. Sign in with the password you just chose.
+        </Alert>
+      ) : null}
+
       {/* ---------- Server error (for example a wrong password) ---------- */}
       {error ? <Alert tone="error">{error}</Alert> : null}
 
@@ -151,7 +158,10 @@ export function LoginForm({
         {isAdmin ? (
           <p className="text-ink-500">
             This area is for administrators only.{' '}
-            <Link href="/member/login" className="font-semibold text-brand-700 hover:underline">
+            <Link
+              href="/member/portal?tab=login"
+              className="font-semibold text-brand-700 hover:underline"
+            >
               Member sign in
             </Link>
           </p>
@@ -167,14 +177,17 @@ export function LoginForm({
               </Link>
             </p>
 
-            {/* ---------- Accounts are created by the office, not by visitors ---------- */}
+            {/* ---------- Not a member yet ---------- */}
             <p className="text-xs text-ink-500">
-              Member accounts are created by the organization office. Please contact them with your
-              name, email address and phone number, or{' '}
-              <Link href="/join" className="font-medium text-ink-600 hover:underline">
-                send us a request
-              </Link>
-              .
+              Not a member yet?{' '}
+              <Link
+                href="/member/portal?tab=register"
+                className="font-semibold text-brand-700 hover:underline"
+              >
+                Request membership
+              </Link>{' '}
+              - the committee reviews every application, and you choose your own password once it is
+              approved.
             </p>
 
             <p className="text-xs text-ink-500">

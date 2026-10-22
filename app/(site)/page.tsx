@@ -589,7 +589,7 @@ export default async function HomePage() {
 
             <p className="mt-6 text-xs text-brand-200">
               Already a member?{' '}
-              <Link href="/member/login" className="font-semibold text-white underline">
+              <Link href="/member/portal?tab=login" className="font-semibold text-white underline">
                 Sign in to your member panel
               </Link>
             </p>

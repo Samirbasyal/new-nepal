@@ -168,7 +168,7 @@ export async function requireMember(): Promise<SessionUser> {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/member/login?notice=login-required');
+    redirect('/member/portal?tab=login&notice=login-required');
   }
 
   // The member panel stays closed until the email address has been proven.
