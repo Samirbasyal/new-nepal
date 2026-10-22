@@ -77,9 +77,13 @@ export default async function AdminRoleDutiesPage() {
     {
       name: 'memberEmail',
       label: 'Member email (required)',
-      type: 'select',
+      // A plain text box, not a fixed list: any address can be typed, including
+      // one for somebody who has not been given an account yet. If the address
+      // matches a member account it is linked to it, and the duty then appears in
+      // that member's own panel.
+      type: 'email',
       required: true,
-      options: memberOptions,
+      placeholder: 'name@example.com',
       hint:
         memberOptions.length === 0
           ? 'No member accounts yet. Add a member first (Members page), then come back.'

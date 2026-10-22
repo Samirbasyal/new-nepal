@@ -1,35 +1,31 @@
-import { t } from '@/lib/i18n';
-import { getLanguage } from '@/lib/i18n-server';
 // ========================================
-// MEMBER PANEL
-// This code controls the Member Dashboard.
+// MEMBER DASHBOARD - THE FIRST SCREEN AFTER SIGNING IN
 // ========================================
 // Address: /member/dashboard
 //
-// WHAT THE MEMBER SEES
-//   - a welcome message and their membership status
-//   - their profile summary
-//   - notices published by the organization
-//   - published programs and upcoming events
-//   - the tasks assigned to them
-//   - quick links to edit their profile
+// WHAT A MEMBER SEES HERE, IN THIS ORDER
+//   1. a greeting strip with their name, post and membership status
+//   2. four numbers: open tasks, permanent duties, fund status, unread alerts
+//   3. this month's performance (score + rank), if the office has published it
+//   4. quick access to every page of the panel
+//   5. the newest notices, programmes and events from the club
 //
-// IMPORTANT: every query below is limited to the signed-in member's own
-// record (session id) or to PUBLISHED public content. A member can therefore
-// never see another member's private information.
+// WHOSE DATA
+//   Only the signed-in member's own. Every query below is limited to the session
+//   user's id, or to PUBLISHED public content. A member can never see another
+//   member's private information on this page.
 // ========================================
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { t } from '@/lib/i18n';
+import { getLanguage } from '@/lib/i18n-server';
 import { requireMember } from '@/lib/auth/guards';
 import { StatusBadge } from '@/components/ui/Badge';
-import { Icon } from '@/components/ui/Icon';
-import { ButtonLink } from '@/components/ui/Button';
-import { Alert } from '@/components/ui/Alert';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { getEvents, getNewsPosts, getPrograms } from '@/lib/data/public';
-import { formatDate, formatDateTime, truncate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,288 +34,386 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t(lang, 'member.dashboard'), robots: { index: false, follow: false } };
 }
 
+const QUICK_LINKS: { label: string; href: string; icon: IconName }[] = [
+  { label: 'My profile', href: '/member/profile', icon: 'user' },
+  { label: 'My tasks', href: '/member/tasks', icon: 'check-circle' },
+  { label: 'My responsibilities', href: '/member/duties', icon: 'shield-check' },
+  { label: 'My performance', href: '/member/performance', icon: 'chart' },
+  { label: 'Monthly fund', href: '/member/fund', icon: 'banknote' },
+  { label: 'Pay fund', href: '/member/fund/pay', icon: 'upload' },
+  { label: 'Fund history', href: '/member/fund/history', icon: 'list' },
+  { label: 'My loans', href: '/member/loans', icon: 'briefcase' },
+  { label: 'Messages', href: '/member/messages', icon: 'mail' },
+  { label: 'My notes', href: '/member/notes', icon: 'file-text' },
+  { label: 'Notices', href: '/news?type=NOTICE', icon: 'megaphone' },
+  { label: 'Programs', href: '/programs', icon: 'layers' },
+];
+
+function monthStart(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
 export default async function MemberDashboardPage() {
-  // The server guard gives us the signed-in member (and redirects if not signed in).
   const user = await requireMember();
+  const month = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
-  // ---------- This member's own profile + tasks ----------
-  const [profile, tasks, notices, programs, events] = await Promise.all([
-    isDatabaseConfigured()
-      ? prisma.memberProfile.findUnique({ where: { userId: user.id } }).catch(() => null)
-      : Promise.resolve(null),
+  const [profile, tasks, dutyCount, roleDutyCount, unread, evaluation, latestPayment, notices, programs, events] =
+    await Promise.all([
+      isDatabaseConfigured()
+        ? prisma.memberProfile.findUnique({ where: { userId: user.id } }).catch(() => null)
+        : Promise.resolve(null),
 
-    // Only tasks assigned to THIS member.
-    isDatabaseConfigured()
-      ? prisma.task
-          .findMany({
-            where: { assignedToId: user.id },
-            orderBy: [{ status: 'asc' }, { dueDate: 'asc' }],
-            take: 5,
-          })
-          .catch(() => [])
-      : Promise.resolve([]),
+      isDatabaseConfigured()
+        ? prisma.task
+            .findMany({
+              where: { assignedToId: user.id, periodMonth: month },
+              orderBy: [{ status: 'asc' }, { dueDate: 'asc' }],
+            })
+            .catch(() => [])
+        : Promise.resolve([]),
 
-    getNewsPosts({ type: 'NOTICE', pageSize: 3 }),
-    getPrograms({ pageSize: 3 }),
-    getEvents({ upcomingOnly: true, pageSize: 3 }),
-  ]);
+      isDatabaseConfigured()
+        ? prisma.memberResponsibility
+            .count({ where: { memberProfile: { userId: user.id }, isActive: true } })
+            .catch(() => 0)
+        : Promise.resolve(0),
 
+      isDatabaseConfigured()
+        ? prisma.committeeRoleDuty
+            .count({ where: { isActive: true, memberUserId: user.id } })
+            .catch(() => 0)
+        : Promise.resolve(0),
+
+      isDatabaseConfigured()
+        ? prisma.notification
+            .count({ where: { userId: user.id, readAt: null } })
+            .catch(() => 0)
+        : Promise.resolve(0),
+
+      isDatabaseConfigured()
+        ? prisma.performanceEvaluation
+            .findFirst({
+              where: { memberProfile: { userId: user.id }, status: 'PUBLISHED' },
+              orderBy: { periodMonth: 'desc' },
+            })
+            .catch(() => null)
+        : Promise.resolve(null),
+
+      isDatabaseConfigured()
+        ? prisma.fundPayment
+            .findFirst({
+              where: { memberId: user.id, paymentDate: { gte: monthStart() } },
+              orderBy: { paymentDate: 'desc' },
+              select: { status: true, amount: true },
+            })
+            .catch(() => null)
+        : Promise.resolve(null),
+
+      getNewsPosts({ type: 'NOTICE', pageSize: 3 }),
+      getPrograms({ pageSize: 3 }),
+      getEvents({ upcomingOnly: true, pageSize: 3 }),
+    ]);
+
+  const firstName = user.name.split(' ')[0] || user.name;
   const status = profile?.status ?? 'PENDING';
   const openTasks = tasks.filter((task) => task.status !== 'DONE').length;
+  const doneTasks = tasks.filter((task) => task.status === 'DONE').length;
+  const duties = dutyCount + roleDutyCount;
+
+  const fundStatus = !latestPayment
+    ? { label: 'Not paid yet', tone: 'text-amber-700', href: '/member/fund/pay' }
+    : latestPayment.status === 'VERIFIED'
+      ? { label: 'Up to date', tone: 'text-emerald-700', href: '/member/fund' }
+      : latestPayment.status === 'PENDING'
+        ? { label: 'Waiting for approval', tone: 'text-amber-700', href: '/member/fund/history' }
+        : { label: 'Needs attention', tone: 'text-red-700', href: '/member/fund/history' };
+
+  const score = evaluation?.overall ?? null;
+  const ring = score === null ? 0 : Math.max(0, Math.min(100, score * 10));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {/* ========================================
-          WELCOME
+          GREETING
           ======================================== */}
-      <section className="card overflow-hidden">
-        <div className="bg-brand-800 px-6 py-8 text-white">
-          <p className="text-sm text-brand-100">Welcome back</p>
-          <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">{user.name}</h1>
-          <p className="mt-2 text-sm text-brand-100">
-            This is your member area. Here you can follow what the organization is doing and see
-            anything assigned to you.
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#126b50] via-[#0d5540] to-[#0a3b2c] px-5 py-6 text-white sm:px-7 sm:py-7">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 400 160"
+          className="pointer-events-none absolute inset-y-0 right-0 h-full w-1/2 opacity-25"
+          preserveAspectRatio="none"
+        >
+          <path d="M0 130 L60 60 L100 100 L150 40 L200 110 L250 65 L300 120 L400 45 L400 160 L0 160 Z" fill="#ffffff" />
+        </svg>
+
+        <div className="relative">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
+            Welcome back
           </p>
-        </div>
+          <h1 className="mt-1 font-display text-2xl font-bold sm:text-3xl">Hello, {firstName}</h1>
+          <p className="mt-1.5 max-w-md text-sm leading-relaxed text-emerald-50/80">
+            Keep going - your contribution matters to our community.
+          </p>
 
-        <div className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-              Membership status
-            </p>
-            <div className="mt-1.5">
-              <StatusBadge status={status} />
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-              Member since
-            </p>
-            <p className="mt-1.5 text-sm text-ink-800">
-              {formatDate(profile?.joinedAt ?? profile?.createdAt) || 'Not recorded yet'}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-              Open tasks
-            </p>
-            <p className="mt-1.5 text-sm text-ink-800">
-              {openTasks} {openTasks === 1 ? 'task' : 'tasks'}
-            </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white ring-1 ring-white/20">
+              <Icon name="users" className="h-3.5 w-3.5" />
+              {profile?.designation ?? 'Member'}
+            </span>
+            <StatusBadge status={status} />
           </div>
         </div>
       </section>
 
-      {/* ---------- Status explanation ---------- */}
-      {status === 'PENDING' ? (
-        <Alert tone="info" title="Your membership is pending">
-          An administrator will review your account and set your membership status. You can already
-          use this panel to follow our programs, events and notices.
-        </Alert>
-      ) : null}
-
-      {status === 'INACTIVE' || status === 'SUSPENDED' ? (
-        <Alert tone="warning" title="Your membership is not active">
-          Please contact the organization office if you believe this is a mistake.
-        </Alert>
-      ) : null}
+      {/* ========================================
+          FOUR NUMBERS
+          ======================================== */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          href="/member/tasks"
+          icon="check-circle"
+          label="Tasks this month"
+          value={String(openTasks).padStart(2, '0')}
+          hint={`${doneTasks} finished`}
+          tone="emerald"
+        />
+        <StatCard
+          href="/member/duties"
+          icon="shield-check"
+          label="Responsibilities"
+          value={String(duties).padStart(2, '0')}
+          hint="Permanent"
+          tone="sky"
+        />
+        <StatCard
+          href={fundStatus.href}
+          icon="banknote"
+          label="Fund status"
+          value={fundStatus.label}
+          hint="This month"
+          tone="amber"
+          small
+        />
+        <StatCard
+          href="/member/notifications"
+          icon="bell"
+          label="Notifications"
+          value={String(unread).padStart(2, '0')}
+          hint={unread === 0 ? 'All read' : 'Unread'}
+          tone="violet"
+        />
+      </div>
 
       {/* ========================================
-          MY PROFILE SUMMARY
+          PERFORMANCE
           ======================================== */}
-      <section className="card p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-base font-bold text-ink-900">
-            <Icon name="user" className="h-5 w-5 text-brand-600" />
-            My profile
+      <section className="card p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-ink-900">
+            <Icon name="chart" className="h-4 w-4 text-brand-600" />
+            My performance
           </h2>
-          <ButtonLink href="/member/profile" variant="outline" size="sm">
-            Edit profile
-          </ButtonLink>
+          <Link href="/member/performance" className="text-xs font-semibold text-brand-700 hover:underline">
+            View details
+          </Link>
         </div>
 
-        <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">Name</dt>
-            <dd className="mt-1 text-sm text-ink-800">{user.name}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">Email</dt>
-            <dd className="mt-1 break-all text-sm text-ink-800">{user.email}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-              Designation
-            </dt>
-            <dd className="mt-1 text-sm text-ink-800">{profile?.designation || 'Not set'}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-semibold uppercase tracking-wide text-ink-500">
-              Department
-            </dt>
-            <dd className="mt-1 text-sm text-ink-800">{profile?.department || 'Not set'}</dd>
-          </div>
-        </dl>
-
-        <p className="mt-4 border-t border-ink-100 pt-4 text-xs text-ink-500">
-          Your email address and membership number can only be changed by an administrator.
-        </p>
-      </section>
-
-      {/* ========================================
-          MY TASKS
-          ======================================== */}
-      <section className="card p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-base font-bold text-ink-900">
-            <Icon name="check-circle" className="h-5 w-5 text-brand-600" />
-            My tasks
-          </h2>
-          <ButtonLink href="/member/tasks" variant="outline" size="sm">
-            View all
-          </ButtonLink>
-        </div>
-
-        {tasks.length > 0 ? (
-          <ul className="mt-4 space-y-3">
-            {tasks.map((task) => (
-              <li key={task.id} className="rounded-card border border-ink-200 p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge status={task.status} />
-                  {task.priority !== 'NORMAL' ? <StatusBadge status={task.priority} /> : null}
-                </div>
-                <p className="mt-2 text-sm font-semibold text-ink-900">{task.title}</p>
-                {task.description ? (
-                  <p className="mt-1 text-xs text-ink-600">{truncate(task.description, 140)}</p>
-                ) : null}
-                {task.dueDate ? (
-                  <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-ink-500">
-                    <Icon name="clock" className="h-3.5 w-3.5" />
-                    Due {formatDate(task.dueDate)}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
+        {score === null ? (
+          <p className="mt-3 text-sm text-ink-500">
+            No result has been published yet. Your score and rank appear here after the committee
+            publishes the month.
+          </p>
         ) : (
-          <div className="mt-4">
-            <EmptyState
-              icon="check-circle"
-              title="No tasks assigned to you"
-              description="When an administrator gives you a task it will appear here."
-              compact
-            />
+          <div className="mt-4 flex flex-wrap items-center gap-5">
+            <Ring value={ring} label={`${Math.round(score)}%`} />
+            <div>
+              <p className="text-sm font-semibold text-ink-900">
+                Your score for {evaluation?.periodMonth}
+              </p>
+              <p className="mt-0.5 text-xs text-ink-500">
+                {score.toFixed(1)} out of 100
+                {evaluation?.rank ? ` · rank ${evaluation.rank}` : ''}
+              </p>
+              {evaluation?.remarks ? (
+                <p className="mt-2 max-w-md text-xs leading-relaxed text-ink-600">
+                  {evaluation.remarks}
+                </p>
+              ) : null}
+            </div>
           </div>
         )}
       </section>
 
       {/* ========================================
-          NOTICES / PROGRAMS / EVENTS
+          QUICK ACCESS
           ======================================== */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* ---------- Notices ---------- */}
-        <section className="card p-6">
-          <h2 className="flex items-center gap-2 text-base font-bold text-ink-900">
-            <Icon name="bell" className="h-5 w-5 text-brand-600" />
-            Notices
-          </h2>
+      <section className="card p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-bold text-ink-900">Quick access</h2>
+          <span className="text-[11px] text-ink-400">Everything in the panel</span>
+        </div>
 
-          {notices.rows.length > 0 ? (
-            <ul className="mt-4 space-y-3">
-              {notices.rows.map((notice) => (
-                <li key={notice.id}>
-                  <Link
-                    href={`/news/${notice.slug}`}
-                    className="text-sm font-semibold text-brand-700 hover:underline"
-                  >
-                    {notice.title}
-                  </Link>
-                  {notice.publishedAt ? (
-                    <p className="text-xs text-ink-500">{formatDate(notice.publishedAt)}</p>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-4 text-sm text-ink-500">
-              No notices have been published yet.
-            </p>
-          )}
-        </section>
-
-        {/* ---------- Programs ---------- */}
-        <section className="card p-6">
-          <h2 className="flex items-center gap-2 text-base font-bold text-ink-900">
-            <Icon name="layers" className="h-5 w-5 text-brand-600" />
-            Programs
-          </h2>
-
-          {programs.rows.length > 0 ? (
-            <ul className="mt-4 space-y-3">
-              {programs.rows.map((program) => (
-                <li key={program.id}>
-                  <Link
-                    href={`/programs/${program.slug}`}
-                    className="text-sm font-semibold text-brand-700 hover:underline"
-                  >
-                    {program.title}
-                  </Link>
-                  <p className="text-xs text-ink-500">
-                    <StatusBadge status={program.status} />
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-4 text-sm text-ink-500">No programs published yet.</p>
-          )}
-        </section>
-
-        {/* ---------- Events ---------- */}
-        <section className="card p-6">
-          <h2 className="flex items-center gap-2 text-base font-bold text-ink-900">
-            <Icon name="calendar" className="h-5 w-5 text-brand-600" />
-            Upcoming events
-          </h2>
-
-          {events.rows.length > 0 ? (
-            <ul className="mt-4 space-y-3">
-              {events.rows.map((event) => (
-                <li key={event.id}>
-                  <Link
-                    href={`/events/${event.slug}`}
-                    className="text-sm font-semibold text-brand-700 hover:underline"
-                  >
-                    {event.title}
-                  </Link>
-                  <p className="text-xs text-ink-500">{formatDateTime(event.startsAt)}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-4 text-sm text-ink-500">No upcoming events right now.</p>
-          )}
-        </section>
-      </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          {QUICK_LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2.5 text-xs font-medium text-ink-700 transition-colors hover:border-brand-300 hover:bg-brand-50/60 hover:text-brand-800"
+            >
+              <Icon name={item.icon} className="h-4 w-4 shrink-0 text-brand-600" />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* ========================================
-          QUICK ACTIONS
+          FROM THE CLUB
           ======================================== */}
-      <section className="flex flex-wrap gap-3">
-        <ButtonLink href="/member/profile" variant="primary">
-          <Icon name="edit" className="h-4 w-4" />
-          Edit my profile
-        </ButtonLink>
-        <ButtonLink href="/join" variant="outline">
-          <Icon name="user-plus" className="h-4 w-4" />
-          Invite someone to join
-        </ButtonLink>
-        <ButtonLink href="/news" variant="ghost">
-          All news and notices
-        </ButtonLink>
-      </section>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Panel title="Latest notices" href="/news?type=NOTICE" empty="No notices yet.">
+          {notices.rows.map((post) => (
+            <Row key={post.id} href={`/news/${post.slug}`} title={post.title} meta={formatDate(post.publishedAt)} />
+          ))}
+        </Panel>
+
+        <Panel title="Programmes" href="/programs" empty="No programmes yet.">
+          {programs.rows.map((program) => (
+            <Row key={program.id} href={`/programs/${program.slug}`} title={program.title} meta={program.location ?? ''} />
+          ))}
+        </Panel>
+
+        <Panel title="Upcoming events" href="/events" empty="Nothing scheduled.">
+          {events.rows.map((event) => (
+            <Row
+              key={event.id}
+              href={`/events/${event.slug}`}
+              title={event.title}
+              meta={event.startsAt ? formatDate(event.startsAt) : ''}
+            />
+          ))}
+        </Panel>
+      </div>
     </div>
+  );
+}
+
+// ========================================
+// SMALL PIECES
+// ========================================
+
+function StatCard({
+  href,
+  icon,
+  label,
+  value,
+  hint,
+  tone,
+  small = false,
+}: {
+  href: string;
+  icon: IconName;
+  label: string;
+  value: string;
+  hint: string;
+  tone: 'emerald' | 'sky' | 'amber' | 'violet';
+  small?: boolean;
+}) {
+  const tones = {
+    emerald: 'bg-emerald-50 text-emerald-700',
+    sky: 'bg-sky-50 text-sky-700',
+    amber: 'bg-amber-50 text-amber-700',
+    violet: 'bg-violet-50 text-violet-700',
+  } as const;
+
+  return (
+    <Link
+      href={href}
+      className="group flex items-start gap-3 rounded-2xl border border-ink-200 bg-white p-4 transition-shadow hover:shadow-md"
+    >
+      <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tones[tone]}`}>
+        <Icon name={icon} className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[11px] font-medium uppercase tracking-wide text-ink-500">
+          {label}
+        </span>
+        <span className={`mt-0.5 block font-bold text-ink-900 ${small ? 'text-sm' : 'text-xl'}`}>
+          {value}
+        </span>
+        <span className="mt-0.5 block text-[11px] text-ink-400">{hint}</span>
+      </span>
+      <Icon
+        name="chevron-right"
+        className="mt-1 h-4 w-4 shrink-0 text-ink-300 group-hover:text-brand-600"
+      />
+    </Link>
+  );
+}
+
+function Ring({ value, label }: { value: number; label: string }) {
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
+  const dash = (value / 100) * circumference;
+
+  return (
+    <div className="relative h-20 w-20 shrink-0">
+      <svg viewBox="0 0 64 64" className="h-20 w-20 -rotate-90">
+        <circle cx="32" cy="32" r={radius} fill="none" stroke="#e6efe9" strokeWidth="6" />
+        <circle
+          cx="32"
+          cy="32"
+          r={radius}
+          fill="none"
+          stroke="#15803d"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${circumference}`}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-ink-900">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  href,
+  empty,
+  children,
+}: {
+  title: string;
+  href: string;
+  empty: string;
+  children: React.ReactNode;
+}) {
+  const hasChildren = Array.isArray(children) ? children.length > 0 : Boolean(children);
+
+  return (
+    <section className="card p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-bold text-ink-900">{title}</h2>
+        <Link href={href} className="text-[11px] font-semibold text-brand-700 hover:underline">
+          All
+        </Link>
+      </div>
+      {hasChildren ? <ul className="mt-2 divide-y divide-ink-100">{children}</ul> : (
+        <p className="mt-3 text-xs text-ink-500">{empty}</p>
+      )}
+    </section>
+  );
+}
+
+function Row({ href, title, meta }: { href: string; title: string; meta: string }) {
+  return (
+    <li>
+      <Link href={href} className="block py-2.5 hover:text-brand-700">
+        <p className="line-clamp-2 text-xs font-medium leading-snug text-ink-800">{title}</p>
+        {meta ? <p className="mt-0.5 text-[11px] text-ink-400">{meta}</p> : null}
+      </Link>
+    </li>
   );
 }

@@ -1005,13 +1005,11 @@ export const RESOURCES: Record<string, ResourceConfig> = {
           select: { id: true, name: true, phone: true },
         });
 
-        if (!account) {
-          throw new UserFacingError(
-            'No member account uses this email address. Add the member first, or correct the address.',
-            400,
-          );
-        }
-
+        // NO ACCOUNT YET IS NOT AN ERROR.
+        // The office may write the duty before that person has been given an
+        // account. The address is stored as typed, memberUserId stays empty, and
+        // the member panel matches on the email as well - so the duty appears the
+        // moment an account with that address exists.
         const row = await prisma.committeeRoleDuty.create({
           data: {
             postTitle: String(data.postTitle),
@@ -1019,10 +1017,10 @@ export const RESOURCES: Record<string, ResourceConfig> = {
             sortOrder: Number(data.sortOrder ?? 0),
             isActive: data.isActive === undefined ? true : Boolean(data.isActive),
             memberEmail: email,
-            memberUserId: account.id,
+            memberUserId: account?.id ?? null,
             // The form's name and phone win; the account fills any gap.
-            memberName: data.memberName ? String(data.memberName) : account.name,
-            memberPhone: data.memberPhone ? String(data.memberPhone) : account.phone,
+            memberName: data.memberName ? String(data.memberName) : (account?.name ?? null),
+            memberPhone: data.memberPhone ? String(data.memberPhone) : (account?.phone ?? null),
           },
         });
 
@@ -1057,16 +1055,12 @@ export const RESOURCES: Record<string, ResourceConfig> = {
             where: { email },
             select: { id: true, name: true, phone: true },
           });
-          if (!account) {
-            throw new UserFacingError(
-              'No member account uses this email address. Add the member first, or correct the address.',
-              400,
-            );
-          }
+          // Same rule as create: any address is allowed; a matching account is
+          // linked, a missing one simply stays unlinked until it exists.
           patch.memberEmail = email;
-          patch.memberUserId = account.id;
-          if (data.memberName === undefined) patch.memberName = account.name;
-          if (data.memberPhone === undefined) patch.memberPhone = account.phone;
+          patch.memberUserId = account?.id ?? null;
+          if (data.memberName === undefined && account) patch.memberName = account.name;
+          if (data.memberPhone === undefined && account) patch.memberPhone = account.phone;
         }
 
         const row = await prisma.committeeRoleDuty.update({ where: { id }, data: patch });

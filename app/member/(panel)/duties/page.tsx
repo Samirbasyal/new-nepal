@@ -74,7 +74,10 @@ export default async function MemberDutiesPage() {
       isActive: true,
       OR: [
         { memberUserId: user.id },
-        ...(myPost ? [{ memberUserId: null, postTitle: myPost }] : []),
+        // A duty written before this person had an account still finds them, by
+        // the address the office typed.
+        { memberEmail: user.email.toLowerCase() },
+        ...(myPost ? [{ memberUserId: null, memberEmail: null, postTitle: myPost }] : []),
       ],
     },
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
