@@ -96,6 +96,20 @@ model User {
   // works" true for sessions that were already open.
   sessionVersion Int @default(1)
 
+  // ---------- TWO-STEP VERIFICATION (administrators) ----------
+  // The shared secret an authenticator app keeps a copy of, in base32
+  // (see lib/auth/totp.ts). It is written when an administrator STARTS setting
+  // two-step verification up, and is not trusted until twoFactorEnabledAt is
+  // filled in by a correct 6-digit code.
+  //
+  // This secret alone cannot sign anybody in - the password is still required -
+  // but it is still a secret: it is shown to a browser exactly once, on the setup
+  // screen, and never appears in a list, an export, a log or an API answer.
+  twoFactorSecret String?
+  // Empty = two-step verification is off for this account. Filled = every future
+  // sign-in needs a code as well as the password.
+  twoFactorEnabledAt DateTime?
+
   // ---------- WHO CREATED THIS ACCOUNT ----------
   // Members cannot register themselves: an administrator creates the account.
   // We remember which administrator it was, for the audit trail.

@@ -25,6 +25,7 @@ import { redirect } from 'next/navigation';
 import { getSession, type SessionUser } from '@/lib/auth/session';
 import { prisma, isDatabaseConfigured } from '@/lib/prisma';
 import { isAdminRole, isSuperAdminRole, canRecordExpenseRole } from '@/lib/constants';
+import { adminLoginUrl } from '@/lib/auth/admin-entry';
 
 // ========================================
 // WHY cache() IS USED BELOW (PERFORMANCE)
@@ -116,8 +117,13 @@ export async function requireAdmin(): Promise<SessionUser> {
   const user = await getCurrentUser();
 
   if (!user) {
-    // Not logged in -> send them to the admin login page.
-    redirect('/admin/login?notice=login-required');
+    // Not logged in -> send them to the PRIVATE admin sign-in page.
+    //
+    // The address is not linked anywhere on the public website (see
+    // lib/auth/admin-entry.ts). Hiding it is only a courtesy, though: the check
+    // that matters is the role check a few lines below, and the same check is
+    // repeated in lib/api/guard.ts for every admin API.
+    redirect(adminLoginUrl({ notice: 'login-required' }));
   }
 
   if (!isAdminRole(user.role)) {

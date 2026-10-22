@@ -2,8 +2,8 @@
 // MEMBER LOGIN + ADMIN LOGIN FORM
 // ========================================
 // This one component powers BOTH login pages:
-//   /member/login  -> mode="member"
-//   /admin/login   -> mode="admin"
+//   /member/portal -> mode="member"
+//   /admin/<private slug> -> mode="admin"  (see lib/auth/admin-entry.ts)
 //
 // HOW THE LOGIN WORKS
 //   1. The visitor types an email and password.
@@ -49,6 +49,17 @@ export function LoginForm({
 
   const { busy, error, fieldErrors, submit } = useFormSubmit('/api/auth/login');
 
+  // ---------- second step (two-step verification) ----------
+  // An administrator who has turned two-step verification on does not receive a
+  // session from the password step. The server answers { mfaRequired: true } and
+  // sets a short-lived challenge cookie; this state swaps the form for the code
+  // box. Nothing is trusted from the browser - /api/auth/mfa checks the cookie,
+  // the account and the code again on the server.
+  const [stage, setStage] = useState<'password' | 'mfa'>('password');
+  const [code, setCode] = useState('');
+  const [mfaBusy, setMfaBusy] = useState(false);
+  const [mfaError, setMfaError] = useState<string | null>(null);
+
   const isAdmin = mode === 'admin';
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -57,7 +68,19 @@ export function LoginForm({
     const succeeded = await submit(
       { email, password, remember, portal: mode },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          const payload = data as { mfaRequired?: boolean } | null;
+
+          if (payload?.mfaRequired) {
+            // Password accepted, code still needed. The password is deliberately
+            // forgotten by the form; it is no longer needed for anything.
+            setPassword('');
+            setCode('');
+            setMfaError(null);
+            setStage('mfa');
+            return;
+          }
+
           // Send the user to their dashboard and refresh so the navbar
           // and the panel both see the new session.
           router.replace(redirectTo);
@@ -67,6 +90,96 @@ export function LoginForm({
     );
 
     return succeeded;
+  }
+
+  // ========================================
+  // THE CODE STEP
+  // ========================================
+  async function handleVerify(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMfaBusy(true);
+    setMfaError(null);
+
+    try {
+      const response = await fetch('/api/auth/mfa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { ok: true; data: { redirectTo?: string } }
+        | { ok: false; error: string }
+        | null;
+
+      if (!response.ok || !payload || payload.ok !== true) {
+        setMfaError(
+          (payload && 'error' in payload && payload.error) ||
+            'The code could not be checked. Please try again.',
+        );
+        setCode('');
+        return;
+      }
+
+      router.replace(payload.data?.redirectTo ?? redirectTo);
+      router.refresh();
+    } catch {
+      setMfaError('Could not reach the server. Please check your connection and try again.');
+    } finally {
+      setMfaBusy(false);
+    }
+  }
+
+  if (stage === 'mfa') {
+    return (
+      <form onSubmit={handleVerify} className="space-y-5" noValidate>
+        <Alert tone="info">
+          Your password was correct. Enter the 6-digit code from your authenticator app to finish
+          signing in.
+        </Alert>
+
+        {mfaError ? <Alert tone="error">{mfaError}</Alert> : null}
+
+        <TextField
+          label="Verification code"
+          name="code"
+          required
+          autoFocus
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          placeholder="123456"
+          hint="The code changes every 30 seconds."
+          value={code}
+          onChange={(event) => setCode(event.target.value)}
+        />
+
+        <Button type="submit" variant="primary" size="lg" className="w-full" disabled={mfaBusy}>
+          {mfaBusy ? (
+            <span className="inline-flex items-center gap-2" role="status">
+              <Icon name="refresh" className="h-4 w-4 animate-spin" />
+              Checking...
+            </span>
+          ) : (
+            'Verify and sign in'
+          )}
+        </Button>
+
+        <p className="text-center text-xs text-ink-500">
+          <button
+            type="button"
+            onClick={() => {
+              setStage('password');
+              setCode('');
+              setMfaError(null);
+            }}
+            className="font-semibold text-brand-700 hover:underline"
+          >
+            Use a different account
+          </button>{' '}
+          · Lost your authenticator? Ask another administrator to reset it.
+        </p>
+      </form>
+    );
   }
 
   return (
@@ -201,13 +314,9 @@ export function LoginForm({
               .
             </p>
 
-            <p className="text-xs text-ink-500">
-              Administrators sign in at{' '}
-              <Link href="/admin/login" className="font-medium text-ink-600 hover:underline">
-                the admin page
-              </Link>
-              .
-            </p>
+            {/* NOTE: no administrator link is shown here (or anywhere else on the
+                public website). The staff sign-in page has a private address that
+                is given to administrators directly - see lib/auth/admin-entry.ts. */}
           </>
         )}
       </div>

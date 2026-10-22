@@ -174,6 +174,7 @@ const en: Record<string, string> = {
   '/admin/notes': 'My notes',
   '/admin/language': 'Language settings',
   '/admin/settings': 'Website settings',
+  '/admin/security': 'Sign-in security',
   '/admin/activity': 'Activity log',
   '/admin/districts': 'District activities',
 };
@@ -340,6 +341,7 @@ const ne: Record<string, string> = {
   '/admin/notes': 'मेरा नोटहरू',
   '/admin/language': 'भाषा सेटिङ',
   '/admin/settings': 'वेबसाइट सेटिङ',
+  '/admin/security': 'साइन-इन सुरक्षा',
   '/admin/activity': 'गतिविधि लग',
   '/admin/districts': 'जिल्ला गतिविधि',
 };

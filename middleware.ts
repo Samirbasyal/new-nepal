@@ -4,9 +4,16 @@
 // This file runs BEFORE any protected page is rendered.
 //
 // It is the fast, friendly layer:
-//   - no valid session cookie       -> send the visitor to the login page
-//   - logged-in member on an admin
-//     page                          -> send them to the "not authorized" page
+//   - a signed-in administrator on
+//     the sign-in page              -> send them to the dashboard
+//   - no valid session cookie in the
+//     member area                   -> send the visitor to the member sign-in
+//
+// NOTE ON THE ADMIN AREA
+//   Middleware no longer redirects unknown /admin addresses to the sign-in page.
+//   Doing so told anybody who guessed a URL where the private page lives. Unknown
+//   addresses now 404, and the pages that exist are guarded by requireAdmin() in
+//   app/admin/(panel)/layout.tsx - the same check, one layer deeper.
 //
 // ========================================
 // THIS FILE IS NOT ENOUGH ON ITS OWN
@@ -24,6 +31,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { SESSION_COOKIE_NAME, isAdminRole } from '@/lib/constants';
 import { readSessionToken } from '@/lib/auth/token';
+import { isAdminLoginPath } from '@/lib/auth/admin-entry';
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -36,8 +44,14 @@ export async function middleware(request: NextRequest) {
   // 1. ADMIN AREA
   // ========================================
   if (pathname.startsWith('/admin')) {
-    // The login page itself must stay reachable, otherwise nobody could sign in.
-    const isLoginPage = pathname === '/admin/login';
+    // ========================================
+    // THE PRIVATE SIGN-IN PAGE
+    // ========================================
+    // Its address comes from ADMIN_LOGIN_SLUG (see lib/auth/admin-entry.ts) and
+    // is not linked anywhere on the public website. /admin/login is NOT it any
+    // more - that address now falls through to the admin pages and is refused
+    // like any other protected page (and, with no session, sent here).
+    const isLoginPage = isAdminLoginPath(pathname);
 
     // isAdminRole() accepts SUPER_ADMIN, FINANCE_ADMIN and ADMIN.
     if (isLoginPage && isAdminRole(session?.user.role)) {
@@ -45,20 +59,23 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
 
-    if (!isLoginPage) {
-      // Not signed in at all.
-      if (!session) {
-        const loginUrl = new URL('/admin/login', request.url);
-        loginUrl.searchParams.set('notice', 'login-required');
-        loginUrl.searchParams.set('next', `${pathname}${search}`);
-        return NextResponse.redirect(loginUrl);
-      }
-
-      // Signed in, but not an administrator (a normal member).
-      if (!isAdminRole(session.user.role)) {
-        return NextResponse.redirect(new URL('/unauthorized?reason=admin-only', request.url));
-      }
-    }
+    // ========================================
+    // EVERYTHING ELSE UNDER /admin IS LEFT TO THE PAGE
+    // ========================================
+    // This used to redirect anybody without a session straight to the login page.
+    // That had to go: it meant /admin/login - and any address a scanner tried,
+    // such as /admin/administrator - was answered with "HTTP 307 -> <the private
+    // sign-in address>", which handed the secret to anybody who asked.
+    //
+    // Now an unknown address under /admin simply does not exist (the [entry] page
+    // calls notFound() for any slug that is not the real one), and the addresses
+    // that DO exist are guarded by requireAdmin() inside
+    // app/admin/(panel)/layout.tsx - the same check, on the server, one layer
+    // deeper. Nothing is less protected by this change: the redirect was a
+    // convenience, and the role check was always the guard.
+    //
+    // The one exception is the sign-in page itself, handled just above: a signed-in
+    // administrator who stumbles back onto it is sent to the dashboard.
   }
 
   // ========================================

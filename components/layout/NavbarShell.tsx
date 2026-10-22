@@ -209,7 +209,7 @@ export function NavbarShell({
                   </Link>
 
                   {/* NOTE: there is deliberately NO public "Admin" link here.
-                      Administrators reach the panel by visiting /admin/login
+                      Administrators reach the panel at its private address (lib/auth/admin-entry.ts)
                       directly, which keeps the public website clean. */}
 
                   <div className="my-1 border-t border-ink-100" />

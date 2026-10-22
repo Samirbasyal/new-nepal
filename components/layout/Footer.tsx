@@ -165,16 +165,11 @@ export async function Footer() {
                 </Link>
               </li>
             ))}
-            {/* A discreet administrator entrance. It is only a link to the
-                login page - the panel itself stays protected by the server. */}
-            <li>
-              <Link
-                href="/admin/login"
-                className="text-xs text-brand-300/70 transition-colors hover:text-white"
-              >
-                Administration
-              </Link>
-            </li>
+            {/* NOTE: there is deliberately no administrative link here.
+                The sign-in page has its own private address (lib/auth/admin-entry.ts)
+                and is reached only by an administrator who already knows it. Hiding
+                it is a courtesy; the door itself is locked by the server-side role
+                checks in lib/auth/guards.ts and lib/api/guard.ts. */}
           </ul>
         </div>
       </Container>

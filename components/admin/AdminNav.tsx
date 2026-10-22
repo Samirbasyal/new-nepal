@@ -192,6 +192,8 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'My notes', href: '/admin/notes', icon: 'file-text' },
       { label: 'Language settings', href: '/admin/language', icon: 'globe' },
       { label: 'Website settings', href: '/admin/settings', icon: 'settings' },
+      // Two-step verification and the private sign-in address, for MY account.
+      { label: 'Sign-in security', href: '/admin/security', icon: 'shield-check' },
       { label: 'Activity log', href: '/admin/activity', icon: 'activity' },
     ],
   },

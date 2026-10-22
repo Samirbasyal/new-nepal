@@ -22,6 +22,7 @@
 
 import { getCurrentUser } from '@/lib/auth/guards';
 import { createSession } from '@/lib/auth/session';
+import { clearMfaChallengeCookie, setMfaChallengeCookie, signMfaChallenge } from '@/lib/auth/mfa';
 import { verifyPassword } from '@/lib/auth/password';
 import { attemptsLeft, blockMessage, blockedForMinutes, clientKey, recordFailure, recordSuccess } from '@/lib/auth/rate-limit';
 import { writeActivity } from '@/lib/audit';
@@ -154,6 +155,34 @@ export async function POST(request: Request) {
       403,
     );
   }
+
+  // ---------- 5b. TWO-STEP VERIFICATION ----------
+  // An administrator who has turned this on gets NO session yet. The password was
+  // correct, so we remember that fact in a short-lived signed challenge cookie and
+  // ask for the 6-digit code (app/api/auth/mfa/route.ts finishes the job).
+  //
+  // This applies whatever page they used to sign in, not just the admin page: an
+  // administrator signing in through the member portal would otherwise end up
+  // with a session that carries the admin role, which would be the same door.
+  if (isAdminRole(user.role) && user.twoFactorEnabledAt && user.twoFactorSecret) {
+    const challenge = await signMfaChallenge({
+      userId: user.id,
+      portal: portal === 'admin' ? 'admin' : 'member',
+      remember: remember === true,
+    });
+
+    await setMfaChallengeCookie(challenge);
+
+    return ok(
+      { mfaRequired: true },
+      200,
+      'Enter the 6-digit code from your authenticator app to finish signing in.',
+    );
+  }
+
+  // No two-step verification on this account: make sure an old half-finished
+  // challenge from an earlier attempt cannot linger in the browser.
+  await clearMfaChallengeCookie();
 
   // ---------- 6. Create the session ----------
   await createSession(
