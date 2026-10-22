@@ -104,7 +104,9 @@ export const membershipRequestSchema = z.object({
     .union([z.boolean(), z.string()])
     .transform((value) => value === true || value === 'true' || value === 'on' || value === '1')
     .refine((value) => value === true, {
-      message: 'Please confirm that you agree to the membership rules.',
+      // Deliberately says "terms", not "membership rules": the form no longer
+      // restates any rule of its own (see MembershipRequestForm.tsx).
+      message: 'Please confirm that you agree to the club\'s terms.',
     }),
 });
 

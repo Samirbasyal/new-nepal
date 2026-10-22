@@ -379,27 +379,43 @@ export function MembershipRequestForm({ onSwitchToLogin }: { onSwitchToLogin?: (
         {fieldErrors.profilePhoto ? <p className="field-error">{fieldErrors.profilePhoto}</p> : null}
       </fieldset>
 
-      {/* ---------- The rules ---------- */}
-      <fieldset className="space-y-3 border-t border-ink-100 pt-5">
-        <legend className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-500">
-          Membership rules
-        </legend>
+      {/* ---------- Consent ---------- */}
+      {/*
+        DELIBERATELY SHORT.
 
-        <ul className="space-y-1.5 rounded-card bg-ink-50 p-4 text-xs leading-relaxed text-ink-600">
-          <li>• I will pay the monthly member fund of NPR 20 on time.</li>
-          <li>• I will take part in the club&apos;s programmes and meetings when I can.</li>
-          <li>• I will treat every member and every person we serve with respect and equality.</li>
-          <li>• I understand that the committee decides on membership, and that its decision is final.</li>
-          <li>• The details I have written here are true.</li>
-        </ul>
+        An earlier version listed five numbered "membership rules" here (monthly
+        fund, attendance, the committee's decision being final...). Those sentences
+        were written by whoever built the form, not by the club - and a website
+        form is the wrong place to state policy, because it would then contradict
+        the club's own written rules the moment they change.
+
+        So the form now asks for ONE agreement and points at the documents the club
+        actually publishes. The wording of the policy lives there, in the club's own
+        words, and nobody has to keep two versions of it in step.
+      */}
+      <fieldset className="space-y-3 border-t border-ink-100 pt-5">
+        <legend className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-500">Consent</legend>
 
         <CheckboxField
-          label="I have read and agree to the club's membership rules"
+          label="I agree to the club's terms"
           name="agree"
           checked={values.agree}
           onChange={(event) => set('agree', event.target.checked)}
           error={fieldErrors.agree}
         />
+
+        <p className="text-xs leading-relaxed text-ink-500">
+          Please read the club&apos;s own{' '}
+          <Link href="/terms" className="font-semibold text-brand-700 hover:underline">
+            Terms
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="font-semibold text-brand-700 hover:underline">
+            Privacy policy
+          </Link>{' '}
+          before you send this request. Those pages are the club&apos;s wording - this form does not
+          replace them.
+        </p>
       </fieldset>
 
       <div className="space-y-3 border-t border-ink-100 pt-5">
