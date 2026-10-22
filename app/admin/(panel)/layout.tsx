@@ -100,7 +100,8 @@ export default async function AdminPanelLayout({ children }: { children: React.R
       {/* ========================================
           THE MENU (desktop)
           ======================================== */}
-      <aside className="hidden w-[252px] shrink-0 flex-col bg-[#0b1727] lg:flex">
+      {/* print:hidden - a printed report should carry the table, not the menu */}
+      <aside className="hidden w-[252px] shrink-0 flex-col bg-[#0b1727] lg:flex print:hidden">
         {/* Who this panel belongs to */}
         <div className="flex items-center gap-2.5 px-4 py-4">
           <LogoMark size={34} />
@@ -123,7 +124,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
           ======================================== */}
       <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
         {/* ---------- Top bar ---------- */}
-        <header className="sticky top-0 z-40 border-b border-ink-200 bg-white lg:static">
+        <header className="sticky top-0 z-40 border-b border-ink-200 bg-white lg:static print:hidden">
           <Container className="flex h-16 items-center justify-between gap-3 lg:max-w-none lg:px-6">
             <div className="flex items-center gap-2.5">
               {/* On a phone the menu is hidden, so the club mark stays here */}

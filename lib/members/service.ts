@@ -17,6 +17,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { notifyUser } from '@/lib/notifications';
+import { readSettingValue } from '@/lib/settings';
 
 export type ScoreKey =
   | 'workQuality'
@@ -300,6 +301,42 @@ export async function deleteResponsibility(input: {
 // ========================================
 // Saving twice for the same member and month UPDATES the same row (the unique
 // pair in the database guarantees there can never be two).
+/**
+ * The weights the office configured in Admin Panel -> Settings -> Performance.
+ *
+ * Every value is read as a number; anything that is not a usable number falls
+ * back to 20, and if somebody sets every weight to zero we fall back to equal
+ * weights rather than dividing by zero.
+ */
+export async function getWeights(): Promise<Record<ScoreKey, number>> {
+  const keys: ScoreKey[] = [
+    'workQuality',
+    'taskCompletion',
+    'participation',
+    'responsibility',
+    'teamwork',
+  ];
+
+  const raw = await Promise.all(
+    keys.map((key) => readSettingValue(`performance.weight.${key}`, '20')),
+  );
+
+  const values = raw.map((value) => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 20;
+  });
+
+  if (values.every((value) => value === 0)) return DEFAULT_WEIGHTS;
+
+  return {
+    workQuality: values[0],
+    taskCompletion: values[1],
+    participation: values[2],
+    responsibility: values[3],
+    teamwork: values[4],
+  };
+}
+
 export async function saveEvaluation(input: {
   memberProfileId: string;
   periodMonth: string;
@@ -307,7 +344,11 @@ export async function saveEvaluation(input: {
   remarks?: string | null;
   adminId: string;
 }) {
-  const overall = calculateOverall(input.scores);
+  // The overall score follows the weights configured in Settings, so changing a
+  // weight changes every score calculated from then on. Existing saved months
+  // keep the number that was calculated for them.
+  const weights = await getWeights();
+  const overall = calculateOverall(input.scores, weights);
 
   return prisma.performanceEvaluation.upsert({
     where: {
@@ -437,6 +478,8 @@ export type MemberManagementFilters = {
   status?: string;
   /** name | newest | oldest | score | rank */
   sort?: string;
+  /** Which month the tasks and scores belong to. Defaults to the current one. */
+  month?: string;
   page?: number;
   pageSize?: number;
 };
@@ -465,7 +508,8 @@ export type MemberManagementRow = {
 };
 
 export async function listMemberManagement(filters: MemberManagementFilters) {
-  const month = currentMonth();
+  // The report screen asks for an older month; everything else uses this one.
+  const month = isValidMonth(filters.month) ? filters.month : currentMonth();
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = Math.min(100, Math.max(5, filters.pageSize ?? 20));
 

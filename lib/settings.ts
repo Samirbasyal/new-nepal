@@ -116,6 +116,19 @@ export const SETTING_DEFINITIONS = [
   // (/api/auth/register), which stays closed. It does NOT switch off the
   // membership request form on /member/portal: that form never creates an
   // account by itself, an administrator has to approve every request first.
+  // ========================================
+  // PERFORMANCE WEIGHTS
+  // ========================================
+  // How much each part of an evaluation counts towards the overall score. Any
+  // numbers work - they are added up and each part is weighted against the total,
+  // so 20/20/20/20/20 (equal) and 40/30/20/5/5 give the same scale of 0-10.
+  // A part left blank on the evaluation form is NOT counted (see calculateOverall).
+  { key: 'performance.weight.workQuality', label: 'Performance weight - work quality', group: 'PERFORMANCE', default: '20', type: 'text' },
+  { key: 'performance.weight.taskCompletion', label: 'Performance weight - task completion', group: 'PERFORMANCE', default: '20', type: 'text' },
+  { key: 'performance.weight.participation', label: 'Performance weight - participation', group: 'PERFORMANCE', default: '20', type: 'text' },
+  { key: 'performance.weight.responsibility', label: 'Performance weight - responsibility fulfilment', group: 'PERFORMANCE', default: '20', type: 'text' },
+  { key: 'performance.weight.teamwork', label: 'Performance weight - teamwork', group: 'PERFORMANCE', default: '20', type: 'text' },
+
   { key: 'join.registrationEnabled', label: 'Allow direct self-registration (legacy endpoint - leave false)', group: 'JOIN', default: 'false', type: 'text' },
 
   // --- Fund Management (Donation & Fund System) ---

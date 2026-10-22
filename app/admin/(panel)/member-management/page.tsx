@@ -94,10 +94,16 @@ export default async function MemberManagementPage({
             monthly tasks belong to one month only.
           </p>
         </div>
-        <Link href="/admin/members" className="btn btn-outline btn-sm">
-          <Icon name="user-plus" className="h-4 w-4" />
-          New member account
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/member-management/report" className="btn btn-outline btn-sm">
+            <Icon name="file-text" className="h-4 w-4" />
+            Monthly report
+          </Link>
+          <Link href="/admin/members" className="btn btn-outline btn-sm">
+            <Icon name="user-plus" className="h-4 w-4" />
+            New member account
+          </Link>
+        </div>
       </div>
 
       {/* ---------- the numbers ---------- */}

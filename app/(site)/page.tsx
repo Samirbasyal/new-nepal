@@ -155,6 +155,40 @@ export default async function HomePage() {
           1. HERO SECTION
           ======================================== */}
       <Hero photos={sliderPhotos} />
+      {/* ========================================
+          9. LATEST NEWS / NOTICES
+          ======================================== */}
+      <Section muted>
+        <SectionHeading
+          eyebrow="News"
+          icon="megaphone"
+          title={t(lang, 'home.news')}
+          description="Updates, announcements and stories from our work."
+        />
+
+        {data.news.rows.length > 0 ? (
+          <>
+            <CardGrid>
+              {data.news.rows.map((post) => (
+                <NewsCard key={post.id} post={post} />
+              ))}
+            </CardGrid>
+
+            <div className="mt-8 text-center">
+              <ButtonLink href="/news" variant="outline">
+                Read all news
+              </ButtonLink>
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            icon="megaphone"
+            title="No news published yet"
+            description="News and notices created in the Admin Panel appear here automatically."
+          />
+        )}
+      </Section>
+
 
       {/* ========================================
           2. WHAT WE WORK FOR
@@ -456,41 +490,7 @@ export default async function HomePage() {
           />
         )}
       </Section>
-
-      {/* ========================================
-          9. LATEST NEWS / NOTICES
-          ======================================== */}
-      <Section muted>
-        <SectionHeading
-          eyebrow="News"
-          icon="megaphone"
-          title={t(lang, 'home.news')}
-          description="Updates, announcements and stories from our work."
-        />
-
-        {data.news.rows.length > 0 ? (
-          <>
-            <CardGrid>
-              {data.news.rows.map((post) => (
-                <NewsCard key={post.id} post={post} />
-              ))}
-            </CardGrid>
-
-            <div className="mt-8 text-center">
-              <ButtonLink href="/news" variant="outline">
-                Read all news
-              </ButtonLink>
-            </div>
-          </>
-        ) : (
-          <EmptyState
-            icon="megaphone"
-            title="No news published yet"
-            description="News and notices created in the Admin Panel appear here automatically."
-          />
-        )}
-      </Section>
-
+
       {/* ========================================
           10. GALLERY PREVIEW
           ======================================== */}

@@ -190,6 +190,26 @@ function Actions({ lang, tone }: { lang: Lang; tone: 'dark' | 'light' }) {
       >
         {t(lang, 'hero.work')}
       </Link>
+
+      {/* ========================================
+          NEWS
+          ======================================== */}
+      {/*
+        Straight to the news page, where every notice an administrator writes and
+        publishes appears. It sits next to About and Our Work because that is where
+        a visitor looks first, and the same notices are also listed on the home page
+        directly below this banner.
+      */}
+      <Link
+        href="/news"
+        className={
+          tone === 'dark'
+            ? 'inline-flex items-center justify-center rounded-lg border-2 border-white/85 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-[#0b1f33] sm:text-base'
+            : 'btn btn-outline'
+        }
+      >
+        {t(lang, 'nav.news')}
+      </Link>
     </div>
   );
 }
