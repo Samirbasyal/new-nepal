@@ -56,6 +56,30 @@ export default async function MemberFilePage({
     take: 100,
   });
 
+  // ---------- task history ----------
+  // One line per task: its most recent move, and who made it. The full history is
+  // in task_updates; the file only needs the last entry to stay readable.
+  const taskUpdates = await prisma.taskUpdate.findMany({
+    where: { task: { assignedToId: file.profile.userId } },
+    orderBy: { createdAt: 'desc' },
+    take: 300,
+    select: {
+      taskId: true,
+      status: true,
+      createdAt: true,
+      by: { select: { name: true } },
+    },
+  });
+
+  const lastUpdateByTask = new Map<string, string>();
+  for (const row of taskUpdates) {
+    if (lastUpdateByTask.has(row.taskId)) continue;
+    lastUpdateByTask.set(
+      row.taskId,
+      `${row.status} - ${row.createdAt.toLocaleDateString('en-GB')} by ${row.by?.name ?? 'the office'}`,
+    );
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -101,6 +125,7 @@ export default async function MemberFilePage({
           remarks: row.remarks,
           completedAt: row.completedAt ? row.completedAt.toISOString() : null,
           createdAt: row.createdAt.toISOString(),
+          lastUpdate: lastUpdateByTask.get(row.id) ?? null,
         }))}
         evaluations={file.profile.evaluations.map((row) => ({
           id: row.id,

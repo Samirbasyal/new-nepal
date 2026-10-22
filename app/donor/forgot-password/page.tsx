@@ -11,7 +11,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
-import { PageHero, Section } from '@/components/ui/Section';
+import { AuthShell } from '@/components/layout/AuthShell';
 import { DonorForgotCodeForm } from '@/components/donor/DonorForgotCodeForm';
 
 export const dynamic = 'force-dynamic';
@@ -24,14 +24,12 @@ export const metadata: Metadata = {
 export default function DonorForgotPasswordPage() {
   return (
     <>
-      <PageHero
-        eyebrow="Donor account"
-        icon="mail"
-        title="Forgot your password?"
-        description="Enter the email address you registered with and we will send you a link to choose a new one."
-      />
+      <AuthShell
+      title="Forgot your password?"
+      subtitle="Enter the email address you registered with and we will send you a link to choose a new one."
+      note="Donor account"
+    >
 
-      <Section>
         <div className="mx-auto max-w-lg">
           <div className="card p-6">
             <DonorForgotCodeForm />
@@ -52,7 +50,7 @@ export default function DonorForgotPasswordPage() {
             </Link>
           </div>
         </div>
-      </Section>
+      </AuthShell>
     </>
   );
 }

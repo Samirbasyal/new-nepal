@@ -173,6 +173,9 @@ model User {
   // which is taken from the session - never from the form.
   personalNotes PersonalNote[]
 
+  // Status changes this person made on tasks (member or administrator).
+  taskUpdates TaskUpdate[] @relation("TaskUpdateAuthor")
+
   // ---------- MEMBERSHIP REQUESTS ----------
   // The request this account came from (one per account, empty for accounts an
   // administrator typed in by hand or created before this feature existed).
@@ -744,8 +747,32 @@ model Task {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  // Every move between TODO / IN_PROGRESS / DONE, by the member or by an
+  // administrator (see TaskUpdate below).
+  updates      TaskUpdate[]
+
   @@index([assignedToId, status])
   @@map("tasks")
+}
+
+// ========================================
+// TASK UPDATES (THE HISTORY OF ONE TASK)
+// ========================================
+// One row each time a task changes status. Who did it, what it became and when -
+// so "the member says they finished it on Monday" is a fact in the database
+// rather than a memory.
+model TaskUpdate {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  status    String
+  note      String?
+  byId      String?
+  by        User?    @relation("TaskUpdateAuthor", fields: [byId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([taskId, createdAt])
+  @@map("task_updates")
 }
 
 // ========================================

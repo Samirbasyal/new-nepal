@@ -156,6 +156,20 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       },
       });
 
+    // ---------- keep the history ----------
+    // Only when the status actually moved. Writing a row for every save would
+    // bury the two or three events that matter under dozens of "no change".
+    if (body.status && body.status !== existing.status) {
+      await prisma.taskUpdate.create({
+        data: {
+          taskId: existing.id,
+          status: body.status,
+          note: `Changed by an administrator from ${existing.status} to ${body.status}.`,
+          byId: auth.user.id,
+        },
+      });
+    }
+
     return ok({ task }, 200, 'Task updated.');
   } catch (error) {
     return serverError(error, 'Could not update the task.');

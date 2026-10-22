@@ -35,6 +35,8 @@ type MonthlyTask = {
   remarks: string | null;
   completedAt: string | null;
   createdAt: string;
+  /** The most recent status change, e.g. "DONE - 22 Oct 2026 by the member". */
+  lastUpdate?: string | null;
 };
 
 type Evaluation = {
@@ -527,6 +529,11 @@ export function MemberFile({
                         ? ` · finished ${new Date(task.completedAt).toLocaleDateString()}`
                         : ''}
                     </p>
+                    {task.lastUpdate ? (
+                      <p className="mt-0.5 text-[11px] text-ink-400">
+                        Last update: {task.lastUpdate}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="flex items-center gap-2">

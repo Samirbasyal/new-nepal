@@ -22,6 +22,7 @@ import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TaskStatusControl } from '@/components/member/TaskStatusControl';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
+import { readSettingValue } from '@/lib/settings';
 import { formatDate, isUpcoming } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,11 @@ export default async function MemberTasksPage() {
         })
         .catch(() => [])
     : [];
+
+  // Admin Panel -> Settings -> Members. Default true, so nothing changes until
+  // the office turns it off.
+  const canUpdateTaskStatus =
+    (await readSettingValue('members.canUpdateTaskStatus', 'true')).trim().toLowerCase() !== 'false';
 
   const todo = tasks.filter((task) => task.status === 'TODO');
   const inProgress = tasks.filter((task) => task.status === 'IN_PROGRESS');
@@ -138,7 +144,11 @@ export default async function MemberTasksPage() {
 
                         {/* ---------- Progress buttons ---------- */}
                         <div className="mt-4 border-t border-ink-100 pt-4">
-                          <TaskStatusControl taskId={task.id} currentStatus={task.status} />
+                          <TaskStatusControl
+                            taskId={task.id}
+                            currentStatus={task.status}
+                            canUpdate={canUpdateTaskStatus}
+                          />
                         </div>
                       </li>
                     );

@@ -117,6 +117,13 @@ export const SETTING_DEFINITIONS = [
   // membership request form on /member/portal: that form never creates an
   // account by itself, an administrator has to approve every request first.
   // ========================================
+  // MEMBER PERMISSIONS
+  // ========================================
+  // "true" (default): a member may move their OWN monthly task between pending,
+  // in progress and done. "false": only an administrator records progress.
+  { key: 'members.canUpdateTaskStatus', label: 'Allow members to change their own task status (true / false)', group: 'MEMBERS', default: 'true', type: 'text' },
+
+  // ========================================
   // PERFORMANCE WEIGHTS
   // ========================================
   // How much each part of an evaluation counts towards the overall score. Any

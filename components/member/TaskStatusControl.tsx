@@ -20,14 +20,27 @@ import { TASK_STATUS_OPTIONS } from '@/lib/constants';
 export function TaskStatusControl({
   taskId,
   currentStatus,
+  canUpdate = true,
 }: {
   taskId: string;
   currentStatus: string;
+  /**
+   * Whether the office allows members to record their own progress
+   * (Admin Panel -> Settings -> Members). When it does not, the buttons are not
+   * drawn at all - and the API refuses the request anyway.
+   */
+  canUpdate?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState(currentStatus);
   const [error, setError] = useState<string | null>(null);
+
+  if (!canUpdate) {
+    return (
+      <p className="text-xs text-ink-500">Progress on this task is recorded by the office.</p>
+    );
+  }
 
   async function updateStatus(nextStatus: string) {
     if (nextStatus === status || busy) return;

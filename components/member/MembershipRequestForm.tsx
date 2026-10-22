@@ -64,6 +64,9 @@ export function MembershipRequestForm({ onSwitchToLogin }: { onSwitchToLogin?: (
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // The optional fields stay out of sight until asked for, so the form shows only
+  // what the committee needs to decide. Nothing is removed from the backend.
+  const [showOptional, setShowOptional] = useState(false);
   const [done, setDone] = useState(false);
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -284,6 +287,15 @@ export function MembershipRequestForm({ onSwitchToLogin }: { onSwitchToLogin?: (
           error={fieldErrors.currentAddress}
         />
 
+        <button
+          type="button"
+          onClick={() => setShowOptional((value) => !value)}
+          className="text-left text-xs font-semibold text-brand-700 hover:underline"
+        >
+          {showOptional ? 'Hide optional details' : '+ Add optional details (date of birth, occupation, photo)'}
+        </button>
+
+        {showOptional ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
             label="Date of birth"
@@ -304,6 +316,7 @@ export function MembershipRequestForm({ onSwitchToLogin }: { onSwitchToLogin?: (
             error={fieldErrors.occupation}
           />
         </div>
+        ) : null}
       </fieldset>
 
       {/* ---------- Why you want to join ---------- */}
@@ -336,7 +349,7 @@ export function MembershipRequestForm({ onSwitchToLogin }: { onSwitchToLogin?: (
       </fieldset>
 
       {/* ---------- Optional photo ---------- */}
-      <fieldset className="space-y-3 border-t border-ink-100 pt-5">
+      <fieldset className={showOptional ? 'space-y-3 border-t border-ink-100 pt-5' : 'hidden'}>
         <legend className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-500">
           Profile photo <span className="font-medium normal-case text-ink-400">(optional)</span>
         </legend>

@@ -15,7 +15,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Alert } from '@/components/ui/Alert';
 import { Icon } from '@/components/ui/Icon';
-import { PageHero, Section } from '@/components/ui/Section';
+import { AuthShell } from '@/components/layout/AuthShell';
 import { DonorResetForm } from '@/components/donor/DonorResetForm';
 import { isResetTokenUsable } from '@/lib/donor/tokens';
 
@@ -37,14 +37,12 @@ export default async function DonorResetPasswordPage({
 
   return (
     <>
-      <PageHero
-        eyebrow="Donor account"
-        icon="lock"
-        title="Choose a new password"
-        description="Pick something you have not used before. You will sign in with it from now on."
-      />
+      <AuthShell
+      title="Choose a new password"
+      subtitle="Pick something you have not used before. You will sign in with it from now on."
+      note="Donor account"
+    >
 
-      <Section>
         <div className="mx-auto max-w-lg">
           {!usable ? (
             <div className="card p-6">
@@ -86,7 +84,7 @@ export default async function DonorResetPasswordPage({
             </Link>
           </div>
         </div>
-      </Section>
+      </AuthShell>
     </>
   );
 }

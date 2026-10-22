@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Alert } from '@/components/ui/Alert';
 import { Icon } from '@/components/ui/Icon';
-import { PageHero, Section } from '@/components/ui/Section';
+import { AuthShell } from '@/components/layout/AuthShell';
 import { DonorVerifyForm } from '@/components/donor/DonorVerifyForm';
 import { getCurrentDonor } from '@/lib/donor/session';
 import { isEmailConfigured } from '@/lib/email/mailer';
@@ -51,14 +51,12 @@ export default async function DonorVerifyEmailPage({
 
   return (
     <>
-      <PageHero
-        eyebrow="Donor account"
-        icon="mail"
-        title="Confirm your email address"
-        description="One code, and your donation can begin. This is what keeps your history yours."
-      />
+      <AuthShell
+      title="Confirm your email address"
+      subtitle="One code, and your donation can begin. This is what keeps your history yours."
+      note="Donor account"
+    >
 
-      <Section>
         <div className="mx-auto max-w-lg">
           {notice === 'verify-required' ? (
             <div className="mb-4">
@@ -96,7 +94,7 @@ export default async function DonorVerifyEmailPage({
             </Link>
           </div>
         </div>
-      </Section>
+      </AuthShell>
     </>
   );
 }
