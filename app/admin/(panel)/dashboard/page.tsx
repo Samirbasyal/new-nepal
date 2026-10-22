@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth/guards';
 import { recentActivity, describeActivity } from '@/lib/audit';
 import { Alert } from '@/components/ui/Alert';
+import { LogoutButton } from '@/components/layout/LogoutButton';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatDateTime, formatNumber } from '@/lib/utils';
@@ -143,6 +144,8 @@ async function getMoneyOverview() {
     donationsLastMonth: 0,
     expensesThisMonth: 0,
     expensesLastMonth: 0,
+    heroPhoto: null as string | null,
+    share: { fund: 0, donations: 0, expenses: 0 },
     months: [] as { key: string; label: string; fund: number; donations: number; expenses: number }[],
     recentDonations: [] as {
       id: string;
@@ -161,6 +164,11 @@ async function getMoneyOverview() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const seriesStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const heroPhoto = await prisma.galleryImage
+      .findFirst({ where: { isPublished: true }, orderBy: { createdAt: 'desc' }, select: { imageUrl: true } })
+      .then((row) => row?.imageUrl ?? null)
+      .catch(() => null);
 
     const [fundRows, donationRows, expenseRows, recent] = await Promise.all([
       prisma.fundPayment.findMany({
@@ -242,7 +250,12 @@ async function getMoneyOverview() {
       else if (row.expenseDate >= lastMonthStart) expensesLastMonth += row.amount;
     }
 
+    const lived = donationTotal + fundTotal + expenseTotal;
+    const pct = (value: number) => (lived > 0 ? Math.round((value / lived) * 100) : 0);
+
     return {
+      heroPhoto,
+      share: { fund: pct(fundTotal), donations: pct(donationTotal), expenses: pct(expenseTotal) },
       fundTotal,
       donationTotal,
       expenseTotal,
@@ -265,6 +278,12 @@ async function getMoneyOverview() {
   } catch {
     return empty;
   }
+}
+
+function delta(current: number, previous: number) {
+  if (previous <= 0) return current > 0 ? 'new this month' : '-';
+  const change = Math.round(((current - previous) / previous) * 100);
+  return `${change >= 0 ? '+' : ''}${change}% vs last month`;
 }
 
 export default async function AdminDashboardPage() {
@@ -356,27 +375,28 @@ export default async function AdminDashboardPage() {
       </header>
 
       {/* ========================================
-          THE HEADLINE: WHO WE ARE
+          THE HEADLINE
           ======================================== */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0a3b2c] via-[#0e5b45] to-[#0a3b2c] p-6 text-white shadow-sm sm:p-8">
-        <svg
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-6 bottom-0 h-40 w-72 opacity-25"
-          viewBox="0 0 288 160"
-          fill="none"
-        >
-          <path d="M0 160 L70 70 L110 110 L150 55 L210 120 L250 85 L288 130 L288 160 Z" fill="#ffffff" />
-        </svg>
+      <section className="relative isolate overflow-hidden rounded-2xl bg-[#0a3b2c] shadow-sm">
+        {money.heroPhoto ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={money.heroPhoto}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#06251c]/95 via-[#06251c]/75 to-[#06251c]/20" />
 
-        <div className="relative max-w-2xl">
-          <p className="font-display text-sm italic text-accent-300">Welcome to</p>
-          <h2 className="mt-1 font-display text-2xl font-bold leading-tight sm:text-3xl">
+        <div className="relative p-6 sm:p-8 lg:p-10">
+          <p className="font-display text-lg italic text-accent-300">Welcome to</p>
+          <h2 className="mt-1 max-w-lg font-display text-3xl font-bold leading-tight text-white sm:text-4xl">
             {organization.name}
           </h2>
-          <p className="mt-2 max-w-md text-sm leading-relaxed text-white/85">
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/85">
             Together we build a stronger, fairer and brighter community.
           </p>
-          <span className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-accent-400 px-3 py-1 text-xs font-semibold text-[#0a3b2c]">
+          <span className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-accent-400 px-3.5 py-1.5 text-xs font-bold text-[#0a3b2c]">
             <Icon name="map-pin" className="h-3.5 w-3.5" />
             Bajhang, Khaptad Chhanna-3
           </span>
@@ -384,14 +404,14 @@ export default async function AdminDashboardPage() {
       </section>
 
       {/* ========================================
-          FOUR NUMBERS
+          FIVE CARDS
           ======================================== */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-5">
         {[
           {
             label: 'Monthly fund',
             value: `Rs. ${formatNumber(money.fundThisMonth)}`,
-            note: `Rs. ${formatNumber(money.fundTotal)} verified in total`,
+            delta: delta(money.fundThisMonth, money.fundLastMonth),
             icon: 'banknote' as IconName,
             href: '/admin/fund',
             tone: 'bg-emerald-100 text-emerald-700',
@@ -399,7 +419,7 @@ export default async function AdminDashboardPage() {
           {
             label: 'Total members',
             value: formatNumber(counts.members),
-            note: `${counts.admins} administrator${counts.admins === 1 ? '' : 's'}`,
+            delta: `${counts.admins} admin`,
             icon: 'users' as IconName,
             href: '/admin/member-management',
             tone: 'bg-sky-100 text-sky-700',
@@ -407,7 +427,7 @@ export default async function AdminDashboardPage() {
           {
             label: 'Total donations',
             value: `Rs. ${formatNumber(money.donationTotal)}`,
-            note: `Rs. ${formatNumber(money.donationsThisMonth)} this month`,
+            delta: delta(money.donationsThisMonth, money.donationsLastMonth),
             icon: 'heart' as IconName,
             href: '/admin/donations',
             tone: 'bg-amber-100 text-amber-700',
@@ -415,7 +435,7 @@ export default async function AdminDashboardPage() {
           {
             label: 'Total expenses',
             value: `Rs. ${formatNumber(money.expenseTotal)}`,
-            note: `Rs. ${formatNumber(money.expensesThisMonth)} this month`,
+            delta: delta(money.expensesThisMonth, money.expensesLastMonth),
             icon: 'file-text' as IconName,
             href: '/admin/expenses',
             tone: 'bg-violet-100 text-violet-700',
@@ -424,81 +444,136 @@ export default async function AdminDashboardPage() {
           <Link
             key={card.label}
             href={card.href}
-            className="card group flex items-center gap-4 p-4 transition-shadow hover:shadow-md"
+            className="card flex flex-col gap-3 p-4 transition-shadow hover:shadow-md"
           >
-            <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${card.tone}`}>
+            <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}>
               <Icon name={card.icon} className="h-5 w-5" />
             </span>
-            <span className="min-w-0">
-              <span className="block text-xs font-medium text-ink-500">{card.label}</span>
-              <span className="mt-0.5 block truncate text-lg font-bold text-ink-900">{card.value}</span>
-              <span className="block truncate text-[11px] text-ink-400">{card.note}</span>
+            <span>
+              <span className="block text-[11px] font-medium text-ink-500">{card.label}</span>
+              <span className="mt-0.5 block truncate text-lg font-bold leading-tight text-ink-900">
+                {card.value}
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700">
+              <Icon name="trending-up" className="h-3 w-3" />
+              {card.delta}
             </span>
           </Link>
         ))}
+
+        {/* the way out, last - as asked */}
+        <div className="card flex flex-col justify-between gap-3 p-4">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+            <Icon name="logout" className="h-5 w-5" />
+          </span>
+          <span className="text-[11px] font-medium text-ink-500">Sign out</span>
+          <LogoutButton className="w-full rounded-btn bg-brand-700 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-brand-800" />
+        </div>
       </div>
 
       {/* ========================================
-          SIX MONTHS OF MONEY
+          CHART + SUMMARY
           ======================================== */}
-      <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
         <section className="card p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-2 text-sm font-bold text-ink-900">
               <Icon name="chart" className="h-4 w-4 text-brand-600" />
               Monthly fund overview
             </h2>
-            <span className="text-xs text-ink-500">Last 6 months</span>
+            <span className="rounded-md border border-ink-200 px-2 py-1 text-[11px] text-ink-600">
+              Last 6 months
+            </span>
           </div>
 
-          {money.months.length > 0 ? (
-            <>
-              <div className="mt-6 flex h-44 items-end justify-between gap-2 sm:gap-4">
-                {money.months.map((month) => {
-                  const max = Math.max(
-                    1,
-                    ...money.months.map((row) => Math.max(row.fund, row.donations, row.expenses)),
-                  );
-                  return (
-                    <div key={month.key} className="flex flex-1 flex-col items-center gap-2">
-                      <div className="flex h-36 w-full items-end justify-center gap-1">
-                        <span
-                          className="w-1/4 rounded-t bg-brand-600"
-                          style={{ height: `${Math.max(2, (month.fund / max) * 100)}%` }}
-                          title={`Fund Rs. ${formatNumber(month.fund)}`}
-                        />
-                        <span
-                          className="w-1/4 rounded-t bg-sky-500"
-                          style={{ height: `${Math.max(2, (month.donations / max) * 100)}%` }}
-                          title={`Donations Rs. ${formatNumber(month.donations)}`}
-                        />
-                        <span
-                          className="w-1/4 rounded-t bg-accent-400"
-                          style={{ height: `${Math.max(2, (month.expenses / max) * 100)}%` }}
-                          title={`Expenses Rs. ${formatNumber(month.expenses)}`}
-                        />
-                      </div>
-                      <span className="text-[11px] font-medium text-ink-500">{month.label}</span>
+          <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center">
+            <div className="flex h-44 flex-1 items-end justify-between gap-2">
+              {money.months.map((month) => {
+                const max = Math.max(
+                  1,
+                  ...money.months.map((row) => Math.max(row.fund, row.donations, row.expenses)),
+                );
+                return (
+                  <div key={month.key} className="flex flex-1 flex-col items-center gap-2">
+                    <div className="flex h-36 w-full items-end justify-center gap-1">
+                      <span
+                        className="w-1/4 rounded-t bg-brand-600"
+                        style={{ height: `${Math.max(2, (month.fund / max) * 100)}%` }}
+                        title={`Fund Rs. ${formatNumber(month.fund)}`}
+                      />
+                      <span
+                        className="w-1/4 rounded-t bg-sky-500"
+                        style={{ height: `${Math.max(2, (month.donations / max) * 100)}%` }}
+                        title={`Donations Rs. ${formatNumber(month.donations)}`}
+                      />
+                      <span
+                        className="w-1/4 rounded-t bg-accent-400"
+                        style={{ height: `${Math.max(2, (month.expenses / max) * 100)}%` }}
+                        title={`Expenses Rs. ${formatNumber(month.expenses)}`}
+                      />
                     </div>
-                  );
-                })}
-              </div>
+                    <span className="text-[11px] font-medium text-ink-500">{month.label}</span>
+                  </div>
+                );
+              })}
+            </div>
 
-              <div className="mt-5 flex flex-wrap gap-4 border-t border-ink-100 pt-3 text-[11px] text-ink-600">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-brand-600" /> Member fund
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-sky-500" /> Donations
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-accent-400" /> Expenses
-                </span>
+            {/* donut */}
+            <div className="flex shrink-0 flex-col items-center gap-3 border-t border-ink-100 pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
+              <svg viewBox="0 0 42 42" className="h-28 w-28 -rotate-90">
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#eef2f7" strokeWidth="6" />
+                <circle
+                  cx="21"
+                  cy="21"
+                  r="15.9"
+                  fill="none"
+                  stroke="#15803d"
+                  strokeWidth="6"
+                  strokeDasharray={`${money.share.fund} ${100 - money.share.fund}`}
+                  strokeDashoffset="0"
+                />
+                <circle
+                  cx="21"
+                  cy="21"
+                  r="15.9"
+                  fill="none"
+                  stroke="#0284c7"
+                  strokeWidth="6"
+                  strokeDasharray={`${money.share.donations} ${100 - money.share.donations}`}
+                  strokeDashoffset={-money.share.fund}
+                />
+                <circle
+                  cx="21"
+                  cy="21"
+                  r="15.9"
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="6"
+                  strokeDasharray={`${money.share.expenses} ${100 - money.share.expenses}`}
+                  strokeDashoffset={-(money.share.fund + money.share.donations)}
+                />
+              </svg>
+              <div className="text-center">
+                <p className="text-[11px] text-ink-500">Total funds</p>
+                <p className="text-sm font-bold text-ink-900">
+                  Rs. {formatNumber(money.donationTotal + money.fundTotal)}
+                </p>
               </div>
-            </>
-          ) : (
-            <p className="mt-6 text-sm text-ink-500">No money has been recorded yet.</p>
-          )}
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-4 border-t border-ink-100 pt-3 text-[11px] text-ink-600">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-brand-600" /> Member fund {money.share.fund}%
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-sky-500" /> Donations {money.share.donations}%
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-accent-400" /> Expenses {money.share.expenses}%
+            </span>
+          </div>
         </section>
 
         <section className="card p-5">
@@ -509,10 +584,12 @@ export default async function AdminDashboardPage() {
 
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-center justify-between border-b border-ink-100 pb-3">
-              <span className="text-ink-600">Total received</span>
-              <span className="font-bold text-ink-900">
-                Rs. {formatNumber(money.donationTotal + money.fundTotal)}
-              </span>
+              <span className="text-ink-600">Total donated</span>
+              <span className="font-bold text-ink-900">Rs. {formatNumber(money.donationTotal)}</span>
+            </li>
+            <li className="flex items-center justify-between border-b border-ink-100 pb-3">
+              <span className="text-ink-600">Total fund</span>
+              <span className="font-bold text-ink-900">Rs. {formatNumber(money.fundTotal)}</span>
             </li>
             <li className="flex items-center justify-between border-b border-ink-100 pb-3">
               <span className="text-ink-600">Total spent</span>
@@ -526,12 +603,28 @@ export default async function AdminDashboardPage() {
             </li>
           </ul>
 
-          <Link
-            href="/admin/fund/reports"
-            className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
-          >
-            Open reports <Icon name="arrow-right" className="h-3.5 w-3.5" />
-          </Link>
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-ink-200 p-3">
+            <div className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 grid-cols-3 gap-0.5 rounded-md bg-ink-900 p-1">
+                {Array.from({ length: 9 }).map((_, index) => (
+                  <span
+                    key={index}
+                    className={index % 3 === 0 || index === 4 ? 'rounded-[1px] bg-white' : 'rounded-[1px] bg-ink-900'}
+                  />
+                ))}
+              </span>
+              <span>
+                <span className="block text-xs font-semibold text-ink-800">eWallet / Bank QR</span>
+                <span className="block text-[11px] text-ink-500">Available for donations</span>
+              </span>
+            </div>
+            <Link
+              href="/admin/donations"
+              className="rounded-btn bg-brand-700 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-brand-800"
+            >
+              View QR
+            </Link>
+          </div>
         </section>
       </div>
 
@@ -551,36 +644,42 @@ export default async function AdminDashboardPage() {
           </div>
 
           {money.recentDonations.length > 0 ? (
-            <ul className="mt-3 divide-y divide-ink-100">
-              {money.recentDonations.map((row) => (
-                <li key={row.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-medium text-ink-900">
-                      {row.donorName}
-                    </span>
-                    <span className="block truncate text-[11px] text-ink-500">
-                      {row.purpose ?? 'General fund'} - {row.date}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-right">
-                    <span className="block text-sm font-bold text-ink-900">
-                      Rs. {formatNumber(row.amount)}
-                    </span>
-                    <span
-                      className={`text-[10px] font-semibold uppercase ${
-                        row.status === 'VERIFIED'
-                          ? 'text-emerald-600'
-                          : row.status === 'REJECTED'
-                            ? 'text-red-600'
-                            : 'text-amber-600'
-                      }`}
-                    >
-                      {row.status}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[10px] uppercase tracking-wide text-ink-400">
+                    <th className="pb-2 font-semibold">Donor</th>
+                    <th className="pb-2 font-semibold">Amount</th>
+                    <th className="pb-2 font-semibold">Purpose</th>
+                    <th className="pb-2 font-semibold">Date</th>
+                    <th className="pb-2 text-right font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {money.recentDonations.map((row) => (
+                    <tr key={row.id} className="border-t border-ink-100">
+                      <td className="py-2 font-medium text-ink-900">{row.donorName}</td>
+                      <td className="py-2 font-semibold text-ink-900">Rs. {formatNumber(row.amount)}</td>
+                      <td className="py-2 text-ink-600">{row.purpose ?? 'General'}</td>
+                      <td className="py-2 text-ink-500">{row.date}</td>
+                      <td className="py-2 text-right">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            row.status === 'VERIFIED'
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : row.status === 'REJECTED'
+                                ? 'bg-red-50 text-red-700'
+                                : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="mt-4 text-sm text-ink-500">No donations recorded yet.</p>
           )}
@@ -599,19 +698,19 @@ export default async function AdminDashboardPage() {
 
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {[
-              { label: 'Add member', href: '/admin/members', icon: 'user-plus' as IconName },
-              { label: 'Add news', href: '/admin/news', icon: 'megaphone' as IconName },
-              { label: 'Add program', href: '/admin/programs', icon: 'layers' as IconName },
-              { label: 'Upload photo', href: '/admin/gallery', icon: 'image' as IconName },
-              { label: 'Record donation', href: '/admin/donations', icon: 'heart' as IconName },
-              { label: 'View reports', href: '/admin/fund/reports', icon: 'chart' as IconName },
+              { label: 'Add program', href: '/admin/programs', icon: 'layers' as IconName, tone: 'bg-sky-50 text-sky-700' },
+              { label: 'Add news', href: '/admin/news', icon: 'megaphone' as IconName, tone: 'bg-violet-50 text-violet-700' },
+              { label: 'Add member', href: '/admin/members', icon: 'user-plus' as IconName, tone: 'bg-emerald-50 text-emerald-700' },
+              { label: 'Add donation', href: '/admin/donations', icon: 'heart' as IconName, tone: 'bg-amber-50 text-amber-700' },
+              { label: 'Upload gallery', href: '/admin/gallery', icon: 'upload' as IconName, tone: 'bg-sky-50 text-sky-700' },
+              { label: 'View reports', href: '/admin/fund/reports', icon: 'chart' as IconName, tone: 'bg-emerald-50 text-emerald-700' },
             ].map((action) => (
               <Link
                 key={action.label}
                 href={action.href}
-                className="flex flex-col items-center gap-1.5 rounded-xl border border-ink-200 px-2 py-3 text-center text-[11px] font-medium text-ink-700 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
+                className={`flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-center text-[11px] font-semibold text-ink-700 transition-transform hover:-translate-y-0.5 ${action.tone}`}
               >
-                <Icon name={action.icon} className="h-5 w-5 text-brand-600" />
+                <Icon name={action.icon} className="h-5 w-5" />
                 {action.label}
               </Link>
             ))}
@@ -619,12 +718,21 @@ export default async function AdminDashboardPage() {
         </section>
       </div>
 
-
+      {/* ========================================
+          CLOSING STRIP
+          ======================================== */}
+      <section className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#0a3b2c] px-5 py-3 text-white">
+        <span className="inline-flex items-center gap-2 text-xs font-medium">
+          <Icon name="leaf" className="h-4 w-4 text-accent-300" />
+          Small help makes a big change!
+        </span>
+        <span className="font-display text-sm italic text-accent-300">Thank You!</span>
+      </section>
 
       {/* ========================================
-          DATABASE NOT CONNECTED YET
+          DATABASE NOT CONNECTED
           ======================================== */}
-      {!databaseReady ? (
+      {!isDatabaseConfigured() ? (
         <Alert tone="warning" title="The database is not connected yet">
           Open your <code>.env</code> file and set <code>DATABASE_URL</code> to your PostgreSQL
           address, then run <code>npm run db:push</code>. Full instructions are in{' '}
