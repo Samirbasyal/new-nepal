@@ -3,16 +3,25 @@
 // ========================================
 // The big banner at the very top of the homepage.
 //
-// WHERE THE TEXT COMES FROM
-//   Admin Panel -> Settings -> "Homepage content"
-//   (with the defaults in lib/settings.ts until the organization fills them in)
+// WHAT CHANGED (and why)
+//   The heading used to sit ON TOP of the photographs, with two dark gradient
+//   layers behind it so the white words stayed readable. That meant every
+//   photograph was permanently covered by a heavy wash and the words crowded it.
 //
-// WHERE THE PICTURE COMES FROM
-//   The published gallery photographs, rotating slowly behind the words. If none
-//   have been published yet, the single hero image from Settings is used, and if
-//   that is empty too the banner falls back to the club's own colours.
+//   The photographs are now shown on their own, full width and unwashed, and the
+//   words sit in their own clean band directly underneath. Nothing is laid over
+//   the pictures any more: no gradient, no tint, no text. The band is ordinary
+//   page background, so the heading is easier to read than it ever was on a
+//   photograph - and it is the same on a phone as on a desktop.
 //
-// The heading is the homepage's single <h1>, which is important for SEO.
+//   The heading is still the homepage's single <h1>, which matters for search
+//   engines, and it still comes from Admin Panel -> Settings, so the club can
+//   change the wording without touching code.
+//
+// IF THERE ARE NO PHOTOGRAPHS YET
+//   An empty dark band would look broken, so that case falls back to the original
+//   dark banner with the words inside it. A brand-new site therefore still looks
+//   finished.
 // ========================================
 
 import Link from 'next/link';
@@ -21,15 +30,15 @@ import { Container } from '@/components/ui/Section';
 import { HeroBackdrop } from '@/components/public/HeroBackdrop';
 import type { SliderPhoto } from '@/components/public/HeroSlider';
 import { organization } from '@/config/site';
-import { t } from '@/lib/i18n';
+import { t, type Lang } from '@/lib/i18n';
 import { getLanguage } from '@/lib/i18n-server';
 import { getSettings, setting } from '@/lib/settings';
 
 // ========================================
-// THE WORDS ON THE HERO
+// THE WORDS
 // ========================================
 // They still come from Admin Panel -> Settings, so the club can change them at
-// any time. Two constants below only matter for a site that has never been
+// any time. The constant below only matters for a site that has never been
 // edited: the old shipped text is recognised and replaced with the current
 // wording, instead of leaving the previous sentence in place for ever.
 const LEGACY_TITLE = 'Working together for a fair and thriving community';
@@ -49,62 +58,138 @@ export async function Hero({ photos = [] }: { photos?: SliderPhoto[] }) {
       ? t(lang, 'hero.subtitle')
       : storedSubtitle;
 
-  // The photographs that go behind the words: the published gallery first, the
-  // single hero picture after that.
+  // The photographs: the published slider photos first, the single hero picture
+  // from Settings after that.
   const urls = photos.length > 0 ? photos.map((photo) => photo.imageUrl) : imageUrl ? [imageUrl] : [];
 
-  return (
-    <section className="relative isolate overflow-hidden bg-[#0b1f33] text-white">
-      {/* ---------- The photographs ---------- */}
-      {urls.length > 0 ? <HeroBackdrop urls={urls} /> : null}
-
-      {/* ---------- Readability wash ----------
-          Two soft layers of ink: one from the left so the words stay readable on
-          a bright photograph, one from the bottom so the cards below sit on a
-          calm edge. */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-r from-[#06121e]/92 via-[#0b1f33]/70 to-[#0b1f33]/25"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-[#06121e]/85 via-transparent to-transparent"
-      />
-
-      <Container className="relative py-14 sm:py-16 lg:py-20">
-        <div className="max-w-2xl">
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-            <Icon name="heart-handshake" className="h-3.5 w-3.5" />
-            {t(lang, 'hero.eyebrow')}
-          </p>
-
-          {/* The one and only <h1> on the homepage */}
-          <h1 className="font-display text-3xl font-bold leading-[1.18] drop-shadow-sm sm:text-[2.1rem] lg:text-[2.4rem]">
-            {title}
-          </h1>
-
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
-            {subtitle}
-          </p>
-
-          {/* ---------- Main call-to-action buttons ---------- */}
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href="/about"
-              className="inline-flex items-center justify-center rounded-lg bg-[#1c8a4e] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#16713f] sm:text-base"
-            >
-              {t(lang, 'hero.about')}
-            </Link>
-
-            <Link
-              href="/projects"
-              className="inline-flex items-center justify-center rounded-lg border-2 border-white/85 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-[#0b1f33] sm:text-base"
-            >
-              {t(lang, 'hero.work')}
-            </Link>
+  // ========================================
+  // NO PHOTOGRAPHS YET - the old dark banner, words inside
+  // ========================================
+  if (urls.length === 0) {
+    return (
+      <section className="relative isolate overflow-hidden bg-[#0b1f33] text-white">
+        <Container className="py-14 sm:py-16 lg:py-20">
+          <div className="max-w-2xl">
+            <Eyebrow lang={lang} tone="dark" />
+            <Heading title={title} tone="dark" />
+            <Subtitle subtitle={subtitle} tone="dark" />
+            <Actions lang={lang} tone="dark" />
           </div>
-        </div>
-      </Container>
-    </section>
+        </Container>
+      </section>
+    );
+  }
+
+  // ========================================
+  // PHOTOGRAPHS, THEN THE WORDS BELOW THEM
+  // ========================================
+  return (
+    <>
+      {/*
+        ---------- The photographs, untouched ----------
+
+        A fixed height keeps the band predictable while the pictures inside it
+        still "cover" the full width and rotate every seven seconds. There is no
+        overlay layer of any kind here, so what the club uploaded is what visitors
+        see. Clicking a picture still opens it full size (PhotoZoom reads the
+        data-photo-full attribute set by HeroBackdrop).
+      */}
+      <section
+        aria-label="Photographs from the club's work"
+        className="relative isolate h-[240px] w-full overflow-hidden bg-[#0b1f33] sm:h-[340px] lg:h-[440px]"
+      >
+        <HeroBackdrop urls={urls} />
+      </section>
+
+      {/* ---------- The words, on a plain, readable background ---------- */}
+      <section className="border-b border-ink-200 bg-white">
+        <Container className="py-9 sm:py-11">
+          <div className="max-w-3xl">
+            <Eyebrow lang={lang} tone="light" />
+            <Heading title={title} tone="light" />
+            <Subtitle subtitle={subtitle} tone="light" />
+            <Actions lang={lang} tone="light" />
+          </div>
+        </Container>
+      </section>
+    </>
+  );
+}
+
+// ========================================
+// THE FOUR PIECES OF THE HERO COPY
+// ========================================
+// Split out only so the "with photographs" and "without photographs" versions
+// cannot drift apart in wording.
+
+function Eyebrow({ lang, tone }: { lang: Lang; tone: 'dark' | 'light' }) {
+  return (
+    <p
+      className={
+        tone === 'dark'
+          ? 'mb-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm'
+          : 'mb-3 inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-800 ring-1 ring-brand-100'
+      }
+    >
+      <Icon name="heart-handshake" className="h-3.5 w-3.5" />
+      {t(lang, 'hero.eyebrow')}
+    </p>
+  );
+}
+
+function Heading({ title, tone }: { title: string; tone: 'dark' | 'light' }) {
+  // The one and only <h1> on the homepage.
+  return (
+    <h1
+      className={
+        tone === 'dark'
+          ? 'font-display text-3xl font-bold leading-[1.18] drop-shadow-sm sm:text-[2.1rem] lg:text-[2.4rem]'
+          : 'font-display text-3xl font-bold leading-tight text-ink-900 sm:text-[2.1rem] lg:text-[2.4rem]'
+      }
+    >
+      {title}
+    </h1>
+  );
+}
+
+function Subtitle({ subtitle, tone }: { subtitle: string; tone: 'dark' | 'light' }) {
+  return (
+    <p
+      className={
+        tone === 'dark'
+          ? 'mt-5 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg'
+          : 'mt-3 max-w-2xl text-base leading-relaxed text-ink-600'
+      }
+    >
+      {subtitle}
+    </p>
+  );
+}
+
+function Actions({ lang, tone }: { lang: Lang; tone: 'dark' | 'light' }) {
+  return (
+    <div className="mt-7 flex flex-wrap items-center gap-3">
+      <Link
+        href="/about"
+        className={
+          tone === 'dark'
+            ? 'inline-flex items-center justify-center rounded-lg bg-[#1c8a4e] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#16713f] sm:text-base'
+            : 'btn btn-primary'
+        }
+      >
+        {t(lang, 'hero.about')}
+      </Link>
+
+      <Link
+        href="/projects"
+        className={
+          tone === 'dark'
+            ? 'inline-flex items-center justify-center rounded-lg border-2 border-white/85 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white hover:text-[#0b1f33] sm:text-base'
+            : 'btn btn-outline'
+        }
+      >
+        {t(lang, 'hero.work')}
+      </Link>
+    </div>
   );
 }
