@@ -96,6 +96,11 @@ model User {
   // works" true for sessions that were already open.
   sessionVersion Int @default(1)
 
+  // ---------- PROFILE PICTURE ----------
+  // Used in the Admin Panel header. Uploaded by the administrator themselves
+  // (Admin Panel -> Settings). Empty means "show the first letter of the name".
+  photoUrl String?
+
   // ---------- TWO-STEP VERIFICATION (administrators) ----------
   // The shared secret an authenticator app keeps a copy of, in base32
   // (see lib/auth/totp.ts). It is written when an administrator STARTS setting

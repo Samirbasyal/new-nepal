@@ -95,13 +95,19 @@ export default async function AdminPanelLayout({ children }: { children: React.R
   // very first paint, then kept fresh by the component itself.
   const unreadNotifications = await unreadNotificationCount(user.id);
 
+  // The administrator's own picture (Admin Panel -> Settings -> My picture).
+  const adminPhoto = await prisma.user
+    .findUnique({ where: { id: user.id }, select: { photoUrl: true } })
+    .then((row) => row?.photoUrl ?? null)
+    .catch(() => null);
+
   return (
     <div className="flex min-h-screen bg-[#f5f8fc] lg:h-dvh lg:min-h-0 lg:overflow-hidden">
       {/* ========================================
           THE MENU (desktop)
           ======================================== */}
       {/* print:hidden - a printed report should carry the table, not the menu */}
-      <aside className="hidden w-[252px] shrink-0 flex-col bg-[#0b1727] lg:flex print:hidden">
+      <aside className="hidden w-[264px] shrink-0 flex-col bg-[#0a3b2c] lg:flex print:hidden">
         {/* Who this panel belongs to */}
         <div className="flex items-center gap-2.5 px-4 py-4">
           <LogoMark size={34} />
@@ -116,6 +122,14 @@ export default async function AdminPanelLayout({ children }: { children: React.R
             pendingRequests={pendingRequests}
             lang={lang}
           />
+        </div>
+
+        {/* ---------- the way out, at the very bottom ---------- */}
+        <div className="border-t border-white/10 px-3 py-3">
+          <LogoutButton className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2.5 text-[13px] font-semibold text-white hover:bg-white/15" />
+          <p className="mt-2 text-center text-[10px] text-white/40">
+            {organization.name}
+          </p>
         </div>
       </aside>
 
@@ -149,10 +163,15 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                 {t(lang, 'admin.viewWebsite')}
               </Link>
 
-              {/* Who is signed in */}
+              {/* Who is signed in - their own picture if they uploaded one */}
               <div className="hidden items-center gap-2 sm:flex">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-                  {user.name.charAt(0).toUpperCase()}
+                <span className="inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-brand-600 text-xs font-bold text-white">
+                  {adminPhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={adminPhoto} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    user.name.charAt(0).toUpperCase()
+                  )}
                 </span>
                 <span className="leading-tight">
                   <span className="block text-[13px] font-semibold text-ink-900">{user.name}</span>
@@ -162,7 +181,6 @@ export default async function AdminPanelLayout({ children }: { children: React.R
                 </span>
               </div>
 
-              <LogoutButton className="rounded-btn border border-ink-300 px-3 py-2 text-sm font-medium text-ink-700 hover:border-red-300 hover:text-red-600" />
             </div>
           </Container>
         </header>

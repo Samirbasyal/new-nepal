@@ -153,15 +153,12 @@ async function finish(userId: string, how: 'link' | 'code') {
       detail: `${user.email} verified using the ${how}`,
     });
 
-    // A short welcome, so the member immediately sees that something happened.
-    await notifyUser({
-      userId: user.id,
-      title: 'Email address verified',
-      message:
-        'Thank you. Your email address is now verified and you can sign in to the member panel.',
-      type: 'SUCCESS',
-      link: '/member/login',
-    });
+    // NO notification to the member for their own action.
+    //
+    // Verifying an email is something the member did themselves. The member's bell
+    // is reserved for changes an ADMINISTRATOR makes - duties, monthly tasks,
+    // published scores, office messages - so it stays meaningful. The office is
+    // still told, just below.
 
     // The office likes to know when an invited member completes the step.
     await notifyAdmins({

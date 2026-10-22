@@ -103,6 +103,9 @@ export function NotificationCentre() {
       );
       setUnread(Number(payload.data?.unread ?? Math.max(0, unread - 1)));
       setDone('Marked as read.');
+      // Tell the bell (which lives in the header, outside this component) that the
+      // count changed, so it re-reads it instead of waiting for the next poll.
+      window.dispatchEvent(new Event('notifications:changed'));
     } catch {
       setProblem('The website could not be reached. Please try again.');
     } finally {

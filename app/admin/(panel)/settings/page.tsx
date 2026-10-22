@@ -21,7 +21,11 @@ import { getLanguage } from '@/lib/i18n-server';
 // ========================================
 
 import type { Metadata } from 'next';
+import { requireAdmin } from '@/lib/auth/guards';
 import { SettingsForm } from '@/components/admin/SettingsForm';
+import { AdminPhotoCard } from '@/components/admin/AdminPhotoCard';
+import { LogoutButton } from '@/components/layout/LogoutButton';
+import { prisma } from '@/lib/prisma';
 import {
   SETTING_DEFINITIONS,
   SETTING_GROUP_TITLES,
@@ -59,6 +63,13 @@ const GROUP_NOTES: Record<string, string> = {
 };
 
 export default async function AdminSettingsPage() {
+  // The signed-in administrator, for the picture card and the sign-out block at
+  // the bottom of this page (the phone's way out).
+  const me = await prisma.user.findFirst({
+    where: { id: (await requireAdmin()).id },
+    select: { id: true, name: true, photoUrl: true },
+  });
+
   const current = await getSettings();
   const grouped = settingsByGroup();
 
@@ -113,7 +124,27 @@ export default async function AdminSettingsPage() {
         </ul>
       </div>
 
+      {/* My own picture in the header */}
+      <AdminPhotoCard name={me?.name ?? 'Administrator'} photoUrl={me?.photoUrl ?? null} />
+
       <SettingsForm groups={groups} initialValues={initialValues} />
+
+      {/* ========================================
+          SIGN OUT
+          ========================================
+          On a laptop the way out is at the bottom of the green menu. On a phone the
+          menu is a drawer, so the way out lives here, at the end of Settings, where
+          it is still easy to find. */}
+      <section className="card flex flex-wrap items-center justify-between gap-3 p-5">
+        <div>
+          <h2 className="text-sm font-bold text-ink-900">Sign out</h2>
+          <p className="mt-1 text-xs text-ink-500">
+            Ends this session on this device. You will need your password - and your
+            authenticator code, if it is turned on - to come back.
+          </p>
+        </div>
+        <LogoutButton className="rounded-btn border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-700 hover:border-red-300 hover:text-red-600" />
+      </section>
     </div>
   );
 }

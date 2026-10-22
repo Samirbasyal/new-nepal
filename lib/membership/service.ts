@@ -794,16 +794,11 @@ export async function activateMembership(input: {
       ipAddress: input.requestIp ?? null,
     });
 
-    // A short welcome in the member's own bell, so the panel is not empty on the
-    // first visit. Failing to write it must not undo the account.
-    void notifyUser({
-      userId: created.id,
-      title: 'Welcome to the club',
-      message:
-        'Your membership has been activated. You can now use your member panel, see your monthly fund and message the office.',
-      type: 'SUCCESS',
-      link: '/member/dashboard',
-    }).catch(() => undefined);
+    // NO "welcome" notification here on purpose.
+    //
+    // The member's bell only changes when an ADMINISTRATOR acts: assigns a duty,
+    // sets a monthly task, publishes a score, sends a message. A member activating
+    // their own account is their own action.
 
     return { ok: true, name: created.name, email: created.email };
   } catch (error) {

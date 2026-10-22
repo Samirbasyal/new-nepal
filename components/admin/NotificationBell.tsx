@@ -76,7 +76,12 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
       if (document.visibilityState === 'visible') void load();
     };
 
+    // The notification page marks a notice as read when it is opened; this keeps
+    // the number on the bell in step without waiting for the next poll.
+    const onChanged = () => void load();
+
     window.addEventListener('focus', onFocus);
+    window.addEventListener('notifications:changed', onChanged);
     document.addEventListener('visibilitychange', onVisible);
 
     return () => {
