@@ -184,12 +184,17 @@ model MemberProfile {
   district     String?
   municipality String? // municipality or rural municipality
   ward         String?
+  // The area this member looks after, e.g. "Ward 3 - education".
+  workingArea  String?
   status       String    @default("PENDING") // PENDING / ACTIVE / INACTIVE / SUSPENDED
   joinedAt     DateTime?
   // When true the member is listed on the public "Members / Leadership" page.
   isPublic     Boolean   @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  responsibilities MemberResponsibility[]
+  evaluations      PerformanceEvaluation[]
 
   @@index([status])
   @@index([isPublic])
@@ -705,6 +710,12 @@ model Task {
   status       String    @default("TODO") // TODO / IN_PROGRESS / DONE
   priority     String    @default("NORMAL") // LOW / NORMAL / HIGH
   dueDate      DateTime?
+  // ---------- MONTHLY TASK FIELDS ----------
+  // periodMonth is "2026-10". Monthly tasks live in this table; permanent
+  // duties live in MemberResponsibility. The two are never mixed.
+  periodMonth String?
+  remarks     String? // feedback written by the administrator
+  completedAt DateTime?
   assignedToId String
   assignedTo   User      @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: Cascade)
   createdById  String?
@@ -1547,4 +1558,104 @@ model CommitteeRoleDuty {
 
   @@index([postTitle, sortOrder])
   @@map("committee_role_duties")
+}
+
+// ========================================
+// MEMBER MANAGEMENT - PERMANENT RESPONSIBILITIES
+// ========================================
+// ONE ROW = ONE DUTY THAT BELONGS TO ONE MEMBER.
+//
+// These are the duties that come with the post - "prepare the monthly report",
+// "keep the cash book". They have NO deadline and NO expiry: they stay until an
+// administrator changes or removes them. Monthly work lives in the Task table
+// and is kept completely separate, so the two can never be confused.
+// ========================================
+model MemberResponsibility {
+  id              String        @id @default(cuid())
+  memberProfileId String
+  memberProfile   MemberProfile @relation(fields: [memberProfileId], references: [id], onDelete: Cascade)
+
+  title       String? // optional short heading, e.g. "Finance"
+  description String // the duty itself, written as a sentence
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  // Who wrote it, for the audit trail.
+  createdById String?
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([memberProfileId, sortOrder])
+  @@map("member_responsibilities")
+}
+
+// ========================================
+// MEMBER MANAGEMENT - RESPONSIBILITY HISTORY
+// ========================================
+// Every time a duty is added, changed or removed we keep a copy of what it said
+// before and after, and which administrator did it. Nothing is ever silently
+// overwritten.
+// ========================================
+model MemberResponsibilityAudit {
+  id              String  @id @default(cuid())
+  memberProfileId String
+  responsibilityId String?
+
+  action     String // CREATED / UPDATED / DELETED
+  beforeText String?
+  afterText  String?
+  changedById String?
+
+  createdAt DateTime @default(now())
+
+  @@index([memberProfileId, createdAt])
+  @@map("member_responsibility_audit")
+}
+
+// ========================================
+// MEMBER MANAGEMENT - MONTHLY PERFORMANCE
+// ========================================
+// ONE ROW = ONE MEMBER FOR ONE MONTH.
+//
+// The unique pair [memberProfileId, periodMonth] is what stops the same month
+// being evaluated twice by accident. periodMonth is stored as "2026-10" so
+// sorting and comparison are plain text comparisons.
+//
+// A score is only ever stored when an administrator actually typed one. Nothing
+// is calculated behind their back.
+// ========================================
+model PerformanceEvaluation {
+  id              String        @id @default(cuid())
+  memberProfileId String
+  memberProfile   MemberProfile @relation(fields: [memberProfileId], references: [id], onDelete: Cascade)
+
+  periodMonth String // "2026-10"
+
+  // The five parts the committee agreed to score.
+  workQuality    Float? // quality of the work produced
+  taskCompletion Float? // how many assigned tasks were finished
+  participation  Float? // attendance and involvement
+  responsibility Float? // how well the permanent duties were carried out
+  teamwork       Float? // cooperation with other members
+
+  overall Float? // weighted total, filled when the administrator confirms
+  rank    Int? // position inside that month
+
+  remarks String?
+
+  // DRAFT -> still being written, the member cannot see it yet.
+  // PUBLISHED -> confirmed by the administrator, the member can see it.
+  status String @default("DRAFT")
+
+  evaluatedById String?
+  publishedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberProfileId, periodMonth])
+  @@index([periodMonth, overall])
+  @@map("performance_evaluations")
 }
