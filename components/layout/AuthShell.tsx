@@ -1,71 +1,51 @@
 // ========================================
 // AUTH SHELL - THE FRAME AROUND SIGN-IN TYPE PAGES
 // ========================================
-// Used by the three member pages that live OUTSIDE the member panel:
-//     /member/verify-email
-//     /member/forgot-password
-//     /member/reset-password
+// Used by every page outside the member panel that still needs a sign-in look:
+//     /member/verify-email, /member/forgot-password, /member/reset-password
+//     /donor/login, /donor/register, /donor/forgot-password, /donor/reset-password,
+//     /donor/verify-email
 //
-// A member who has forgotten their password (or has not verified their email
-// yet) cannot sign in, so these pages must be reachable while signed out. They
-// therefore draw their own simple header instead of the member panel menu.
+// It is now a thin wrapper around components/auth/AuthFrame.tsx, which is the ONE
+// frame every sign-in and sign-up screen on the website uses - the member portal
+// and the administrator sign-in included. Keeping them all on one frame is what
+// makes the register page match the login page exactly, with no second design to
+// keep in step.
 //
-// WHY A SHARED COMPONENT?
-//   So the three pages stay identical in look, and a change to the frame is
-//   made once. The existing /member/login page keeps its own markup - working
-//   pages are not touched without a reason.
+// A member who has forgotten their password (or has not verified their email yet)
+// cannot sign in, so these pages must be reachable while signed out - which is why
+// they draw this simple header instead of the member panel menu.
 // ========================================
 
-import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Logo } from '@/components/layout/Logo';
-import { Icon } from '@/components/ui/Icon';
-import { organization } from '@/config/site';
+import { AuthFrame } from '@/components/auth/AuthFrame';
 
 export function AuthShell({
   title,
   subtitle,
   children,
   footer,
+  note = 'Member area',
+  width = 'md',
 }: {
+  /** Heading shown at the top of the card. */
   title: string;
   subtitle?: string;
   children: ReactNode;
   /** Small print under the card (for example "back to sign in"). */
   footer?: ReactNode;
+  /** Which service this is - shown in small print under the card. */
+  note?: string;
+  width?: 'md' | 'lg';
 }) {
   return (
-    <main className="flex min-h-screen flex-col bg-ink-50">
-      {/* ---------- Simple header ---------- */}
-      <header className="border-b border-ink-200 bg-white">
-        <div className="container-page flex h-16 items-center justify-between">
-          <Logo size={38} />
-          <Link href="/" className="text-sm font-medium text-ink-600 hover:text-brand-700">
-            <span className="inline-flex items-center gap-1.5">
-              <Icon name="home" className="h-4 w-4" />
-              Back to website
-            </span>
-          </Link>
-        </div>
-      </header>
+    <AuthFrame note={note} width={width}>
+      <h1 className="font-display text-xl font-bold text-ink-900 sm:text-2xl">{title}</h1>
+      {subtitle ? <p className="mt-1 text-sm leading-relaxed text-ink-600">{subtitle}</p> : null}
 
-      {/* ---------- The card ---------- */}
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="card p-7 sm:p-8">
-            <h1 className="font-display text-2xl font-bold text-ink-900">{title}</h1>
-            {subtitle ? <p className="mt-1 text-sm text-ink-600">{subtitle}</p> : null}
+      <div className="mt-5">{children}</div>
 
-            <div className="mt-6">{children}</div>
-          </div>
-
-          {footer ? <div className="mt-5 text-center text-sm text-ink-600">{footer}</div> : null}
-
-          <p className="mt-6 text-center text-xs text-ink-500">
-            {organization.name} · Member area
-          </p>
-        </div>
-      </div>
-    </main>
+      {footer ? <div className="mt-4 text-center text-sm text-ink-600">{footer}</div> : null}
+    </AuthFrame>
   );
 }

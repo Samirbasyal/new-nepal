@@ -32,11 +32,9 @@
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { LoginForm } from '@/components/forms/LoginForm';
-import { LogoMark } from '@/components/layout/Logo';
+import { AuthFrame } from '@/components/auth/AuthFrame';
 import { Icon } from '@/components/ui/Icon';
-import { organization } from '@/config/site';
 import { ADMIN_ENTRY_SLUG } from '@/lib/auth/admin-entry';
 
 export const dynamic = 'force-dynamic';
@@ -63,58 +61,25 @@ export default async function AdminEntryPage({
   // Only allow redirects back into the admin area - never to another website.
   const redirectTo = query.next && query.next.startsWith('/admin') ? query.next : '/admin/dashboard';
 
+  // ========================================
+  // THE SAME FRAME AS EVERY OTHER SIGN-IN PAGE
+  // ========================================
+  // The administrator form used to sit on its own dark background. It now uses
+  // the shared auth frame, so the member portal and this page look like one
+  // website - while the address stays private (lib/auth/admin-entry.ts).
   return (
-    <main className="flex min-h-screen flex-col bg-brand-900">
-      {/* ---------- Simple dark header ---------- */}
-      <header className="border-b border-white/10">
-        <div className="container-page flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
-            <LogoMark size={36} onDark />
-            <div className="leading-tight">
-              <p className="text-sm font-bold text-white">Administration</p>
-              <p className="text-xs text-brand-200">{organization.name}</p>
-            </div>
-          </div>
-
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-100 hover:text-white"
-          >
-            <Icon name="home" className="h-4 w-4" />
-            Back to website
-          </Link>
-        </div>
-      </header>
-
-      {/* ---------- The form ---------- */}
-      <div className="flex flex-1 items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="card p-7 sm:p-8">
-            <div className="mb-6 flex items-center gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-card bg-brand-50 text-brand-700">
-                <Icon name="shield-check" className="h-5 w-5" />
-              </span>
-              <div>
-                <h1 className="font-display text-xl font-bold text-ink-900">Administrator sign in</h1>
-                <p className="text-xs text-ink-500">Restricted area</p>
-              </div>
-            </div>
-
-            <LoginForm mode="admin" redirectTo={redirectTo} notice={query.notice} />
-          </div>
-
-          {/* ---------- Security note ---------- */}
-          <div className="mt-6 rounded-card border border-white/15 bg-white/5 p-4 text-xs leading-relaxed text-brand-100">
-            <p className="font-semibold text-white">Protected area</p>
-            <p className="mt-1">
-              This page is for authorized administrators only. Passwords are stored as secure hashes
-              and never in plain text. Every sign-in attempt is recorded, repeated failures are
-              temporarily blocked, and an administrator who has turned on two-step verification is
-              asked for a code as well.
-            </p>
-          </div>
+    <AuthFrame note="Administrator sign-in - restricted area">
+      <div className="mb-5 flex items-center gap-3">
+        <span className="inline-flex h-11 w-11 items-center justify-center rounded-card bg-brand-50 text-brand-700">
+          <Icon name="shield-check" className="h-5 w-5" />
+        </span>
+        <div>
+          <h1 className="font-display text-xl font-bold text-ink-900">Administrator sign in</h1>
+          <p className="text-xs text-ink-500">Restricted to club administrators</p>
         </div>
       </div>
-    </main>
+
+      <LoginForm mode="admin" redirectTo={redirectTo} notice={query.notice} />
+    </AuthFrame>
   );
 }

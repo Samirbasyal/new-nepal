@@ -29,7 +29,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
-import { PageHero, Section } from '@/components/ui/Section';
+import { AuthShell } from '@/components/layout/AuthShell';
 import { DonorAuthForm } from '@/components/donor/DonorAuthForm';
 import { getCurrentDonor } from '@/lib/donor/session';
 
@@ -54,31 +54,22 @@ export default async function DonorRegisterPage({
   }
 
   return (
-    <>
-      <PageHero
-        eyebrow="Donor account"
-        icon="user-plus"
-        title="Create your donor account"
-        description="One email address, one password, and your giving record is always a sign-in away."
-      />
-
-      <Section>
-        <div className="mx-auto max-w-lg">
-          <div className="card p-6">
-            <DonorAuthForm mode="register" next={next} />
-          </div>
-        </div>
-
-        <div className="mx-auto mt-6 max-w-lg">
-          <Link
-            href="/donate"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-700"
-          >
-            <Icon name="chevron-left" className="h-4 w-4" />
+    <AuthShell
+      title="Create your donor account"
+      subtitle="One email address, one password, and your giving record is always a sign-in away."
+      note="Donor account"
+      footer={
+        <span className="flex flex-wrap items-center justify-center gap-4">
+          <Link href="/donor/login" className="font-semibold text-brand-700 hover:underline">
+            I already have an account
+          </Link>
+          <Link href="/donate" className="text-ink-600 hover:text-brand-700">
             Back to Donate
           </Link>
-        </div>
-      </Section>
-    </>
+        </span>
+      }
+    >
+      <DonorAuthForm mode="register" next={next} />
+    </AuthShell>
   );
 }

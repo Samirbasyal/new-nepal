@@ -60,7 +60,7 @@ export function MemberPortal({
   return (
     <div>
       {/* ---------- Tabs ---------- */}
-      <div role="tablist" aria-label="Member portal" className="mb-6 grid grid-cols-2 gap-1 rounded-full bg-ink-100 p-1">
+      <div role="tablist" aria-label="Member portal" className="mb-6 grid grid-cols-2 gap-1 rounded-full border border-ink-200 bg-white p-1">
         <button
           type="button"
           role="tab"
@@ -71,7 +71,7 @@ export function MemberPortal({
           className={cn(
             'flex items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-sm font-semibold transition-colors',
             tab === 'register'
-              ? 'bg-white text-brand-800 shadow-sm'
+              ? 'bg-brand-700 text-white shadow-sm'
               : 'text-ink-600 hover:text-ink-900',
           )}
         >
@@ -89,7 +89,7 @@ export function MemberPortal({
           className={cn(
             'flex items-center justify-center gap-1.5 rounded-full px-3 py-2.5 text-sm font-semibold transition-colors',
             tab === 'login'
-              ? 'bg-white text-brand-800 shadow-sm'
+              ? 'bg-brand-700 text-white shadow-sm'
               : 'text-ink-600 hover:text-ink-900',
           )}
         >
@@ -107,14 +107,6 @@ export function MemberPortal({
       >
         {tab === 'register' ? (
           <>
-            <div className="mb-5">
-              <h2 className="font-display text-xl font-bold text-ink-900">Request membership</h2>
-              <p className="mt-1 text-sm leading-relaxed text-ink-600">
-                Fill in this form to ask the committee to make you a member. An administrator
-                reviews every request - your account is created only after it is approved.
-              </p>
-            </div>
-
             <MembershipRequestForm onSwitchToLogin={() => select('login')} />
           </>
         ) : null}
@@ -124,13 +116,6 @@ export function MemberPortal({
       <div role="tabpanel" id="panel-login" aria-labelledby="tab-login" hidden={tab !== 'login'}>
         {tab === 'login' ? (
           <>
-            <div className="mb-5">
-              <h2 className="font-display text-xl font-bold text-ink-900">Member sign in</h2>
-              <p className="mt-1 text-sm leading-relaxed text-ink-600">
-                For approved members whose account has been activated.
-              </p>
-            </div>
-
             <LoginForm
               mode="member"
               redirectTo={next && next.startsWith('/member') ? next : '/member/dashboard'}
