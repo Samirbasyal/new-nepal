@@ -586,13 +586,9 @@ export default async function HomePage() {
               </ButtonLink>
             </div>
 
-            <p className="mt-6 text-xs text-brand-200">
-              Looking for your member account? Open{' '}
-              <Link href="/display" className="font-semibold text-white underline">
-                Display
-              </Link>{' '}
-              and use the Member view button.
-            </p>
+            {/* NOTE: no link to Display or to the member portal here.
+                The member area is deliberately not advertised on the home page -
+                it is reached through More -> Display -> Member view. */}
           </div>
         </Container>
       </section>

@@ -80,38 +80,37 @@ export const organization = {
 // group: 'more' are collected into a "More" drop-down menu on desktop.
 // On mobile every link is simply listed inside the menu.
 export const navigation = [
-  // ---------- the one link shown directly ----------
-  // Everything else lives under "More", so the top bar stays quiet and the page
-  // content is what people see first.
+  // ========================================
+  // THE FOUR THINGS IN THE TOP BAR
+  // ========================================
+  // Exactly as marked up on the screenshot: Gallery, News, Home, then More.
+  // Everything else in the website lives inside More.
+  { label: 'Gallery', href: '/gallery' },
+  { label: 'News', href: '/news' },
   { label: 'Home', href: '/' },
 
-  // ---------- collected under "More" ----------
+  // ========================================
+  // EVERYTHING ELSE, INSIDE "MORE"
+  // ========================================
   { label: 'About', href: '/about', group: 'more' as const },
   { label: 'Programs', href: '/programs', group: 'more' as const },
   { label: 'Our Work', href: '/our-works', group: 'more' as const },
-  { label: 'Our Members', href: '/members', group: 'more' as const },
-  { label: 'Our Donors & Supporters', href: '/donors', group: 'more' as const },
-  { label: 'Contact', href: '/contact', group: 'more' as const },
-  { label: 'Donate', href: '/donate', group: 'more' as const },
-
   { label: 'Projects', href: '/projects', group: 'more' as const },
   { label: 'Events', href: '/events', group: 'more' as const },
-  { label: 'News', href: '/news', group: 'more' as const },
-  { label: 'Gallery', href: '/gallery', group: 'more' as const },
   { label: 'Impact', href: '/impact', group: 'more' as const },
+  { label: 'Our Members', href: '/members', group: 'more' as const },
+  { label: 'Our Donors & Supporters', href: '/donors', group: 'more' as const },
   // कार्य समिति (working committee) - photo, name, post and current address only.
   { label: 'कार्य समिति', href: '/karya-samiti', group: 'more' as const },
+  { label: 'Donate', href: '/donate', group: 'more' as const },
+  { label: 'Contact', href: '/contact', group: 'more' as const },
 
   // ========================================
-  // DISPLAY - the way into the member area
+  // DISPLAY - kept quiet on purpose
   // ========================================
-  // The road to becoming a member is now one simple path:
-  //
-  //     More  ->  Display  ->  Member view  ->  registration form / sign in
-  //
-  // Nothing in the top bar points at the member portal any more, so a visitor
-  // meets it on a page that explains it first instead of a button they cannot
-  // use without an account.
+  // The way into the member area, and nothing more: a page that says Welcome and
+  // carries the Member view button in its corner. It is NOT advertised anywhere
+  // else on the site - no button, no footer link, no mention in any page copy.
   { label: 'Display', href: '/display', group: 'more' as const },
 ];
 
@@ -121,13 +120,12 @@ export const navMore = navigation.filter((item) => 'group' in item);
 
 // Links shown as buttons on the right side of the navigation bar.
 //
-// EMPTY ON PURPOSE: Donate and the member sign-in moved into "More" (and the
-// sign-in then into More -> Display -> Member view). Keeping a duplicate button
-// here would only put the same two links in front of visitors twice.
+// EMPTY ON PURPOSE: Donate lives in "More", and the member sign-in is reached the
+// long way round (More -> Display -> Member view) so it is not offered in the open.
 export const navigationActions: { label: string; href: string; style: 'accent' | 'outline' }[] = [];
 
 // Links shown in the mobile menu's bottom section. The full list already appears
-// above it, so this stays empty rather than repeating Donate and Display.
+// above it, so this stays empty rather than repeating the same links.
 export const mobileMenuExtras: { label: string; href: string }[] = [];
 
 // ========================================

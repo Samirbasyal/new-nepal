@@ -1,151 +1,54 @@
 // ========================================
-// DISPLAY - THE WAY INTO THE MEMBER AREA
+// DISPLAY
 // ========================================
 // Address: /display        (reached from  More -> Display)
 //
-// WHY THIS PAGE EXISTS
-//   The navbar used to carry a "Member Login" button, which is a dead end for
-//   anybody who is not a member yet - and a promise of something a visitor cannot
-//   have. Now the only road in is:
+// WHAT IS ON THIS PAGE
+//   One word: "Welcome". And the "Member view" button in the bottom corner.
+//   Nothing else - no lists, no explanation, no mention of membership.
 //
-//       More  ->  Display  ->  Member view  ->  registration form / sign in
+// WHY IT IS THIS EMPTY
+//   This page is deliberately quiet. It is the way into the member area, and the
+//   less it says the better: a visitor who lands here sees a welcome, and only
+//   somebody who was told about the corner button will use it.
 //
-//   A visitor first lands here, where the club says welcome and explains what
-//   membership actually involves. The "Member view" button in the bottom corner
-//   then opens the member portal, which has both the membership request form and
-//   the sign-in form.
+//   The real form is NOT here. It is the server-checked form at /member/portal
+//   (components/member/MembershipRequestForm.tsx), which the corner button opens.
+//   One form, one place, one set of rules.
 //
-// WHERE THE FORM LIVES
-//   NOT on this page. It is the real, server-checked form at /member/portal
-//   (components/member/MembershipRequestForm.tsx). This page deliberately does not
-//   repeat it: one form, one place, one set of rules.
+// NOT IN SEARCH ENGINES
+//   metadata.robots below tells search engines not to list this page, and the
+//   sitemap does not mention it either.
 // ========================================
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
-import { PageHero, Section } from '@/components/ui/Section';
-import { organization } from '@/config/site';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Welcome to club',
-  description:
-    'Welcome to Janakalyan Samataa Yuwa Club. Open Member view to request membership or sign in to the member panel.',
+  title: 'Welcome',
+  // Keep this page out of search results: it is an entrance, not a destination.
+  robots: { index: false, follow: false },
 };
 
 export default function DisplayPage() {
+  // NOTE: a <div>, not <main> - the site layout already wraps every page in
+  // <main id="main-content">, and two of them would be invalid HTML.
   return (
-    <>
-      <PageHero
-        eyebrow="Members"
-        icon="users"
-        title="Welcome to club"
-        description={`${organization.name} - a community of people from Bajhang working together for equality, dignity and local development.`}
-      />
-
-      <Section>
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-          {/* ========================================
-              WHAT THIS PAGE IS FOR
-              ======================================== */}
-          <div className="lg:col-span-7">
-            <h2 className="font-display text-2xl font-bold text-ink-900">This is the member area</h2>
-            <p className="mt-3 text-base leading-relaxed text-ink-600">
-              Everything about membership starts here. Use the{' '}
-              <strong className="font-semibold text-ink-900">Member view</strong> button in the
-              bottom corner of this page: it opens the member portal, where you can either ask to
-              become a member or sign in if your account is already active.
-            </p>
-
-            <div className="mt-6 space-y-4">
-              {[
-                {
-                  icon: 'user-plus' as const,
-                  title: 'Request membership',
-                  text: 'Fill in the form once: your details, why you want to join, and a short letter to the committee. It takes about five minutes.',
-                },
-                {
-                  icon: 'shield-check' as const,
-                  title: 'The committee reviews it',
-                  text: 'An administrator reads every application. Nothing is approved automatically, and no account is created until they decide.',
-                },
-                {
-                  icon: 'lock' as const,
-                  title: 'You choose your own password',
-                  text: 'If it is approved, you receive a private link. You set the password yourself - nobody at the club ever sees it - and then you can sign in.',
-                },
-              ].map((step, index) => (
-                <div key={step.title} className="flex gap-4 rounded-card border border-ink-200 bg-white p-5">
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-brand-50 text-brand-700">
-                    <Icon name={step.icon} className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <p className="font-semibold text-ink-900">
-                      <span className="mr-1.5 text-brand-600">{index + 1}.</span>
-                      {step.title}
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-ink-600">{step.text}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ========================================
-              THE SIDE PANEL
-              ======================================== */}
-          <aside className="lg:col-span-5">
-            <div className="space-y-4">
-              <div className="card p-6">
-                <h2 className="text-base font-bold text-ink-900">Already a member?</h2>
-                <p className="mt-2 text-sm leading-relaxed text-ink-600">
-                  Sign in to see notices, programmes, events, your monthly fund and your tasks.
-                </p>
-                <Link href="/member/portal?tab=login" className="btn btn-primary mt-4 w-full">
-                  <Icon name="log-in" className="h-4 w-4" />
-                  Member view
-                </Link>
-                <p className="mt-2 text-center text-xs text-ink-500">
-                  Sign-in is on the second tab.
-                </p>
-              </div>
-
-              <div className="card bg-brand-50/60 p-6">
-                <h2 className="flex items-center gap-2 text-base font-bold text-ink-900">
-                  <Icon name="shield-check" className="h-5 w-5 text-brand-600" />
-                  Your information stays private
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-ink-600">
-                  Applications are stored in the club&apos;s own database and can only be read by a
-                  signed-in administrator. They are never shown on the public website.
-                </p>
-              </div>
-
-              <div className="card p-6">
-                <h2 className="text-base font-bold text-ink-900">Need help?</h2>
-                <p className="mt-2 text-sm leading-relaxed text-ink-600">
-                  If something does not work, contact the office - a person will answer.
-                </p>
-                <Link href="/contact" className="btn btn-outline mt-4 w-full">
-                  <Icon name="mail" className="h-4 w-4" />
-                  Contact the office
-                </Link>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </Section>
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-white px-6">
+      <h1 className="font-display text-3xl font-bold tracking-tight text-ink-900 sm:text-4xl">
+        Welcome
+      </h1>
 
       {/* ========================================
           THE CORNER BUTTON
           ======================================== */}
       {/*
-        Pinned to the bottom-right corner of the page, as asked: the member sign-in
-        (now called "Member view") is the one door into the member portal. It is
-        outside the normal page flow so it is reachable without scrolling, and it
-        keeps its distance from the footer text on small screens.
+        Pinned to the bottom-right corner: the member sign-in, shown as
+        "Member view". Outside the normal flow so it is always reachable, and
+        quiet enough that it does not advertise itself.
       */}
       <Link
         href="/member/portal"
@@ -154,6 +57,6 @@ export default function DisplayPage() {
         <Icon name="users" className="h-4 w-4" />
         Member view
       </Link>
-    </>
+    </div>
   );
 }
