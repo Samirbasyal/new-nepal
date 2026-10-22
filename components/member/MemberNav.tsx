@@ -27,6 +27,7 @@ const MEMBER_LINKS: { label: string; href: string; icon: IconName }[] = [
   { label: 'My profile', href: '/member/profile', icon: 'user' },
   { label: 'My tasks', href: '/member/tasks', icon: 'check-circle' },
   { label: 'My responsibilities', href: '/member/duties', icon: 'shield-check' },
+  { label: 'My performance', href: '/member/performance', icon: 'chart' },
 
   // ========================================
   // MONTHLY FUND (Donation & Fund System)

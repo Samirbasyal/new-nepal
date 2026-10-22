@@ -76,6 +76,12 @@ type Props = {
   tasks: MonthlyTask[];
   evaluations: Evaluation[];
   audit: Audit[];
+  /**
+   * Which tab to open first. The member management table links straight to
+   * "Responsibilities", "Monthly tasks", "Evaluate" or "History", so the right
+   * panel is already open instead of making the administrator click twice.
+   */
+  initialTab?: string;
 };
 
 const TABS = [
@@ -116,8 +122,17 @@ async function callApi(path: string, method: string, body?: unknown) {
   return json;
 }
 
-export function MemberFile({ member, responsibilities, tasks, evaluations, audit }: Props) {
-  const [tab, setTab] = useState('duties');
+export function MemberFile({
+  member,
+  responsibilities,
+  tasks,
+  evaluations,
+  audit,
+  initialTab,
+}: Props) {
+  const [tab, setTab] = useState(
+    initialTab && TABS.some((entry) => entry.key === initialTab) ? initialTab : 'duties',
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);

@@ -203,6 +203,9 @@ export const memberCreateSchema = z.object({
   role: requiredOptionField([{ value: 'MEMBER' }, { value: 'ADMIN' }, { value: 'FINANCE_ADMIN' }, { value: 'SUPER_ADMIN' }], 'Role'),
   membershipNo: optionalText(60),
   designation: optionalText(120),
+  // The area this member looks after, e.g. "Ward 3 - education". Shown in the
+  // member's own profile and used to filter the member management table.
+  workingArea: optionalText(160),
   department: optionalText(120),
   bio: optionalText(1000),
   photoUrl: optionalText(500),

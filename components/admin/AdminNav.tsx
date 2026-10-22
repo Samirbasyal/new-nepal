@@ -95,6 +95,9 @@ const NAV_GROUPS: NavGroup[] = [
   {
     title: 'People',
     links: [
+      // The working list: duties, monthly tasks, evaluation and ranking.
+      { label: 'Member management', href: '/admin/member-management', icon: 'briefcase' },
+      // The accounts themselves: creating one, passwords, roles, verification.
       { label: 'Members', href: '/admin/members', icon: 'users' },
       // ========================================
       // MEMBER REGISTRATION REQUESTS
@@ -400,6 +403,7 @@ export function AdminMobileNav({
     { label: 'News', href: '/admin/news', icon: 'megaphone' as const },
     { label: 'Gallery', href: '/admin/gallery', icon: 'image' as const },
     { label: 'Members', href: '/admin/members', icon: 'users' as const },
+    { label: 'Management', href: '/admin/member-management', icon: 'briefcase' as const },
     // The join-up queue. On a phone this is the list an administrator is most
     // likely to check after somebody says "I sent the form", so it gets a chip.
     { label: 'Requests', href: REQUESTS_HREF, icon: 'user-plus' as const },

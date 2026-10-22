@@ -115,6 +115,14 @@ const FIELDS: FieldConfig[] = [
   // ---------- Membership ----------
   { name: 'membershipNo', label: 'Membership number', type: 'text', hint: 'Never shown publicly.', section: 'Membership' },
   { name: 'designation', label: 'Designation', type: 'text', placeholder: 'For example: Chairperson, Secretary, Volunteer', section: 'Membership' },
+  {
+    name: 'workingArea',
+    label: 'Working area',
+    type: 'text',
+    placeholder: 'For example: Ward 3 - education',
+    hint: 'What this member is responsible for, area by area. Shown in their own profile.',
+    section: 'Membership',
+  },
   { name: 'department', label: 'Department / area', type: 'text', placeholder: 'For example: Education, Health', section: 'Membership' },
   { name: 'status', label: 'Membership status', type: 'select', options: MEMBERSHIP_STATUS_OPTIONS, hint: 'Only ACTIVE members are counted in the expected monthly collection.', section: 'Membership' },
   { name: 'joinedAt', label: 'Member since', type: 'date', section: 'Membership' },

@@ -88,6 +88,7 @@ type MemberRowShape = {
   emailVerifiedAt: Date | null;
   membershipNo: string | null;
   designation: string | null;
+  workingArea: string | null;
   department: string | null;
   bio: string | null;
   photoUrl: string | null;
@@ -115,6 +116,7 @@ function flattenMember(user: Record<string, unknown>): MemberRowShape {
     emailVerifiedAt: (user.emailVerifiedAt as Date) ?? null,
     membershipNo: (profile.membershipNo as string) ?? null,
     designation: (profile.designation as string) ?? null,
+    workingArea: (profile.workingArea as string) ?? null,
     department: (profile.department as string) ?? null,
     bio: (profile.bio as string) ?? null,
     photoUrl: (profile.photoUrl as string) ?? null,
@@ -154,7 +156,7 @@ function splitMemberData(data: Record<string, unknown>) {
     // columns that belong to the "users" table
     name, email, phone, role, isActive, password,
     // everything else belongs to the "member_profiles" table
-    membershipNo, designation, department, bio, photoUrl, address,
+    membershipNo, designation, workingArea, department, bio, photoUrl, address,
     district, municipality, ward,
     status, joinedAt, isPublic,
   } = data;
@@ -162,7 +164,7 @@ function splitMemberData(data: Record<string, unknown>) {
   return {
     userFields: { name, email, phone, role, isActive, password },
     profileFields: {
-      membershipNo, designation, department, bio, photoUrl, address,
+      membershipNo, designation, workingArea, department, bio, photoUrl, address,
       // The three address columns used by the district reports.
       district, municipality, ward,
       status, joinedAt, isPublic,
@@ -274,6 +276,7 @@ export const RESOURCES: Record<string, ResourceConfig> = {
               create: {
                 membershipNo: (profileFields.membershipNo as string) ?? null,
                 designation: (profileFields.designation as string) ?? null,
+                workingArea: (profileFields.workingArea as string) ?? null,
                 department: (profileFields.department as string) ?? null,
                 bio: (profileFields.bio as string) ?? null,
                 photoUrl: (profileFields.photoUrl as string) ?? null,
@@ -381,6 +384,10 @@ export const RESOURCES: Record<string, ResourceConfig> = {
           profileData.membershipNo = profileFields.membershipNo ?? null;
         if (profileFields.designation !== undefined)
           profileData.designation = profileFields.designation ?? null;
+        // The area this member looks after. Written from the Member management
+        // table and from the Members form, and read by the member's own profile.
+        if (profileFields.workingArea !== undefined)
+          profileData.workingArea = profileFields.workingArea ?? null;
         if (profileFields.department !== undefined)
           profileData.department = profileFields.department ?? null;
         if (profileFields.bio !== undefined) profileData.bio = profileFields.bio ?? null;

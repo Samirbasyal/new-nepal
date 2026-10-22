@@ -20,6 +20,7 @@ import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { SectionHeading } from '@/components/ui/Section';
 import { Alert } from '@/components/ui/Alert';
 import { DutyList, type MemberDuty } from '@/components/member/DutyList';
+import { getMyResponsibilities } from '@/lib/members/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +71,12 @@ export default async function MemberDutiesPage() {
 
   const permanent = permanentRows.map((row) => row.description);
 
+  // ---------- permanent duties written by an administrator ----------
+  // These come from the member file (Admin -> Member management), not from the
+  // committee list, so EVERY member can see them - with or without a committee
+  // record. They have no deadline and no expiry, by design.
+  const assigned = await getMyResponsibilities(user.id);
+
   const duties: MemberDuty[] = rows.map((duty) => ({
     id: duty.id,
     title: duty.title,
@@ -92,6 +99,26 @@ export default async function MemberDutiesPage() {
             : 'Responsibilities given to you by the office.'
         }
       />
+
+      {assigned.length > 0 ? (
+        <section className="mb-8 rounded-card border border-ink-200 bg-white p-5">
+          <h2 className="text-base font-bold text-ink-900">Permanent responsibilities</h2>
+          <p className="mt-1 text-xs text-ink-500">
+            Assigned to you by the office. These are permanent duties - they have no deadline and
+            they do not expire. Only an administrator can change them.
+          </p>
+          <ul className="mt-4 space-y-3">
+            {assigned.map((duty) => (
+              <li key={duty.id} className="rounded-btn border border-ink-200 p-3">
+                {duty.title ? (
+                  <p className="text-sm font-semibold text-ink-900">{duty.title}</p>
+                ) : null}
+                <p className="mt-1 text-sm leading-relaxed text-ink-700">{duty.description}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {committeeMember ? (
         <DutyList
