@@ -71,7 +71,7 @@ export async function Hero({ photos = [] }: { photos?: SliderPhoto[] }) {
         className="absolute inset-0 bg-gradient-to-t from-[#06121e]/85 via-transparent to-transparent"
       />
 
-      <Container className="relative py-16 sm:py-20 lg:py-28">
+      <Container className="relative py-14 sm:py-16 lg:py-20">
         <div className="max-w-2xl">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
             <Icon name="heart-handshake" className="h-3.5 w-3.5" />
@@ -79,7 +79,7 @@ export async function Hero({ photos = [] }: { photos?: SliderPhoto[] }) {
           </p>
 
           {/* The one and only <h1> on the homepage */}
-          <h1 className="font-display text-3xl font-bold leading-[1.15] drop-shadow-sm sm:text-4xl lg:text-[2.9rem]">
+          <h1 className="font-display text-3xl font-bold leading-[1.18] drop-shadow-sm sm:text-[2.1rem] lg:text-[2.4rem]">
             {title}
           </h1>
 

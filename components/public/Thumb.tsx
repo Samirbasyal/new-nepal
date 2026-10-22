@@ -41,7 +41,7 @@ export function Thumb({
   return (
     <div
       className={cn(
-        'relative w-full overflow-hidden bg-ink-100',
+        'relative w-full cursor-zoom-in overflow-hidden bg-ink-100',
         ratio,
         rounded && 'rounded-full',
         className,
@@ -52,6 +52,9 @@ export function Thumb({
         alt={alt}
         fill
         sizes={sizes}
+        // Marks the picture for the full-size viewer (components/public/PhotoZoom).
+        data-photo-full={src && src.trim() !== '' ? imageSrc(src) : undefined}
+        data-photo-alt={alt}
         className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         // Local placeholder files do not need optimisation.
         unoptimized={imageSrc(src).endsWith('.svg')}

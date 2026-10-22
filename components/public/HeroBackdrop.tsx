@@ -34,10 +34,14 @@ export function HeroBackdrop({ urls }: { urls: string[] }) {
       {urls.map((url, position) => (
         <div
           key={url}
-          className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+          className="absolute inset-0 cursor-zoom-in bg-cover bg-center transition-opacity duration-1000 ease-in-out"
+          data-photo-full={url}
+          data-photo-alt=""
           style={{
             backgroundImage: `url("${url}")`,
             opacity: position === index ? 1 : 0,
+            // Only the photograph on screen can be clicked.
+            pointerEvents: position === index ? 'auto' : 'none',
           }}
         />
       ))}

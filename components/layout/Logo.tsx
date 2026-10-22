@@ -19,6 +19,7 @@
 // ========================================
 
 import Link from 'next/link';
+import { T } from '@/components/ui/T';
 import { logo as logoConfig, organization } from '@/config/site';
 import { cn } from '@/lib/utils';
 
@@ -89,7 +90,7 @@ export function Logo({
               onDark ? 'text-brand-100' : 'text-brand-600',
             )}
           >
-            Community Youth Organization
+            <T text="Community Youth Organization" />
           </span>
         </span>
       ) : null}

@@ -93,7 +93,20 @@ export default async function HomePage() {
   // four fields the slider needs are passed on.
   // These come from the photos an administrator marked "Hero slider" - NOT from
   // the photo wall. Two separate sets, on purpose.
-  const sliderPhotos: SliderPhoto[] = sliderImages.map((photo) => ({
+
+  // ========================================
+  // HOW MANY PHOTOS THE HOME PAGE SHOWS
+  // ========================================
+  // Read from Admin Panel -> Settings -> Homepage. Anything that is not a whole
+  // number between 0 and 12 falls back to the default, so a typo can never empty
+  // the banner. 0 means "show none".
+  const photoLimit = (key: string, fallback: number) => {
+    const raw = Number.parseInt(setting(settings, key, String(fallback)), 10);
+    if (!Number.isFinite(raw)) return fallback;
+    return Math.min(12, Math.max(0, raw));
+  };
+
+  const sliderPhotos: SliderPhoto[] = sliderImages.slice(0, photoLimit('home.heroPhotoCount', 4)).map((photo) => ({
     id: photo.id,
     imageUrl: photo.imageUrl,
     title: photo.title ?? null,
@@ -490,7 +503,9 @@ export default async function HomePage() {
             description="Photographs from our activities and events."
           />
 
-          <GalleryGrid photos={data.photos} />
+          <GalleryGrid
+          photos={data.photos.slice(0, photoLimit('home.galleryPhotoCount', 6))}
+        />
 
           <div className="mt-8 text-center">
             <ButtonLink href="/gallery" variant="outline">

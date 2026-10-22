@@ -55,6 +55,11 @@ export const SETTING_DEFINITIONS = [
   { key: 'social.linkedin', label: 'LinkedIn link', group: 'SOCIAL', default: '', type: 'text' },
   { key: 'social.tiktok', label: 'TikTok link', group: 'SOCIAL', default: '', type: 'text' },
 
+  // --- Home page photos ---
+  // How many pictures the homepage shows. "0" hides that part completely.
+  { key: 'home.heroPhotoCount', label: 'Photos rotating behind the hero heading (0-12)', group: 'HOMEPAGE', default: '4', type: 'text' },
+  { key: 'home.galleryPhotoCount', label: 'Photos in the homepage gallery (0-12)', group: 'HOMEPAGE', default: '6', type: 'text' },
+
   // --- Homepage hero ---
   { key: 'home.heroTitle', label: 'Homepage main heading', group: 'HOMEPAGE', default: 'Welcome to Our Club', type: 'text' },
   {

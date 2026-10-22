@@ -17,6 +17,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/layout/Logo';
 import { Icon } from '@/components/ui/Icon';
+import { useLang } from '@/components/ui/LangProvider';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +38,8 @@ export function NavbarShell({
   extras: NavLink[];
   user: NavUser;
 }) {
+  // Menu words arrive in English and are translated here.
+  const { lang, tr } = useLang();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -114,7 +117,7 @@ export function NavbarShell({
           {primary.map((item) => (
             <li key={item.href}>
               <Link href={item.href} className={linkClass(item.href)} aria-current={isActive(item.href) ? 'page' : undefined}>
-                {item.label}
+                {tr(item.label)}
               </Link>
             </li>
           ))}
@@ -134,7 +137,7 @@ export function NavbarShell({
                     : 'text-ink-700 hover:bg-ink-100 hover:text-ink-900',
                 )}
               >
-                More
+                {tr('More')}
                 <Icon
                   name="chevron-down"
                   className={cn('h-4 w-4 transition-transform', moreOpen && 'rotate-180')}
@@ -154,7 +157,7 @@ export function NavbarShell({
                           : 'text-ink-700 hover:bg-ink-100',
                       )}
                     >
-                      {item.label}
+                      {tr(item.label)}
                     </Link>
                   ))}
                 </div>
@@ -171,7 +174,7 @@ export function NavbarShell({
               href={action.href}
               className={cn('btn', action.style === 'accent' ? 'btn-accent' : 'btn-outline')}
             >
-              {action.label}
+              {tr(action.label)}
             </Link>
           ))}
 
@@ -245,7 +248,7 @@ export function NavbarShell({
                     )}
                     aria-current={isActive(item.href) ? 'page' : undefined}
                   >
-                    {item.label}
+                    {tr(item.label)}
                   </Link>
                 </li>
               ))}
@@ -261,7 +264,7 @@ export function NavbarShell({
                     action.style === 'accent' ? 'btn-accent' : 'btn-outline',
                   )}
                 >
-                  {action.label}
+                  {tr(action.label)}
                 </Link>
               ))}
             </div>
@@ -288,7 +291,7 @@ export function NavbarShell({
                         href={item.href}
                         className="block rounded-btn px-3 py-2 text-sm font-medium text-ink-700 hover:bg-white"
                       >
-                        {item.label}
+                        {tr(item.label)}
                       </Link>
                     </li>
                   ))}

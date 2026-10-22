@@ -301,6 +301,27 @@ const PHRASES: Record<string, string> = {
   'Support and protection for women affected by violence.':
     'हिंसा प्रभावित महिलाको सहयोग र संरक्षण।',
 
+  'Home':
+    'गृहपृष्ठ',
+  'About':
+    'हाम्रो बारेमा',
+  'Programs':
+    'कार्यक्रमहरू',
+  'Our Work':
+    'हाम्रो काम',
+  'Our Members':
+    'हाम्रा सदस्यहरू',
+  'Our Donors & Supporters':
+    'दाता र सहयोगीहरू',
+  'More':
+    'थप',
+  'Donate':
+    'चन्दा दिनुहोस्',
+  'Member Login':
+    'सदस्य लगइन',
+  'Community Youth Organization':
+    'सामुदायिक युवा संस्था',
+
   // ---------- Page titles ----------
   'Donors & supporters': 'दाता र सहयोगीहरू',
   'Donation records': 'चन्दा अभिलेख',

@@ -19,6 +19,7 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { LangProvider } from '@/components/ui/LangProvider';
+import { PhotoZoom } from '@/components/public/PhotoZoom';
 import { getLanguage } from '@/lib/i18n-server';
 
 // Public pages read live data from the database, so the pages inside this
@@ -51,6 +52,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </main>
 
       <Footer />
+
+      {/* Opens any picture marked data-photo-full at full size. */}
+      <PhotoZoom />
     </LangProvider>
   );
 }
