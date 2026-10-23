@@ -300,6 +300,24 @@ export default async function AdminDashboardPage() {
     getMoneyOverview(),
   ]);
 
+  // ---------- new notices only ----------
+  // A notice belongs on the dashboard for the first two weeks, while it is news.
+  // After that it is still in News and updates - it simply stops taking up room
+  // here, so the dashboard never becomes a second news list.
+  const newNotices = isDatabaseConfigured()
+    ? await prisma.newsPost
+        .findMany({
+          where: {
+            isPublished: true,
+            publishedAt: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+          },
+          orderBy: { publishedAt: 'desc' },
+          take: 4,
+          select: { id: true, title: true, type: true, publishedAt: true },
+        })
+        .catch(() => [])
+    : [];
+
   const databaseReady = isDatabaseConfigured();
 
   // ========================================
@@ -631,6 +649,41 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
       </div>
+
+      {/* ========================================
+          NEW NOTICES
+          ======================================== */}
+      {newNotices.length > 0 ? (
+        <section className="card p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-bold text-ink-900">
+              <Icon name="megaphone" className="h-4 w-4 text-amber-500" />
+              New notices
+            </h2>
+            <Link href="/admin/news" className="text-xs font-semibold text-brand-700 hover:underline">
+              All notices
+            </Link>
+          </div>
+          <ul className="mt-3 divide-y divide-ink-100">
+            {newNotices.map((notice) => (
+              <li key={notice.id} className="flex items-start justify-between gap-3 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-ink-900">{notice.title}</p>
+                  <p className="text-[11px] text-ink-500">
+                    {notice.type} · {nepaliDate(notice.publishedAt)}
+                  </p>
+                </div>
+                <Link
+                  href="/admin/news"
+                  className="shrink-0 text-xs font-semibold text-brand-700 hover:underline"
+                >
+                  Open
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* ========================================
           RECENT DONATIONS + QUICK ACTIONS

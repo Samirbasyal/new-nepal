@@ -24,7 +24,7 @@ import { requireMember } from '@/lib/auth/guards';
 import { StatusBadge } from '@/components/ui/Badge';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
-import { getEvents, getNewsPosts, getPrograms } from '@/lib/data/public';
+import { getEvents, getPrograms } from '@/lib/data/public';
 import { formatDate } from '@/lib/utils';
 import { withNepaliDate } from '@/lib/nepali-date';
 
@@ -111,7 +111,22 @@ export default async function MemberDashboardPage() {
             .catch(() => null)
         : Promise.resolve(null),
 
-      getNewsPosts({ type: 'NOTICE', pageSize: 3 }),
+      // ONLY notices from the last 14 days reach the dashboard. Everything
+      // older stays inside the Notices page, so the dashboard never turns into
+      // a second news list.
+      prisma.newsPost
+        .findMany({
+          where: {
+            isPublished: true,
+            type: 'NOTICE',
+            publishedAt: { gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+          },
+          orderBy: { publishedAt: 'desc' },
+          take: 3,
+          select: { id: true, title: true, slug: true, publishedAt: true },
+        })
+        .then((rows) => ({ rows }))
+        .catch(() => ({ rows: [] })),
       getPrograms({ pageSize: 3 }),
       getEvents({ upcomingOnly: true, pageSize: 3 }),
     ]);
@@ -273,7 +288,7 @@ export default async function MemberDashboardPage() {
           FROM THE CLUB
           ======================================== */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Panel title="Latest notices" href="/news?type=NOTICE" empty="No notices yet.">
+        <Panel title="New notices" href="/news?type=NOTICE" empty="No new notices - older ones are in Notices.">
           {notices.rows.map((post) => (
             <Row key={post.id} href={`/news/${post.slug}`} title={post.title} meta={withNepaliDate(post.publishedAt)} />
           ))}
