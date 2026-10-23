@@ -368,9 +368,10 @@ export function NotificationCentre() {
                   {item.link ? (
                     <Link
                       href={item.link}
-                      onClick={() => {
+                      onClick={(event) => {
                         // Opening a notice IS reading it. Only unread rows are sent,
                         // so opening the same notice twice cannot count twice.
+                        event.stopPropagation();
                         if (!item.isRead) void markOne(item.id);
                       }}
                       className="text-sm font-semibold text-brand-700 hover:underline"
@@ -382,7 +383,10 @@ export function NotificationCentre() {
                   {!item.isRead ? (
                     <button
                       type="button"
-                      onClick={() => void markOne(item.id)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void markOne(item.id);
+                      }}
                       disabled={busyId === item.id}
                       className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-600 hover:text-ink-900 disabled:opacity-60"
                     >
@@ -404,7 +408,10 @@ export function NotificationCentre() {
                       about is untouched - only the notice goes. */}
                   <button
                     type="button"
-                    onClick={() => void removeOne(item.id, item.title)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void removeOne(item.id, item.title);
+                    }}
                     disabled={busyDeleteId === item.id}
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-red-700 hover:text-red-800 disabled:opacity-60"
                   >
@@ -427,7 +434,15 @@ export function NotificationCentre() {
             return (
               <li
                 key={item.id}
-                className={`card p-4 ${item.isRead ? '' : 'border-l-4 border-l-brand-600'}`}
+                // The WHOLE card is the click target, not just the word "Open".
+                // People click the title or the message - that is what a notice
+                // looks like - and nothing used to happen.
+                onClick={() => {
+                  if (!item.isRead) void markOne(item.id);
+                }}
+                className={`card p-4 ${
+                  item.isRead ? '' : 'cursor-pointer border-l-4 border-l-brand-600'
+                }`}
               >
                 {body}
               </li>
