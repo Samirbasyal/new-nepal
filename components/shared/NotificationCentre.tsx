@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { formatDateTime } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 type Notification = {
   id: string;
@@ -353,7 +354,7 @@ export function NotificationCentre() {
                     </span>
                   ) : null}
 
-                  <span className="text-xs text-ink-500">{formatDateTime(item.createdAt)}</span>
+                  <span className="text-xs text-ink-500">{withNepaliDate(item.createdAt)}</span>
                 </div>
 
                 <h3

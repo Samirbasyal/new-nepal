@@ -19,6 +19,7 @@ import { requireAdmin } from '@/lib/auth/guards';
 import { recentActivity, describeActivity } from '@/lib/audit';
 import { Alert } from '@/components/ui/Alert';
 import { LogoutButton } from '@/components/layout/LogoutButton';
+import { nepaliDate } from '@/lib/nepali-date';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatDateTime, formatNumber } from '@/lib/utils';
@@ -154,6 +155,7 @@ async function getMoneyOverview() {
       purpose: string | null;
       status: string;
       date: string;
+    iso: string;
     }[],
   };
 
@@ -273,6 +275,7 @@ async function getMoneyOverview() {
         purpose: row.purpose,
         status: row.status,
         date: row.createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+      iso: row.createdAt.toISOString(),
       })),
     };
   } catch {
@@ -661,7 +664,12 @@ export default async function AdminDashboardPage() {
                       <td className="py-2 font-medium text-ink-900">{row.donorName}</td>
                       <td className="py-2 font-semibold text-ink-900">Rs. {formatNumber(row.amount)}</td>
                       <td className="py-2 text-ink-600">{row.purpose ?? 'General'}</td>
-                      <td className="py-2 text-ink-500">{row.date}</td>
+                      <td className="py-2 text-ink-500">
+                        {row.date}
+                        {nepaliDate(row.iso) ? (
+                          <span className="block text-[10px] text-ink-400">{nepaliDate(row.iso)}</span>
+                        ) : null}
+                      </td>
                       <td className="py-2 text-right">
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${

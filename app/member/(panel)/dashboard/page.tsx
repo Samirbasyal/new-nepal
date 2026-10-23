@@ -26,6 +26,7 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { getEvents, getNewsPosts, getPrograms } from '@/lib/data/public';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -274,7 +275,7 @@ export default async function MemberDashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Panel title="Latest notices" href="/news?type=NOTICE" empty="No notices yet.">
           {notices.rows.map((post) => (
-            <Row key={post.id} href={`/news/${post.slug}`} title={post.title} meta={formatDate(post.publishedAt)} />
+            <Row key={post.id} href={`/news/${post.slug}`} title={post.title} meta={withNepaliDate(post.publishedAt)} />
           ))}
         </Panel>
 
@@ -290,7 +291,7 @@ export default async function MemberDashboardPage() {
               key={event.id}
               href={`/events/${event.slug}`}
               title={event.title}
-              meta={event.startsAt ? formatDate(event.startsAt) : ''}
+              meta={event.startsAt ? withNepaliDate(event.startsAt) : ''}
             />
           ))}
         </Panel>
