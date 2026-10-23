@@ -147,6 +147,8 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Payment settings & QR', href: '/admin/fund/banks', icon: 'qr-code' },
       { label: 'Fund categories', href: '/admin/fund/categories', icon: 'layers' },
       { label: 'Reports & export', href: '/admin/fund/reports', icon: 'file-text' },
+      // The committee's Excel workbook, kept beside the live figures.
+      { label: 'Fund workbook (Excel)', href: '/admin/fund/workbook', icon: 'download' },
     ],
   },
   {
