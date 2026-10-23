@@ -28,6 +28,7 @@ import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { getLanguage } from '@/lib/i18n-server';
 import { LangProvider } from '@/components/ui/LangProvider';
 import { MemberNav } from '@/components/member/MemberNav';
+import { NotificationsChangedSync } from '@/components/shared/NotificationsChangedSync';
 import { MobileTabBar } from '@/components/member/MobileTabBar';
 import { LogoutButton } from '@/components/layout/LogoutButton';
 import { LogoMark } from '@/components/layout/Logo';
@@ -160,6 +161,7 @@ export default async function MemberPanelLayout({ children }: { children: React.
       {/* ========================================
           THE PHONE BAR
           ======================================== */}
+      <NotificationsChangedSync />
       <MobileTabBar unread={unread} pendingPayments={pendingPayments} />
     </div>
   );

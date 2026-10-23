@@ -27,6 +27,7 @@
 // nothing is lost on a phone.
 // ========================================
 
+import { NotificationsChangedSync } from '@/components/shared/NotificationsChangedSync';
 import { cache } from 'react';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/auth/guards';
@@ -103,6 +104,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
 
   return (
     <div className="flex min-h-screen bg-[#f5f8fc] lg:h-dvh lg:min-h-0 lg:overflow-hidden">
+      <NotificationsChangedSync />
       {/* ========================================
           THE MENU (desktop)
           ======================================== */}

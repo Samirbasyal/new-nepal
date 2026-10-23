@@ -89,6 +89,10 @@ export function NotificationCentre() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'read', id }),
+        // keepalive: the click also navigates to the page the notice points at,
+        // and without this the browser can cancel the request on the way out -
+        // which is exactly why the number used to stay put.
+        keepalive: true,
       });
       const payload = await response.json().catch(() => null);
 
@@ -364,6 +368,11 @@ export function NotificationCentre() {
                   {item.link ? (
                     <Link
                       href={item.link}
+                      onClick={() => {
+                        // Opening a notice IS reading it. Only unread rows are sent,
+                        // so opening the same notice twice cannot count twice.
+                        if (!item.isRead) void markOne(item.id);
+                      }}
                       className="text-sm font-semibold text-brand-700 hover:underline"
                     >
                       Open
