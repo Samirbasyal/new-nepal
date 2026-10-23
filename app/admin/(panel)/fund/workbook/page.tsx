@@ -18,12 +18,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
+import { toNepaliDate } from '@/lib/nepali-date';
 
 export const metadata: Metadata = {
   title: 'Fund workbook (Excel)',
 };
 
-const FILE = '/downloads/janakalyan-monthly-fund-and-donations.xlsx';
+// The workbook is built on the server from live rows, so the link carries the
+// Bikram Sambat year the administrator wants. See app/api/admin/fund/workbook.
+const YEAR_PARAM = 'year';
 
 const SHEETS = [
   {
@@ -44,14 +47,23 @@ const SHEETS = [
   },
 ];
 
-export default function FundWorkbookPage() {
+export default async function FundWorkbookPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ year?: string }>;
+}) {
+  const params = await searchParams;
+  // Today, in Bikram Sambat - the year the download defaults to.
+  const currentYear = Number(toNepaliDate(new Date())?.iso.slice(0, 4) ?? '');
+  const requested = Number(params.year);
+  const year = requested >= 2070 && requested <= 2100 ? requested : currentYear;
   return (
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-2xl font-bold text-ink-900">Fund workbook (Excel)</h1>
         <p className="mt-1 text-sm text-ink-500">
-          The committee workbook, ready to fill in. Formulas are already in place, so you only type the
-          amounts.
+          Built from this website's own records the moment you press download: verified member payments,
+          each in its own Nepali month, and every donation with its status.
         </p>
       </header>
 
@@ -71,10 +83,23 @@ export default function FundWorkbookPage() {
             </div>
           </div>
 
-          <a href={FILE} download className="btn btn-primary">
-            <Icon name="download" className="h-4 w-4" />
-            Download the workbook
-          </a>
+          <form action="/api/admin/fund/workbook" method="get" className="flex flex-wrap items-end gap-2">
+            <label className="text-xs font-semibold text-ink-600">
+              Fiscal year (B.S.)
+              <input
+                type="number"
+                name="year"
+                defaultValue={year}
+                min={2070}
+                max={2100}
+                className="input mt-1 w-28"
+              />
+            </label>
+            <button type="submit" className="btn btn-primary">
+              <Icon name="download" className="h-4 w-4" />
+              Download the workbook
+            </button>
+          </form>
         </div>
 
         <ul className="mt-6 space-y-3 border-t border-ink-100 pt-5">
