@@ -43,6 +43,7 @@ import {
 import { DONATION_PURPOSES } from '@/lib/donation/purposes';
 import { formatMoney } from '@/lib/fund/calc';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,7 +118,7 @@ export default async function AdminDonationsPage({
 
   const rangeLabel =
     fromDay || toDay
-      ? `${fromDay ? formatDate(fromDay) : 'the beginning'} to ${toDay ? formatDate(toDay) : 'today'}`
+      ? `${fromDay ? withNepaliDate(fromDay) : 'the beginning'} to ${toDay ? withNepaliDate(toDay) : 'today'}`
       : 'All time';
 
   // Two ready-made dates for the quick buttons, built from the server's own clock
@@ -622,7 +623,7 @@ export default async function AdminDonationsPage({
                       {formatMoney(donation.amount)}
                     </p>
                     <p className="text-xs text-ink-500">
-                      {formatDate(donation.receivedOn)} · {typeLabel(donation.donationType)}
+                      {withNepaliDate(donation.receivedOn)} · {typeLabel(donation.donationType)}
                     </p>
                   </div>
                 </div>
@@ -741,7 +742,7 @@ export default async function AdminDonationsPage({
                       {formatMoney(donation.amount)}
                     </p>
                     <p className="text-xs text-ink-500">
-                      {formatDate(donation.receivedOn)} · {typeLabel(donation.donationType)}
+                      {withNepaliDate(donation.receivedOn)} · {typeLabel(donation.donationType)}
                     </p>
                   </div>
                 </div>

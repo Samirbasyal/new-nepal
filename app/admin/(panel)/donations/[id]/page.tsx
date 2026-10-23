@@ -40,6 +40,7 @@ import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { DONATION_METHOD_OPTIONS, DONATION_STATUS_OPTIONS, DONATION_TYPE_OPTIONS } from '@/lib/donation/schemas';
 import { formatMoney } from '@/lib/fund/calc';
 import { formatDate, formatDateTime } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -197,13 +198,13 @@ export default async function AdminDonationDetailPage({ params }: { params: Prom
               <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">
                 Date received
               </dt>
-              <dd className="text-ink-800">{formatDate(donation.receivedOn)}</dd>
+              <dd className="text-ink-800">{withNepaliDate(donation.receivedOn)}</dd>
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">
                 Submitted / recorded
               </dt>
-              <dd className="text-ink-800">{formatDateTime(donation.createdAt)}</dd>
+              <dd className="text-ink-800">{withNepaliDate(donation.createdAt)}</dd>
             </div>
             <div className="sm:col-span-2">
               <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">
@@ -257,7 +258,7 @@ export default async function AdminDonationDetailPage({ params }: { params: Prom
                     <span className="block font-semibold">{donorAccount.name}</span>
                     <span className="block break-all text-xs text-ink-600">{donorAccount.email}</span>
                     <span className="mt-1 block text-[11px] text-ink-500">
-                      Opened {formatDate(donorAccount.createdAt)}
+                      Opened {withNepaliDate(donorAccount.createdAt)}
                       {donorAccount.emailVerifiedAt ? ' · email confirmed' : ' · email NOT confirmed'}
                       {donorAccount.isActive ? '' : ' · account switched off'}
                     </span>
@@ -286,7 +287,7 @@ export default async function AdminDonationDetailPage({ params }: { params: Prom
               </dt>
               <dd className="text-ink-800">
                 {checkedBy?.name ?? '-'}
-                {donation.verifiedAt ? ` · ${formatDateTime(donation.verifiedAt)}` : ''}
+                {donation.verifiedAt ? ` · ${withNepaliDate(donation.verifiedAt)}` : ''}
               </dd>
             </div>
           </dl>

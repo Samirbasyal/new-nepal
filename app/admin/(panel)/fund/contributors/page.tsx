@@ -39,6 +39,7 @@ import { formatMoney, monthLabel, monthStart, addMonths } from '@/lib/fund/calc'
 import { countMemberContributionRows, getMemberContributionRows } from '@/lib/fund/collection';
 import { DISTRICT_OPTIONS } from '@/config/districts';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -325,7 +326,7 @@ export default async function MemberContributorsPage({
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-ink-600">
-                      {row.lastPaymentDate ? formatDate(row.lastPaymentDate) : '—'}
+                      {row.lastPaymentDate ? withNepaliDate(row.lastPaymentDate) : '—'}
                     </td>
                   </tr>
                 ))}

@@ -41,6 +41,7 @@ import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatMoney, monthLabel } from '@/lib/fund/calc';
 import { loanFigures, deriveLoanStatus } from '@/lib/loan/calc';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -319,7 +320,7 @@ export default async function MemberHistoryPage({
               {payments.map((payment) => (
                 <li key={payment.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-100 pb-2">
                   <span className="text-ink-700">
-                    {formatDate(payment.paymentDate)} · {payment.method.replace(/_/g, ' ').toLowerCase()}
+                    {withNepaliDate(payment.paymentDate)} · {payment.method.replace(/_/g, ' ').toLowerCase()}
                     {payment.transactionId ? ` · ${payment.transactionId}` : ''}
                   </span>
                   <span className="flex items-center gap-3">
@@ -387,7 +388,7 @@ export default async function MemberHistoryPage({
                     <tr key={loan.id} className="border-t border-ink-100">
                       <td className="px-4 py-3 font-medium text-ink-900">{loan.loanNo}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-ink-600">
-                        {loan.givenDate ? formatDate(loan.givenDate) : '—'}
+                        {loan.givenDate ? withNepaliDate(loan.givenDate) : '—'}
                       </td>
                       <td className="px-4 py-3 text-right">{formatMoney(figures.payable)}</td>
                       <td className="px-4 py-3 text-right text-green-700">
@@ -458,7 +459,7 @@ export default async function MemberHistoryPage({
             {donations.map((donation) => (
               <li key={donation.id} className="flex flex-wrap items-center justify-between gap-2 p-4 text-sm">
                 <span className="text-ink-700">
-                  {formatDate(donation.receivedOn)} · {donation.purpose ?? 'no purpose recorded'}
+                  {withNepaliDate(donation.receivedOn)} · {donation.purpose ?? 'no purpose recorded'}
                   {donation.reference ? ` · ${donation.reference}` : ''}
                 </span>
                 <span className="flex items-center gap-3">

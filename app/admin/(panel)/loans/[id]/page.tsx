@@ -38,6 +38,7 @@ import { LOAN_RETURN_METHOD_OPTIONS, LOAN_STATUS_OPTIONS } from '@/lib/loan/sche
 import { recalculateLoan } from '@/lib/loan/service';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -157,7 +158,7 @@ export default async function LoanDetailPage({
 
         <div className="text-right text-sm text-ink-500">
           <p>
-            Created {formatDate(loan.createdAt)}
+            Created {withNepaliDate(loan.createdAt)}
             {loan.createdBy?.name ? ` by ${loan.createdBy.name}` : ''}
           </p>
           {loan.approvedBy?.name ? <p>Approved by {loan.approvedBy.name}</p> : null}
@@ -345,7 +346,7 @@ export default async function LoanDetailPage({
                 <tbody>
                   {history.map((row) => (
                     <tr key={row.id} className="border-b border-ink-100 last:border-0">
-                      <td className="py-2 pr-3 whitespace-nowrap">{formatDate(row.returnDate)}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{withNepaliDate(row.returnDate)}</td>
                       <td className="py-2 pr-3 font-medium text-green-700">
                         {formatMoney(row.amount)}
                       </td>

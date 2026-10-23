@@ -30,6 +30,7 @@ import { DonationPermanentDelete } from '@/components/admin/DonationPermanentDel
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatMoney } from '@/lib/fund/calc';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,7 +98,7 @@ export default async function RemovedDonationsPage() {
                 <div className="min-w-0">
                   <p className="font-semibold text-ink-900">{row.donorName}</p>
                   <p className="text-xs text-ink-500">
-                    {row.donorEmail ?? 'no email'} · received {formatDate(row.receivedOn)}
+                    {row.donorEmail ?? 'no email'} · received {withNepaliDate(row.receivedOn)}
                   </p>
                   <p className="mt-1 text-sm text-ink-600">{row.purpose ?? 'General donation'}</p>
                   <p className="mt-1 text-[11px] text-ink-400">

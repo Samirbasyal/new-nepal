@@ -37,6 +37,7 @@ import { formatMoney } from '@/lib/fund/calc';
 import { LOAN_STATUS_OPTIONS } from '@/lib/loan/schemas';
 import { getMemberLoans } from '@/lib/loan/service';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -129,7 +130,7 @@ export default async function MemberLoansPage() {
                 <div>
                   <h2 className="font-display text-lg font-bold text-ink-900">Loan {loan.loanNo}</h2>
                   <p className="mt-1 text-xs text-ink-500">
-                    Recorded {formatDate(loan.createdAt)}
+                    Recorded {withNepaliDate(loan.createdAt)}
                     {loan.purpose ? ` · ${loan.purpose}` : ''}
                   </p>
                 </div>
@@ -182,7 +183,7 @@ export default async function MemberLoansPage() {
                     Repayment deadline
                   </dt>
                   <dd className="mt-0.5 text-sm font-medium text-ink-900">
-                    {loan.expectedReturnDate ? formatDate(loan.expectedReturnDate) : 'Not set'}
+                    {loan.expectedReturnDate ? withNepaliDate(loan.expectedReturnDate) : 'Not set'}
                   </dd>
                 </div>
               </dl>
@@ -232,7 +233,7 @@ export default async function MemberLoansPage() {
                     <tbody>
                       {loan.returns.map((row, index) => (
                         <tr key={row.id} className="border-b border-ink-100 last:border-0">
-                          <td className="py-2 pr-3 whitespace-nowrap">{formatDate(row.returnDate)}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap">{withNepaliDate(row.returnDate)}</td>
                           <td className="py-2 pr-3 font-medium text-green-700">
                             {formatMoney(row.amount)}
                           </td>

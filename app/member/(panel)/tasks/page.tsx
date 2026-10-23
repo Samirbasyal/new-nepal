@@ -24,6 +24,7 @@ import { TaskStatusControl } from '@/components/member/TaskStatusControl';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { readSettingValue } from '@/lib/settings';
 import { formatDate, isUpcoming } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,7 +135,7 @@ export default async function MemberTasksPage() {
                                   }`}
                                 >
                                   <Icon name="clock" className="h-3.5 w-3.5" />
-                                  Due {formatDate(task.dueDate)}
+                                  Due {withNepaliDate(task.dueDate)}
                                   {overdue ? ' (overdue)' : ''}
                                 </span>
                               ) : null}

@@ -22,6 +22,7 @@ import { ProfileForm } from '@/components/forms/ProfileForm';
 import { PasswordForm } from '@/components/forms/PasswordForm';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,7 @@ export default async function MemberProfilePage() {
               Last sign in
             </dt>
             <dd className="mt-1 text-sm text-ink-800">
-              {formatDate(account?.lastLoginAt) || 'This is your first visit'}
+              {withNepaliDate(account?.lastLoginAt) || 'This is your first visit'}
             </dd>
           </div>
         </dl>

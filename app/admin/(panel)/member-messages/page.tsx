@@ -29,6 +29,7 @@ import { MemberConversation } from '@/components/admin/MemberConversation';
 import { requireAdmin } from '@/lib/auth/guards';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatDate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -173,7 +174,7 @@ export default async function AdminMemberMessagesPage({
                       <p className="mt-1 truncate text-xs text-ink-500">{thread.lastMessage}</p>
                       <p className="mt-1 text-xs text-ink-400">
                         {thread.fromMember ? 'From the member' : 'From the office'} ·{' '}
-                        {formatDate(thread.lastAt)}
+                        {withNepaliDate(thread.lastAt)}
                       </p>
                     </Link>
                   </li>
