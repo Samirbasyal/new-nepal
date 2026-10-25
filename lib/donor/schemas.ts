@@ -69,6 +69,15 @@ export const donorRegisterSchema = z
 
     // Hidden anti-spam box. Real people never see it.
     website: z.string().optional().nullable(),
+
+    // The tick box beside "I agree to the Terms and Privacy Policy". Optional in
+    // type because an old client may not send it, but superRefine makes it
+    // mandatory - a donor account cannot be created without consent.
+    acceptTerms: z
+      .union([z.boolean(), z.string(), z.number()])
+      .optional()
+      .nullable()
+      .transform((value) => value === true || value === 'true' || value === 'on' || value === 1 || value === '1'),
   })
   .superRefine((value, context) => {
     if (!/[A-Za-z]/.test(value.password)) {
@@ -92,6 +101,16 @@ export const donorRegisterSchema = z
         code: z.ZodIssueCode.custom,
         path: ['confirmPassword'],
         message: 'The two passwords do not match.',
+      });
+    }
+
+    // Consent is not a formality we can skip on the server: a request that does
+    // not carry it is refused here, whatever the browser did or did not show.
+    if (!value.acceptTerms) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['acceptTerms'],
+        message: 'Please accept the Terms and Privacy Policy to continue.',
       });
     }
   });

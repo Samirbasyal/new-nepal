@@ -57,7 +57,9 @@ type Esewa = {
   name: string;
 };
 
-const QUICK_AMOUNTS = [500, 1000, 2500, 5000];
+// The four amounts the club suggests. A small gift matters as much as a large
+// one - NPR 100 is real money for a student - so the row starts there.
+const QUICK_AMOUNTS = [100, 500, 1000, 5000];
 
 /** The three stops of this page, as shown in the little progress bar. */
 const STAGES = [

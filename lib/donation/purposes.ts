@@ -67,6 +67,12 @@ export const DONATION_PURPOSES = [
     icon: 'alert',
   },
   {
+    code: 'FOOD_SECURITY',
+    label: 'Food and Basic Needs',
+    description: 'Rice, oil, clothes and everyday essentials for households that are struggling.',
+    icon: 'leaf',
+  },
+  {
     code: 'COMMUNITY',
     label: 'Community Development',
     description: 'Cleanliness, environment and shared community improvements.',
@@ -74,9 +80,18 @@ export const DONATION_PURPOSES = [
   },
   {
     code: 'GENERAL',
-    label: 'Other / General Donation',
+    label: 'General Donation',
     description: 'Let the club use your gift wherever it is needed most.',
     icon: 'heart',
+  },
+  {
+    // Kept apart from GENERAL on purpose. "Use it where it is needed" and "I have
+    // something else in mind" are different intentions, and the office reads the
+    // second one to find out what the donor actually meant.
+    code: 'OTHER',
+    label: 'Other',
+    description: 'Something else - describe it in your own words.',
+    icon: 'sparkles',
     asksForOwnWords: true,
   },
 ] as const satisfies readonly DonationPurposeOption[];

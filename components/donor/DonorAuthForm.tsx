@@ -39,6 +39,7 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [website, setWebsite] = useState('');
+  const [agreed, setAgreed] = useState(false);
 
   const [errors, setErrors] = useState<Errors>({});
   const [failure, setFailure] = useState<string | null>(null);
@@ -69,6 +70,10 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
       if (phone.trim() !== '' && (digits.length < 6 || digits.length > 15)) {
         found.phone = 'Please enter the mobile number using digits only (6 to 15 digits).';
       }
+
+      if (!agreed) {
+        found.acceptTerms = 'Please accept the Terms and Privacy Policy to continue.';
+      }
     } else if (password.length === 0) {
       found.password = 'Please enter your password.';
     }
@@ -95,7 +100,15 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
 
       const body =
         mode === 'register'
-          ? { name: name.trim(), email: email.trim(), phone: phone.trim() || null, password, confirmPassword, website }
+          ? {
+              name: name.trim(),
+              email: email.trim(),
+              phone: phone.trim() || null,
+              password,
+              confirmPassword,
+              acceptTerms: agreed,
+              website,
+            }
           : { email: email.trim(), password, remember };
 
       const response = await fetch(url, {
@@ -237,6 +250,46 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
       ) : null}
 
       <HoneypotField value={website} onChange={setWebsite} />
+
+      {isRegister ? (
+        <div>
+          <label className="flex items-start gap-2.5 text-xs leading-relaxed">
+            <input
+              type="checkbox"
+              name="acceptTerms"
+              checked={agreed}
+              onChange={(event) => {
+                setAgreed(event.target.checked);
+                if (event.target.checked) {
+                  setErrors((current) => {
+                    const next = { ...current };
+                    delete next.acceptTerms;
+                    return next;
+                  });
+                }
+              }}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-ink-300"
+              aria-describedby="terms-error"
+            />
+            <span>
+              I agree to the{' '}
+              <Link href="/terms" target="_blank" className="font-semibold underline">
+                Terms of Use
+              </Link>{' '}
+              and the{' '}
+              <Link href="/privacy" target="_blank" className="font-semibold underline">
+                Privacy Policy
+              </Link>
+              . My name and the details of my donation will be seen only by the club office.
+            </span>
+          </label>
+          {errors.acceptTerms ? (
+            <p id="terms-error" className="mt-1.5 text-xs font-medium text-red-400" role="alert">
+              {errors.acceptTerms}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <Button type="submit" variant="primary" size="lg" disabled={busy} className="w-full">
         {busy ? (

@@ -176,22 +176,16 @@ export default async function DonateSubmittedPage({ params }: { params: Promise<
                 {donation.status === 'PENDING' ? (
                   <div className="mt-2 space-y-3 text-sm leading-relaxed text-ink-700">
                     <p>
-                      Thank you for your generous support of Janakalyan Samata Yuwa Club!
+                      Your donation request has been received successfully. Our team will carefully
+                      review your payment and aims to complete verification within {REVIEW_HOURS}{' '}
+                      hours. Thank you for supporting Janakalyan Samata Yuwa Club. We sincerely
+                      appreciate your generosity.
                     </p>
-                    <p>
-                      We have received your donation submission. Your payment is currently pending
-                      verification by our Admin team.
+                    <p className="text-ink-600">
+                      {REVIEW_HOURS} hours is our target, not an automatic approval - your donation
+                      becomes successful only when the office has confirmed the payment. If they need
+                      longer they will contact you on the email address or mobile number you gave us.
                     </p>
-                    <p>
-                      Please allow up to {REVIEW_HOURS} hours for verification. This is the usual
-                      review time, not a guarantee - if the office needs longer, they will contact
-                      you using the email address or mobile number you provided.
-                    </p>
-                    <p>
-                      Your donation will be marked as successful only after the payment has been
-                      verified and approved.
-                    </p>
-                    <p>Thank you for your kindness, trust, and valuable contribution to our community.</p>
                   </div>
                 ) : null}
 
