@@ -82,3 +82,25 @@ export function withNepaliDate(value: Date | string | null | undefined): string 
   if (!nepali) return english;
   return english ? `${english} - ${nepali}` : nepali;
 }
+
+/**
+ * "22 Oct 2026, 14:05 - 5 Kartik 2082, 14:05" - the same idea as withNepaliDate,
+ * for a moment rather than a day. Used where the time matters: when a payment was
+ * submitted, and when the office confirmed it.
+ *
+ * The Bikram Sambat calendar has no separate clock, so the time is the same in
+ * both halves; it is repeated so each half reads on its own.
+ */
+export function withNepaliDateTime(value: Date | string | null | undefined): string {
+  if (!value) return "";
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const time = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+  const english = `${date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, ${time}`;
+  const nepali = toNepaliDate(date)?.full;
+
+  return nepali ? `${english} - ${nepali}, ${time}` : english;
+}

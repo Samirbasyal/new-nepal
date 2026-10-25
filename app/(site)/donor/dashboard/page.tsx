@@ -35,11 +35,12 @@ import { ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { PageHero, Section, SectionHeading } from '@/components/ui/Section';
 import { DonorLogoutButton } from '@/components/donor/DonorLogoutButton';
+import { DonationApprovedBanner } from '@/components/donor/DonationApprovedBanner';
 import { requireDonor } from '@/lib/donor/session';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { DONATION_METHOD_OPTIONS } from '@/lib/donation/schemas';
 import { formatMoney } from '@/lib/fund/calc';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { withNepaliDate, withNepaliDateTime } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,6 +96,19 @@ export default async function DonorDashboardPage() {
   const waiting = rows.filter((row) => row.status === 'PENDING' || row.status === 'INFO_REQUIRED');
   const rejected = rows.filter((row) => row.status === 'REJECTED');
 
+  // The most recently confirmed gift, if it was confirmed in the last month. This
+  // is what the banner at the top of the page announces - "your donation was
+  // approved". Only the last 30 days, because a confirmation from last year is not
+  // news any more, and a banner nobody can remember creating is just noise.
+  const justApproved = rows
+    .filter(
+      (row) =>
+        row.status === 'VERIFIED' &&
+        row.verifiedAt !== null &&
+        Date.now() - new Date(row.verifiedAt).getTime() < 30 * 24 * 60 * 60 * 1000,
+    )
+    .sort((a, b) => new Date(b.verifiedAt as Date).getTime() - new Date(a.verifiedAt as Date).getTime())[0];
+
   const approvedTotal = approved.reduce((sum, row) => sum + row.amount, 0);
   const waitingTotal = waiting.reduce((sum, row) => sum + row.amount, 0);
 
@@ -137,6 +151,18 @@ export default async function DonorDashboardPage() {
               <DonorLogoutButton />
             </div>
           </div>
+
+          {/* ---------- the good news, if there is any ---------- */}
+          {justApproved ? (
+            <DonationApprovedBanner
+              donation={{
+                id: justApproved.id,
+                amount: formatMoney(justApproved.amount),
+                purpose: justApproved.purpose ?? 'a general donation',
+                when: withNepaliDateTime(justApproved.verifiedAt),
+              }}
+            />
+          ) : null}
 
           {/* ---------- totals ---------- */}
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -212,10 +238,10 @@ export default async function DonorDashboardPage() {
                             {row.purpose ?? 'General donation'}
                           </p>
                           <p className="mt-1 text-xs text-ink-500">
-                            {formatDateTime(row.createdAt)} · {methodLabel(row.method)}
+                            {withNepaliDateTime(row.createdAt)} · {methodLabel(row.method)}
                           </p>
                           <p className="mt-0.5 text-xs text-ink-500">
-                            Money received {formatDate(row.receivedOn)}
+                            Money received {withNepaliDate(row.receivedOn)}
                           </p>
                         </div>
 
@@ -252,7 +278,7 @@ export default async function DonorDashboardPage() {
                       {/* ---------- what the office said ---------- */}
                       {row.verifiedAt && row.status === 'VERIFIED' ? (
                         <p className="mt-2 rounded-card bg-green-50/70 px-3 py-2 text-xs text-green-900">
-                          Confirmed by the office on {formatDateTime(row.verifiedAt)}.
+                          Confirmed by the office on {withNepaliDateTime(row.verifiedAt)}.
                         </p>
                       ) : null}
 

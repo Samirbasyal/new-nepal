@@ -29,7 +29,8 @@ import { Icon } from '@/components/ui/Icon';
 import { PageHero, Section } from '@/components/ui/Section';
 import { PUBLIC_PAYMENT_METHODS } from '@/lib/donation/publicSchemas';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
-import { formatDateTime, formatMoney } from '@/lib/utils';
+import { formatMoney } from '@/lib/utils';
+import { withNepaliDateTime } from '@/lib/nepali-date';
 
 export const dynamic = 'force-dynamic';
 
@@ -290,7 +291,7 @@ export default async function DonateSubmittedPage({ params }: { params: Promise<
                 <dd className="text-ink-800">
                   {donation.status === 'INITIATED'
                     ? 'Not submitted yet'
-                    : formatDateTime(donation.receivedOn)}
+                    : withNepaliDateTime(donation.receivedOn)}
                 </dd>
               </div>
 
@@ -306,7 +307,7 @@ export default async function DonateSubmittedPage({ params }: { params: Promise<
                   <dt className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">
                     Verified on
                   </dt>
-                  <dd className="text-ink-800">{formatDateTime(donation.verifiedAt)}</dd>
+                  <dd className="text-ink-800">{withNepaliDateTime(donation.verifiedAt)}</dd>
                 </div>
               ) : null}
             </dl>
