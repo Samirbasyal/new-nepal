@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { PageHero, Section } from '@/components/ui/Section';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
+import { getCurrentDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,11 +45,28 @@ export default async function DonateStatusPage({
     const donation = await prisma.donation
       .findFirst({
         where: { id: reference, isDeleted: false },
-        select: { id: true },
+        select: { id: true, donorAccountId: true },
       })
       .catch(() => null);
 
-    if (donation) redirect(`/donate/submitted/${donation.id}`);
+    if (donation) {
+      // A donation that belongs to an account is only opened for that account.
+      // Signed out, the donor is asked to sign in and then brought straight back
+      // to the receipt - which is friendlier than "not found" and leaks less.
+      if (donation.donorAccountId) {
+        const viewer = await getCurrentDonor();
+
+        if (viewer?.id === donation.donorAccountId) {
+          redirect(`/donate/submitted/${donation.id}`);
+        }
+
+        redirect(`/donor/login?next=${encodeURIComponent(`/donate/submitted/${donation.id}`)}`);
+      }
+
+      // An older, anonymous gift: its link is the only way to it, as before.
+      redirect(`/donate/submitted/${donation.id}`);
+    }
+
     notFound = true;
   }
 

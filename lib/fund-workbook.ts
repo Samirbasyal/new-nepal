@@ -59,11 +59,15 @@ export async function buildFundWorkbook(fiscalYearBs: number): Promise<Buffer> {
       orderBy: { name: 'asc' },
       select: { id: true, name: true, email: true, phone: true },
     }),
+    // A deleted payment is not money the club holds. Without isDeleted:false a
+    // row the office had already removed would still be added into the yearly
+    // grid, and the workbook would disagree with every screen in the panel.
     prisma.fundPayment.findMany({
-      where: { status: 'VERIFIED' },
+      where: { status: 'VERIFIED', isDeleted: false },
       select: { memberId: true, amount: true, paymentDate: true },
     }),
     prisma.donation.findMany({
+      where: { isDeleted: false },
       orderBy: { createdAt: 'desc' },
       select: {
         donorName: true,

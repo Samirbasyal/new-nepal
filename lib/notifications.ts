@@ -322,8 +322,11 @@ export async function purgeStaleDonationNotifications(userId: string): Promise<n
 
     if (pairs.length === 0) return 0;
 
+    // A donation the office removed still has a row, but its card is gone from
+    // /admin/donations, so a bell entry pointing at it now leads nowhere. Treat
+    // "removed" the same as "never there".
     const alive = await prisma.donation.findMany({
-      where: { id: { in: pairs.map((pair) => pair.donationId) } },
+      where: { id: { in: pairs.map((pair) => pair.donationId) }, isDeleted: false },
       select: { id: true },
     });
 

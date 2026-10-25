@@ -174,16 +174,20 @@ async function getMoneyOverview() {
       .catch(() => null);
 
     const [fundRows, donationRows, expenseRows, recent] = await Promise.all([
+      // isDeleted:false everywhere. A removed record is not income: this chart, the
+      // donation screen and the fund screens must all answer the same question the
+      // same way, or the office ends up explaining two different totals.
       prisma.fundPayment.findMany({
-        where: { status: 'VERIFIED' },
+        where: { status: 'VERIFIED', isDeleted: false },
         select: { amount: true, paymentDate: true },
       }),
       prisma.donation.findMany({
-        where: { status: 'VERIFIED' },
+        where: { status: 'VERIFIED', isDeleted: false },
         select: { amount: true, createdAt: true, verifiedAt: true },
       }),
-      prisma.expense.findMany({ select: { amount: true, expenseDate: true } }),
+      prisma.expense.findMany({ where: { isDeleted: false }, select: { amount: true, expenseDate: true } }),
       prisma.donation.findMany({
+        where: { isDeleted: false },
         orderBy: { createdAt: 'desc' },
         take: 5,
         select: {

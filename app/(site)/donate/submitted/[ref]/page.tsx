@@ -24,13 +24,14 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Icon } from '@/components/ui/Icon';
 import { PageHero, Section } from '@/components/ui/Section';
 import { PUBLIC_PAYMENT_METHODS } from '@/lib/donation/publicSchemas';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { formatMoney } from '@/lib/utils';
 import { withNepaliDateTime } from '@/lib/nepali-date';
+import { getCurrentDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,6 +75,7 @@ export default async function DonateSubmittedPage({ params }: { params: Promise<
       select: {
         id: true,
         status: true,
+        donorAccountId: true,
         donorName: true,
         donorEmail: true,
         donorPhone: true,
@@ -90,6 +92,34 @@ export default async function DonateSubmittedPage({ params }: { params: Promise<
     .catch(() => null);
 
   if (!donation) notFound();
+
+  // ========================================
+  // WHOSE RECEIPT IS THIS?
+  // ========================================
+  // This page prints the donor's name, email, phone and amount. While a donation
+  // belongs to an account, only that account may read it - the reference is a long
+  // random id, but an id that was pasted into a group chat should not end up
+  // showing somebody's phone number to everybody in it.
+  //
+  // A donation with no account behind it is one of the older, anonymous gifts; it
+  // has no owner to check against, so it stays readable by its link exactly as
+  // before. Nothing that was reachable yesterday became unreachable today.
+  if (donation.donorAccountId) {
+    const viewer = await getCurrentDonor();
+
+    if (!viewer) {
+      // Signed out, but the reference is real: ask them to sign in rather than
+      // telling them the page does not exist. Sending them to the sign-in page
+      // would lose the reference they clicked, so it travels in "next".
+      redirect(`/donor/login?next=${encodeURIComponent(`/donate/submitted/${donation.id}`)}`);
+    }
+
+    if (viewer.id !== donation.donorAccountId) {
+      // A different donor. The same answer as "no such donation": whether a
+      // reference exists is not information this page should confirm.
+      notFound();
+    }
+  }
 
   const status = STATUS[donation.status] ?? { label: donation.status, tone: 'info' as const };
   const methodLabel =
