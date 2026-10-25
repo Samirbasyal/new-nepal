@@ -128,7 +128,8 @@ export default async function MemberDutiesPage() {
                 {duty.title ? (
                   <p className="text-sm font-semibold text-ink-900">{duty.title}</p>
                 ) : null}
-                <p className="mt-1 text-sm leading-relaxed text-ink-700">{duty.description}</p>
+                <p className="
+                mt-1 text-sm leading-relaxed text-ink-700">{duty.description}</p>
               </li>
             ))}
           </ul>
