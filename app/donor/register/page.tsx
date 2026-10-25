@@ -28,9 +28,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Icon } from '@/components/ui/Icon';
-import { AuthShell } from '@/components/layout/AuthShell';
 import { DonorAuthForm } from '@/components/donor/DonorAuthForm';
+import { DonorAuthFrame } from '@/components/donor/DonorAuthFrame';
 import { getCurrentDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
@@ -54,22 +53,19 @@ export default async function DonorRegisterPage({
   }
 
   return (
-    <AuthShell
+    <DonorAuthFrame
       title="Create your donor account"
       subtitle="One email address, one password, and your giving record is always a sign-in away."
-      note="Donor account"
       footer={
         <span className="flex flex-wrap items-center justify-center gap-4">
-          <Link href="/donor/login" className="font-semibold text-brand-700 hover:underline">
+          <Link href="/donor/login" className="font-semibold">
             I already have an account
           </Link>
-          <Link href="/donate" className="text-ink-600 hover:text-brand-700">
-            Back to Donate
-          </Link>
+          <Link href="/donate">Back to Donate</Link>
         </span>
       }
     >
       <DonorAuthForm mode="register" next={next} />
-    </AuthShell>
+    </DonorAuthFrame>
   );
 }

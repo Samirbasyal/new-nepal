@@ -20,9 +20,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Alert } from '@/components/ui/Alert';
-import { Icon } from '@/components/ui/Icon';
-import { AuthShell } from '@/components/layout/AuthShell';
 import { DonorAuthForm } from '@/components/donor/DonorAuthForm';
+import { DonorAuthFrame } from '@/components/donor/DonorAuthFrame';
 import { getCurrentDonor } from '@/lib/donor/session';
 
 export const dynamic = 'force-dynamic';
@@ -50,18 +49,15 @@ export default async function DonorLoginPage({
   }
 
   return (
-    <AuthShell
+    <DonorAuthFrame
       title="Sign in to see your donations"
       subtitle="Your own record of what you gave, which cause it supported, and whether the office has confirmed the payment."
-      note="Donor account"
       footer={
         <span className="flex flex-wrap items-center justify-center gap-4">
-          <Link href="/donor/register" className="font-semibold text-brand-700 hover:underline">
+          <Link href="/donor/register" className="font-semibold">
             Create a donor account
           </Link>
-          <Link href="/donate" className="text-ink-600 hover:text-brand-700">
-            Back to Donate
-          </Link>
+          <Link href="/donate">Back to Donate</Link>
         </span>
       }
     >
@@ -80,6 +76,6 @@ export default async function DonorLoginPage({
       ) : null}
 
       <DonorAuthForm mode="login" next={next} />
-    </AuthShell>
+    </DonorAuthFrame>
   );
 }

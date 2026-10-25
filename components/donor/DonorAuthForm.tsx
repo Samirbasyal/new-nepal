@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { HoneypotField, TextField } from '@/components/forms/Field';
 import { PasswordField } from '@/components/forms/PasswordField';
+import { PasswordStrength } from '@/components/donor/PasswordStrength';
 
 type Mode = 'login' | 'register';
 type Errors = Record<string, string>;
@@ -207,6 +208,8 @@ export function DonorAuthForm({ mode, next }: { mode: Mode; next?: string }) {
           error={errors.password}
           hint={isRegister ? 'Use at least 8 characters, including a letter and a number.' : undefined}
         />
+
+        {isRegister ? <PasswordStrength value={password} /> : null}
 
         {mode === 'login' ? (
           <label className="mt-2 flex items-center gap-2 text-xs text-ink-600">

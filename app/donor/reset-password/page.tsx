@@ -15,7 +15,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Alert } from '@/components/ui/Alert';
 import { Icon } from '@/components/ui/Icon';
-import { AuthShell } from '@/components/layout/AuthShell';
+import { DonorAuthFrame } from '@/components/donor/DonorAuthFrame';
 import { DonorResetForm } from '@/components/donor/DonorResetForm';
 import { isResetTokenUsable } from '@/lib/donor/tokens';
 
@@ -37,15 +37,20 @@ export default async function DonorResetPasswordPage({
 
   return (
     <>
-      <AuthShell
+      <DonorAuthFrame
       title="Choose a new password"
       subtitle="Pick something you have not used before. You will sign in with it from now on."
-      note="Donor account"
+      footer={
+        <Link href="/donor/login" className="inline-flex items-center gap-1.5 font-semibold">
+          <Icon name="chevron-left" className="h-4 w-4" />
+          Back to sign in
+        </Link>
+      }
     >
 
         <div className="mx-auto max-w-lg">
           {!usable ? (
-            <div className="card p-6">
+            <div>
               <Alert tone="warning">
                 This reset link is not valid any more. It may have expired after one hour, or it may
                 already have been used. Links only work once.
@@ -54,37 +59,25 @@ export default async function DonorResetPasswordPage({
               <div className="mt-5">
                 <Link href="/donor/forgot-password" className="btn btn-primary">
                   <Icon name="mail" className="h-4 w-4" />
-                  Ask for a new link
+                  Ask for a new code
                 </Link>
               </div>
 
-              <p className="mt-4 text-xs text-ink-500">
+              <p className="mt-4 text-xs text-purple-100/60">
                 If you did not ask for a reset, nothing has changed - your current password still works.
               </p>
             </div>
           ) : (
             <>
-              <div className="card p-6">
-                <DonorResetForm token={raw} />
-              </div>
+              <DonorResetForm token={raw} />
 
-              <p className="mt-4 text-center text-xs text-ink-500">
+              <p className="mt-4 text-center text-xs text-purple-100/60">
                 Choosing a new password signs out any other device that was still using the old one.
               </p>
             </>
           )}
-
-          <div className="mt-6 text-sm">
-            <Link
-              href="/donor/login"
-              className="inline-flex items-center gap-1.5 font-semibold text-ink-600 hover:text-brand-700"
-            >
-              <Icon name="chevron-left" className="h-4 w-4" />
-              Back to sign in
-            </Link>
-          </div>
         </div>
-      </AuthShell>
+      </DonorAuthFrame>
     </>
   );
 }

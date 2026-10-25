@@ -11,7 +11,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
-import { AuthShell } from '@/components/layout/AuthShell';
+import { DonorAuthFrame } from '@/components/donor/DonorAuthFrame';
 import { DonorForgotCodeForm } from '@/components/donor/DonorForgotCodeForm';
 
 export const dynamic = 'force-dynamic';
@@ -24,33 +24,26 @@ export const metadata: Metadata = {
 export default function DonorForgotPasswordPage() {
   return (
     <>
-      <AuthShell
+      <DonorAuthFrame
       title="Forgot your password?"
-      subtitle="Enter the email address you registered with and we will send you a link to choose a new one."
-      note="Donor account"
+      subtitle="Enter the email address you registered with and we will send you a code to choose a new one."
+      footer={
+        <Link href="/donor/login" className="inline-flex items-center gap-1.5 font-semibold">
+          <Icon name="chevron-left" className="h-4 w-4" />
+          Back to sign in
+        </Link>
+      }
     >
 
         <div className="mx-auto max-w-lg">
-          <div className="card p-6">
             <DonorForgotCodeForm />
-          </div>
 
-          <p className="mt-4 text-center text-xs text-ink-500">
-            The link works once and expires in one hour. Your password is never sent by email - you
+          <p className="mt-4 text-center text-xs text-purple-100/60">
+            The code works once and expires in one hour. Your password is never sent by email - you
             choose a new one on the website.
           </p>
-
-          <div className="mt-6 text-sm">
-            <Link
-              href="/donor/login"
-              className="inline-flex items-center gap-1.5 font-semibold text-ink-600 hover:text-brand-700"
-            >
-              <Icon name="chevron-left" className="h-4 w-4" />
-              Back to sign in
-            </Link>
-          </div>
         </div>
-      </AuthShell>
+      </DonorAuthFrame>
     </>
   );
 }

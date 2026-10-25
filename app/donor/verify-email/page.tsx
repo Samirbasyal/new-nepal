@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Alert } from '@/components/ui/Alert';
 import { Icon } from '@/components/ui/Icon';
-import { AuthShell } from '@/components/layout/AuthShell';
+import { DonorAuthFrame } from '@/components/donor/DonorAuthFrame';
 import { DonorVerifyForm } from '@/components/donor/DonorVerifyForm';
 import { getCurrentDonor } from '@/lib/donor/session';
 import { isEmailConfigured } from '@/lib/email/mailer';
@@ -51,10 +51,20 @@ export default async function DonorVerifyEmailPage({
 
   return (
     <>
-      <AuthShell
+      <DonorAuthFrame
       title="Confirm your email address"
       subtitle="One code, and your donation can begin. This is what keeps your history yours."
-      note="Donor account"
+      footer={
+        <span className="flex flex-wrap items-center justify-center gap-4">
+          <Link href="/donate" className="inline-flex items-center gap-1.5 font-semibold">
+            <Icon name="chevron-left" className="h-4 w-4" />
+            Back to Donate
+          </Link>
+          <Link href="/donor/login" className="font-semibold">
+            Go to sign in
+          </Link>
+        </span>
+      }
     >
 
         <div className="mx-auto max-w-lg">
@@ -76,25 +86,9 @@ export default async function DonorVerifyEmailPage({
             </div>
           ) : null}
 
-          <div className="card p-6">
-            <DonorVerifyForm email={address} next={next} />
-          </div>
-
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm">
-            <Link
-              href="/donate"
-              className="inline-flex items-center gap-1.5 font-semibold text-ink-600 hover:text-brand-700"
-            >
-              <Icon name="chevron-left" className="h-4 w-4" />
-              Back to Donate
-            </Link>
-
-            <Link href="/donor/login" className="font-semibold text-brand-700 hover:underline">
-              Go to sign in
-            </Link>
-          </div>
+          <DonorVerifyForm email={address} next={next} />
         </div>
-      </AuthShell>
+      </DonorAuthFrame>
     </>
   );
 }
