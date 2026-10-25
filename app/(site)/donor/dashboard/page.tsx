@@ -30,12 +30,13 @@
 
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { Alert } from '@/components/ui/Alert';
 import { ButtonLink } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { PageHero, Section, SectionHeading } from '@/components/ui/Section';
 import { DonorLogoutButton } from '@/components/donor/DonorLogoutButton';
-import { DonationApprovedBanner } from '@/components/donor/DonationApprovedBanner';
+import { APPROVED_BANNER_COOKIE, DonationApprovedBanner } from '@/components/donor/DonationApprovedBanner';
 import { requireDonor } from '@/lib/donor/session';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { DONATION_METHOD_OPTIONS } from '@/lib/donation/schemas';
@@ -109,6 +110,13 @@ export default async function DonorDashboardPage() {
     )
     .sort((a, b) => new Date(b.verifiedAt as Date).getTime() - new Date(a.verifiedAt as Date).getTime())[0];
 
+  // The donor's own "I have read this" marker, written by the banner's Dismiss
+  // button. Kept in a cookie rather than the database: it is a reading preference,
+  // not a financial record, and it must be readable before the page is rendered so
+  // the banner never flashes for somebody who dismissed it a week ago.
+  const dismissedBanner = (await cookies()).get(APPROVED_BANNER_COOKIE)?.value;
+  const showApprovedBanner = Boolean(justApproved) && justApproved.id !== dismissedBanner;
+
   const approvedTotal = approved.reduce((sum, row) => sum + row.amount, 0);
   const waitingTotal = waiting.reduce((sum, row) => sum + row.amount, 0);
 
@@ -155,6 +163,7 @@ export default async function DonorDashboardPage() {
           {/* ---------- the good news, if there is any ---------- */}
           {justApproved ? (
             <DonationApprovedBanner
+              initiallyVisible={showApprovedBanner}
               donation={{
                 id: justApproved.id,
                 amount: formatMoney(justApproved.amount),

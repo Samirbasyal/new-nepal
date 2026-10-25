@@ -8,22 +8,23 @@
 // WHY IT IS NOT A TOAST
 //   A toast disappears after four seconds. A donor who checks their phone a day
 //   later would see nothing. This sits at the top of the dashboard until it is
-//   dismissed, so the news is there whenever they arrive.
+//   dismissed.
 //
-// WHERE THE DISMISSAL IS KEPT
-//   In localStorage, keyed by the donation's id. That means: dismissing it on a
-//   phone does not silence it on a laptop, and the banner never comes back once
-//   it has been read. Nothing is written to the database - this is a reading
-//   preference, not a financial record.
+// WHY THE SERVER DECIDES WHETHER IT SHOWS
+//   The first version read localStorage in useEffect, so the banner was missing
+//   from the HTML and appeared a moment later - and never at all if the script
+//   failed to load. A thank-you that needs JavaScript is a poor thank-you.
 //
-// WHY THE DATES COME IN ALREADY FORMATTED
-//   The Bikram Sambat conversion belongs on the server (lib/nepali-date), so the
-//   component is handed strings and does not need to know the calendar at all.
+//   Now the server reads the dismissal cookie and renders the banner as part of
+//   the page. No flash, no empty frame, and it is visible the instant the page
+//   arrives. Dismissing writes one cookie: the id of the donation that was read.
+//   Only the latest id is kept, because only the latest matters - an older
+//   confirmation is not news.
 // ========================================
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 
@@ -35,32 +36,29 @@ export type ApprovedDonation = {
   when: string;
 };
 
-const storageKey = (id: string) => `donor-approved-seen:${id}`;
+/** The cookie the dashboard reads. Kept here so the two cannot drift apart. */
+export const APPROVED_BANNER_COOKIE = 'jsyc_banner_seen';
 
-export function DonationApprovedBanner({ donation }: { donation: ApprovedDonation | null }) {
-  // Starts hidden: the server cannot see localStorage, so showing it first and
-  // hiding it afterwards would flash the banner at somebody who dismissed it long
-  // ago. One frame of nothing is better than one frame of wrong.
-  const [visible, setVisible] = useState(false);
+export function DonationApprovedBanner({
+  donation,
+  initiallyVisible,
+}: {
+  donation: ApprovedDonation;
+  initiallyVisible: boolean;
+}) {
+  const [visible, setVisible] = useState(initiallyVisible);
 
-  useEffect(() => {
-    if (!donation) return;
-    try {
-      setVisible(window.localStorage.getItem(storageKey(donation.id)) !== '1');
-    } catch {
-      // Private mode, or storage disabled: show it rather than swallow the news.
-      setVisible(true);
-    }
-  }, [donation]);
-
-  if (!donation || !visible) return null;
+  if (!visible) return null;
 
   function dismiss() {
     try {
-      window.localStorage.setItem(storageKey(donation!.id), '1');
+      // A year is long enough to be forgotten, short enough to expire on its own.
+      // Not HttpOnly: only this script needs it, and it holds no secret.
+      document.cookie = `${APPROVED_BANNER_COOKIE}=${donation.id}; path=/; max-age=31536000; samesite=lax`;
     } catch {
-      // Nothing to do - it will simply appear again next time.
+      // Cookies blocked: it will simply appear again next time.
     }
+
     setVisible(false);
   }
 
