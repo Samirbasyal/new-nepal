@@ -25,6 +25,7 @@ import { writeActivity } from '@/lib/audit';
 import { isEmailConfigured, sendMail } from '@/lib/email/mailer';
 import { buildMembershipApprovedEmail } from '@/lib/email/templates';
 import { ACTIVATION_MINUTES, issueActivation } from '@/lib/membership/tokens';
+import { requestOrigin } from '@/lib/auth/verification';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +57,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return fail('This applicant has already activated their account, so a new link is not needed.', 409);
   }
 
-  const issued = await issueActivation(found.id);
+  // The link must point at the address the office is actually using, not at
+  // whatever NEXT_PUBLIC_SITE_URL happens to say. On a phone "localhost" means
+  // the phone itself, and the member gets ERR_CONNECTION_REFUSED.
+  const issued = await issueActivation(found.id, requestOrigin(request));
 
   let emailed = false;
   let emailError: string | null = null;

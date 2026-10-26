@@ -49,12 +49,35 @@ export function siteUrl(): string {
   return 'http://localhost:3000';
 }
 
-export function verifyEmailLink(rawToken: string): string {
-  return `${siteUrl()}/member/verify-email?token=${encodeURIComponent(rawToken)}`;
+/**
+ * The address the person actually reached us on, taken from the request itself.
+ *
+ * A link built from NEXT_PUBLIC_SITE_URL is only right when that setting is right,
+ * and it very often is not - it says http://localhost:3000 while somebody is
+ * reading the mail on a phone, where "localhost" means the phone and the page can
+ * never open. Reading the host from the request means the link always points back
+ * at the same place the office is working in: the real domain in production, the
+ * preview address on a preview deployment, localhost while developing.
+ */
+export function requestOrigin(request: Request): string {
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const host = (forwardedHost ?? request.headers.get('host') ?? '').split(',')[0].trim();
+
+  if (!host) return siteUrl();
+
+  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0].trim();
+  const proto =
+    forwardedProto || (host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https');
+
+  return `${proto}://${host}`;
 }
 
-export function resetPasswordLink(rawToken: string): string {
-  return `${siteUrl()}/member/reset-password?token=${encodeURIComponent(rawToken)}`;
+export function verifyEmailLink(rawToken: string, base: string = siteUrl()): string {
+  return `${base}/member/verify-email?token=${encodeURIComponent(rawToken)}`;
+}
+
+export function resetPasswordLink(rawToken: string, base: string = siteUrl()): string {
+  return `${base}/member/reset-password?token=${encodeURIComponent(rawToken)}`;
 }
 
 // ========================================
@@ -262,7 +285,12 @@ export async function clearTokens(userId: string, purpose?: string): Promise<voi
 //   2. the member presses "send it again"
 export async function sendVerificationEmail(
   user: { id: string; name: string; email: string },
-  options: { requestedById?: string | null; requestIp?: string | null } = {},
+  options: {
+    requestedById?: string | null;
+    requestIp?: string | null;
+    /** Where the link should point. Defaults to NEXT_PUBLIC_SITE_URL. */
+    baseUrl?: string;
+  } = {},
 ): Promise<MailResult> {
   const { raw, code } = await issueToken({
     userId: user.id,
@@ -275,7 +303,7 @@ export async function sendVerificationEmail(
   const email = buildVerificationEmail({
     memberName: user.name,
     code,
-    link: verifyEmailLink(raw),
+    link: verifyEmailLink(raw, options.baseUrl ?? siteUrl()),
     expiresMinutes: VERIFY_MINUTES,
   });
 
@@ -307,6 +335,7 @@ export async function sendVerificationEmail(
 export async function sendPasswordResetEmail(
   user: { id: string; name: string; email: string },
   requestIp?: string | null,
+  baseUrl?: string,
 ): Promise<MailResult> {
   const { raw, code } = await issueToken({
     userId: user.id,
@@ -318,7 +347,7 @@ export async function sendPasswordResetEmail(
   const email = buildPasswordResetEmail({
     memberName: user.name,
     code,
-    link: resetPasswordLink(raw),
+    link: resetPasswordLink(raw, baseUrl ?? siteUrl()),
     expiresMinutes: RESET_MINUTES,
   });
 

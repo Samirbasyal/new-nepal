@@ -456,6 +456,8 @@ export async function approveRequest(input: {
   id: string;
   adminId: string;
   adminName: string;
+  /** Origin of the request, so the emailed link points at the real site. */
+  baseUrl?: string;
 }): Promise<DecisionResult> {
   const request = await prisma.membershipRequest.findUnique({ where: { id: input.id } });
   if (!request) return { ok: false, message: 'This request no longer exists.' };
@@ -507,7 +509,7 @@ export async function approveRequest(input: {
   }
 
   // ---------- Create the single-use activation link ----------
-  const issued = await issueActivation(input.id);
+  const issued = await issueActivation(input.id, input.baseUrl);
 
   // ---------- Send it, but never pretend ----------
   let emailed = false;

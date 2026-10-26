@@ -20,7 +20,7 @@
 
 import { fail, ok, readJson, zodFieldErrors, zodMessage } from '@/lib/api/http';
 import { blockMessage, blockedForMinutes, clientKey, recordFailure } from '@/lib/auth/rate-limit';
-import { NO_EMAIL_NOTICE, canSendNow, sendPasswordResetEmail } from '@/lib/auth/verification';
+import { NO_EMAIL_NOTICE, canSendNow, requestOrigin, sendPasswordResetEmail } from '@/lib/auth/verification';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { forgotPasswordSchema } from '@/lib/validation/schemas';
 
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       return ok({ sent: false }, 200, GENERIC_MESSAGE);
     }
 
-    const result = await sendPasswordResetEmail(user, ip);
+    const result = await sendPasswordResetEmail(user, ip, requestOrigin(request));
 
     if (!result.ok) {
       return fail(

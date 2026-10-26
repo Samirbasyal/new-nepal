@@ -22,6 +22,7 @@
 
 import { fail, ok, readJson, zodFieldErrors, zodMessage } from '@/lib/api/http';
 import { requireAdminApi } from '@/lib/api/guard';
+import { requestOrigin } from '@/lib/auth/verification';
 import { membershipDecisionSchema } from '@/lib/membership/schemas';
 import { approveRequest, rejectRequest } from '@/lib/membership/service';
 
@@ -41,7 +42,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   if (parsed.data.action === 'APPROVE') {
-    const result = await approveRequest({ id, adminId: auth.user.id, adminName: auth.user.name });
+    // The origin the administrator is working from, so the emailed activation
+    // link opens on the member's phone instead of pointing at localhost.
+    const result = await approveRequest({
+      id,
+      adminId: auth.user.id,
+      adminName: auth.user.name,
+      baseUrl: requestOrigin(request),
+    });
     if (!result.ok) return fail(result.message, 409);
 
     const emailed = result.activation?.emailed ?? false;

@@ -28,9 +28,16 @@ import { hashSecret, siteUrl } from '@/lib/auth/verification';
 // that an old forwarded link is not a permanent key.
 export const ACTIVATION_MINUTES = 60 * 24 * 7;
 
-/** The address that goes into the approval email. */
-export function activationLink(rawToken: string): string {
-  return `${siteUrl()}/member/activate?token=${encodeURIComponent(rawToken)}`;
+/**
+ * The address that goes into the approval email.
+ *
+ * `base` is the origin of the request that triggered the email. Without it the
+ * link is built from NEXT_PUBLIC_SITE_URL, which in development is
+ * http://localhost:3000 - and a member who opens that on a phone gets
+ * ERR_CONNECTION_REFUSED, because "localhost" there means the phone itself.
+ */
+export function activationLink(rawToken: string, base: string = siteUrl()): string {
+  return `${base}/member/activate?token=${encodeURIComponent(rawToken)}`;
 }
 
 export type IssuedActivation = {
@@ -45,7 +52,7 @@ export type IssuedActivation = {
  * Called on approval, and again if an administrator asks for a fresh link
  * because the first one expired or went to the wrong address.
  */
-export async function issueActivation(requestId: string): Promise<IssuedActivation> {
+export async function issueActivation(requestId: string, base?: string): Promise<IssuedActivation> {
   if (!isDatabaseConfigured()) {
     throw new Error('The database is not configured, so an activation link cannot be created.');
   }
@@ -64,7 +71,7 @@ export async function issueActivation(requestId: string): Promise<IssuedActivati
     },
   });
 
-  return { raw, expiresAt, link: activationLink(raw) };
+  return { raw, expiresAt, link: activationLink(raw, base ?? siteUrl()) };
 }
 
 export type ActivationLookup =

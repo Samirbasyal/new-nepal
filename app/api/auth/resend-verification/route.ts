@@ -17,7 +17,7 @@
 
 import { fail, ok, readJson, zodFieldErrors, zodMessage } from '@/lib/api/http';
 import { blockMessage, blockedForMinutes, clientKey, recordFailure } from '@/lib/auth/rate-limit';
-import { NO_EMAIL_NOTICE, canSendNow, sendVerificationEmail } from '@/lib/auth/verification';
+import { NO_EMAIL_NOTICE, canSendNow, requestOrigin, sendVerificationEmail } from '@/lib/auth/verification';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { isAdminRole } from '@/lib/constants';
 import { resendVerificationSchema } from '@/lib/validation/schemas';
@@ -80,7 +80,10 @@ export async function POST(request: Request) {
       return ok({ sent: false }, 200, GENERIC_MESSAGE);
     }
 
-    const result = await sendVerificationEmail(user, { requestIp: ip });
+    const result = await sendVerificationEmail(user, {
+      requestIp: ip,
+      baseUrl: requestOrigin(request),
+    });
 
     if (!result.ok) {
       // Be honest with the person standing in front of the screen: the email
