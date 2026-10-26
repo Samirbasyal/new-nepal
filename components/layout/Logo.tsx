@@ -20,6 +20,7 @@
 
 import Link from 'next/link';
 import { T } from '@/components/ui/T';
+import { LogoLightbox } from '@/components/ui/LogoLightbox';
 import { logo as logoConfig, organization } from '@/config/site';
 import { cn } from '@/lib/utils';
 
@@ -76,7 +77,14 @@ export function Logo({
 }) {
   const content = (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <LogoMark size={size} onDark={onDark} />
+      {/* Clicking the emblem opens it at full size, with zoom. Clicking the name
+          beside it still goes to the home page. */}
+      <LogoLightbox
+        src={onDark && logoConfig.srcOnDark ? logoConfig.srcOnDark : logoConfig.src}
+        alt={logoConfig.alt}
+      >
+        <LogoMark size={size} onDark={onDark} />
+      </LogoLightbox>
       {showName ? (
         <span className="flex flex-col leading-tight">
           <span
