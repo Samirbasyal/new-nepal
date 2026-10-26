@@ -38,8 +38,15 @@ export default async function MemberDutiesPage() {
   }
 
   // The committee row that belongs to this login, if there is one.
+  // Two ways to be "this person's record", because the office does not always
+  // link the login: the account link when it exists, and the email address typed
+  // on the committee form otherwise. Without the second the office could fill in
+  // a responsibility and the member would still see an empty panel.
   const committeeMember = await prisma.karyaSamitiMember.findFirst({
-    where: { userId: user.id, isDeleted: false },
+    where: {
+      isDeleted: false,
+      OR: [{ userId: user.id }, { email: { equals: user.email, mode: 'insensitive' } }],
+    },
     // responsibility is selected HERE and nowhere public. The public page builds
     // its query from PUBLIC_FIELDS, which does not include it, so a visitor's
     // browser never receives this text at all.

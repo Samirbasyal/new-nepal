@@ -76,6 +76,8 @@ export type ColumnType =
   | 'badge'
   | 'boolean'
   | 'date'
+  /** Shown in both calendars: "05 Mar 2019 - 21 Magh 2075". */
+  | 'nepali-date'
   | 'datetime'
   | 'image'
   | 'number'

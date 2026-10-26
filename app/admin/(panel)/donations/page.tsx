@@ -315,7 +315,7 @@ export default async function AdminDonationsPage({
       options: DONATION_METHOD_OPTIONS,
     },
     { name: 'reference', label: 'Receipt / reference number', type: 'text', section: 'What was given' },
-    { name: 'receivedOn', label: 'Date received', type: 'date', required: true, section: 'What was given' },
+    { name: 'receivedOn', label: 'Date received', type: 'nepali-date', required: true, section: 'What was given' },
     {
       name: 'purpose',
       label: 'Purpose (what the donor wanted it used for)',
@@ -351,7 +351,7 @@ export default async function AdminDonationsPage({
     { name: 'donorPhone', label: 'Phone', hideOnMobile: true },
     { name: 'amount', label: 'Amount', type: 'money' },
     { name: 'currency', label: 'Currency', hideOnMobile: true },
-    { name: 'receivedOn', label: 'Received', type: 'date' },
+    { name: 'receivedOn', label: 'Received', type: 'nepali-date' },
     { name: 'donationType', label: 'Type', hideOnMobile: true },
     { name: 'method', label: 'Method', hideOnMobile: true },
     { name: 'purpose', label: 'Purpose', type: 'longtext', hideOnMobile: true },

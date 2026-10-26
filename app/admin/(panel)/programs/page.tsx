@@ -54,7 +54,7 @@ const COLUMNS: ColumnConfig[] = [
   { name: 'title', label: 'Program' },
   { name: 'category', label: 'Category', hideOnMobile: true },
   { name: 'status', label: 'Status', type: 'badge' },
-  { name: 'startDate', label: 'Starts', type: 'date', hideOnMobile: true },
+  { name: 'startDate', label: 'Starts', type: 'nepali-date', hideOnMobile: true },
   { name: 'isPublished', label: 'Published', toggle: true },
 ];
 
@@ -80,8 +80,8 @@ export default async function AdminProgramsPage() {
     { name: 'results', label: 'Results / impact so far', type: 'lines', hint: 'One result per line. Only write what really happened.', section: 'Details' },
     { name: 'targetGroup', label: 'Who is this for?', type: 'text', placeholder: 'For example: students, women, families', section: 'Details' },
     { name: 'location', label: 'Location', type: 'text', section: 'Details' },
-    { name: 'startDate', label: 'Start date', type: 'date', section: 'Details' },
-    { name: 'endDate', label: 'End date', type: 'date', section: 'Details' },
+    { name: 'startDate', label: 'Start date', type: 'nepali-date', section: 'Details' },
+    { name: 'endDate', label: 'End date', type: 'nepali-date', section: 'Details' },
     {
       name: 'status',
       label: 'Status',

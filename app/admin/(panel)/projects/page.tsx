@@ -66,8 +66,8 @@ const FIELDS: FieldConfig[] = [
     section: 'Details',
   },
   { name: 'location', label: 'Location', type: 'text', section: 'Details' },
-  { name: 'startDate', label: 'Start date', type: 'date', section: 'Details' },
-  { name: 'endDate', label: 'End date', type: 'date', section: 'Details' },
+  { name: 'startDate', label: 'Start date', type: 'nepali-date', section: 'Details' },
+  { name: 'endDate', label: 'End date', type: 'nepali-date', section: 'Details' },
   { name: 'status', label: 'Status', type: 'select', options: PROJECT_STATUS_OPTIONS, section: 'Details' },
 
   // ---------- Picture ----------

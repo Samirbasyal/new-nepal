@@ -64,7 +64,7 @@ const COLUMNS: ColumnConfig[] = [
   { name: 'district', label: 'District', hideOnMobile: true },
   { name: 'status', label: 'Status', type: 'badge' },
   // Empty means "not verified yet". Only verified members can sign in.
-  { name: 'emailVerifiedAt', label: 'Email verified', type: 'date', hideOnMobile: true },
+  { name: 'emailVerifiedAt', label: 'Email verified', type: 'nepali-date', hideOnMobile: true },
   { name: 'isActive', label: 'Active', type: 'boolean' },
   { name: 'isPublic', label: 'Listed publicly', type: 'boolean' },
 ];
@@ -125,7 +125,7 @@ const FIELDS: FieldConfig[] = [
   },
   { name: 'department', label: 'Department / area', type: 'text', placeholder: 'For example: Education, Health', section: 'Membership' },
   { name: 'status', label: 'Membership status', type: 'select', options: MEMBERSHIP_STATUS_OPTIONS, hint: 'Only ACTIVE members are counted in the expected monthly collection.', section: 'Membership' },
-  { name: 'joinedAt', label: 'Member since', type: 'date', section: 'Membership' },
+  { name: 'joinedAt', label: 'Member since', type: 'nepali-date', section: 'Membership' },
 
   // ---------- Address ----------
   // These three are what the district reports count, so they are kept separate

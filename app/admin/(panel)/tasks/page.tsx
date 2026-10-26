@@ -32,7 +32,7 @@ const COLUMNS: ColumnConfig[] = [
   { name: 'assignedTo.name', label: 'Assigned to', hideOnMobile: true },
   { name: 'status', label: 'Status', type: 'badge' },
   { name: 'priority', label: 'Priority', type: 'badge', hideOnMobile: true },
-  { name: 'dueDate', label: 'Due', type: 'date', hideOnMobile: true },
+  { name: 'dueDate', label: 'Due', type: 'nepali-date', hideOnMobile: true },
 ];
 
 // ========================================
@@ -75,7 +75,7 @@ export default async function AdminTasksPage() {
       hint: memberOptions.length === 0 ? 'No active accounts yet. Add a member first.' : 'The task appears in that person\'s member panel.',
       section: 'Task',
     },
-    { name: 'dueDate', label: 'Due date', type: 'date', hint: 'Optional.', section: 'Task' },
+    { name: 'dueDate', label: 'Due date', type: 'nepali-date', hint: 'Optional.', section: 'Task' },
     { name: 'status', label: 'Status', type: 'select', options: TASK_STATUS_OPTIONS, section: 'Task' },
     { name: 'priority', label: 'Priority', type: 'select', options: TASK_PRIORITY_OPTIONS, section: 'Task' },
   ];

@@ -161,7 +161,7 @@ export default async function DistrictActivitiesPage({
     },
 
     // --- when and how much ---
-    { name: 'activityDate', label: 'Date of the activity', type: 'date', required: true, section: 'When and how much' },
+    { name: 'activityDate', label: 'Date of the activity', type: 'nepali-date', required: true, section: 'When and how much' },
     {
       name: 'amountUsed',
       label: 'Fund used (whole rupees)',
@@ -200,7 +200,7 @@ export default async function DistrictActivitiesPage({
     { name: 'title', label: 'Activity' },
     { name: 'district', label: 'District' },
     { name: 'municipality', label: 'Municipality', hideOnMobile: true },
-    { name: 'activityDate', label: 'Date', type: 'date' },
+    { name: 'activityDate', label: 'Date', type: 'nepali-date' },
     { name: 'beneficiaries', label: 'Benefited', type: 'number' },
     { name: 'membersInvolved', label: 'Members', type: 'number' },
     { name: 'amountUsed', label: 'Fund used', type: 'money' },

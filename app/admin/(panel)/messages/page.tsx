@@ -35,7 +35,7 @@ const COLUMNS: ColumnConfig[] = [
   { name: 'email', label: 'Email', hideOnMobile: true },
   { name: 'subject', label: 'Subject', hideOnMobile: true },
   { name: 'message', label: 'Message', type: 'longtext', hideOnMobile: true },
-  { name: 'createdAt', label: 'Received', type: 'date', hideOnMobile: true },
+  { name: 'createdAt', label: 'Received', type: 'nepali-date', hideOnMobile: true },
   { name: 'status', label: 'Status', type: 'badge' },
 ];
 

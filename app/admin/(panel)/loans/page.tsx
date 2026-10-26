@@ -121,7 +121,7 @@ export default async function AdminLoansPage() {
     { name: 'remainingAmount', label: 'Outstanding', type: 'money' },
     { name: 'repaidPercent', label: 'Repaid %', type: 'number', hideOnMobile: true },
     { name: 'status', label: 'Status', type: 'badge' },
-    { name: 'expectedReturnDate', label: 'Deadline', type: 'date', hideOnMobile: true },
+    { name: 'expectedReturnDate', label: 'Deadline', type: 'nepali-date', hideOnMobile: true },
   ];
 
   // ---------- The form ----------
@@ -163,27 +163,27 @@ export default async function AdminLoansPage() {
     {
       name: 'requestedDate',
       label: 'Date requested',
-      type: 'date',
+      type: 'nepali-date',
       section: 'Loan',
     },
     {
       name: 'givenDate',
       label: 'Date the money was given',
-      type: 'date',
+      type: 'nepali-date',
       section: 'Loan',
       hint: 'Fill this in when the money is actually handed over.',
     },
     {
       name: 'disbursedDate',
       label: 'Date paid out (optional)',
-      type: 'date',
+      type: 'nepali-date',
       section: 'Loan',
       hint: 'Looking for the step-by-step way? Use the buttons on the loan page instead - they keep the audit trail tidier.',
     },
     {
       name: 'expectedReturnDate',
       label: 'Repayment deadline',
-      type: 'date',
+      type: 'nepali-date',
       section: 'Loan',
       hint: 'A loan that goes past this date shows as Overdue automatically.',
     },
@@ -217,7 +217,7 @@ export default async function AdminLoansPage() {
       section: 'Physical agreement',
     },
     { name: 'agreementNo', label: 'Agreement number', type: 'text', section: 'Physical agreement' },
-    { name: 'agreementDate', label: 'Agreement date', type: 'date', section: 'Physical agreement' },
+    { name: 'agreementDate', label: 'Agreement date', type: 'nepali-date', section: 'Physical agreement' },
     {
       name: 'agreementUrl',
       label: 'Agreement file',

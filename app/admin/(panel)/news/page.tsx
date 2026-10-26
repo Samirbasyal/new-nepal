@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const COLUMNS: ColumnConfig[] = [
   { name: 'title', label: 'Title' },
   { name: 'type', label: 'Type', type: 'badge' },
-  { name: 'publishedAt', label: 'Date', type: 'date', hideOnMobile: true },
+  { name: 'publishedAt', label: 'Date', type: 'nepali-date', hideOnMobile: true },
   { name: 'isPublished', label: 'Published', toggle: true },
 ];
 
@@ -63,7 +63,7 @@ const FIELDS: FieldConfig[] = [
   {
     name: 'publishedAt',
     label: 'Article date',
-    type: 'date',
+    type: 'nepali-date',
     hint: 'The date shown on the website. Leave empty to use today.',
     section: 'Article',
   },

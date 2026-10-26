@@ -30,6 +30,7 @@ import { StatusBadge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ResourceForm } from '@/components/admin/ResourceForm';
 import { cn, formatDate, formatDateTime, truncate } from '@/lib/utils';
+import { withNepaliDate } from '@/lib/nepali-date';
 // Money is always formatted in one place, so every page agrees.
 import { formatMoney } from '@/lib/fund/calc';
 import type { AdminErrorResponse, AdminListResponse, AdminRow, ColumnConfig, FieldConfig } from '@/components/admin/types';
@@ -340,6 +341,11 @@ export function ResourceManager({
 
           case 'date':
             return <span className="whitespace-nowrap">{formatDate(value as string)}</span>;
+
+          // Both calendars in the table, the same way every other screen of this
+          // project prints a date: "05 Mar 2019 - 21 Magh 2075".
+          case 'nepali-date':
+            return <span className="whitespace-nowrap">{withNepaliDate(value as string)}</span>;
 
           case 'datetime':
             return <span className="whitespace-nowrap">{formatDateTime(value as string)}</span>;

@@ -164,7 +164,7 @@ export default async function AdminCollectionsPage({
       hint: 'Who paid this money.',
     },
     { name: 'amount', label: 'Amount (whole rupees)', type: 'number', required: true, span: 1 },
-    { name: 'paymentDate', label: 'Payment date', type: 'date', required: true, span: 1 },
+    { name: 'paymentDate', label: 'Payment date', type: 'nepali-date', required: true, span: 1 },
     {
       name: 'method',
       label: 'Payment method',
@@ -199,7 +199,7 @@ export default async function AdminCollectionsPage({
     {
       name: 'periodMonth',
       label: 'Month this payment is for',
-      type: 'date',
+      type: 'nepali-date',
       span: 1,
       hint: 'Use the first day of the month, for example 2026-10-01 for October 2026. Leave empty for a one-off donation.',
     },
@@ -228,13 +228,13 @@ export default async function AdminCollectionsPage({
     { name: 'memberName', label: 'Member' },
     { name: 'memberCode', label: 'Member ID', hideOnMobile: true },
     { name: 'memberEmail', label: 'Email', hideOnMobile: true },
-    { name: 'periodMonth', label: 'Month', type: 'date' },
+    { name: 'periodMonth', label: 'Month', type: 'nepali-date' },
     { name: 'amount', label: 'Fund amount', type: 'money' },
-    { name: 'paymentDate', label: 'Paid on', type: 'date' },
+    { name: 'paymentDate', label: 'Paid on', type: 'nepali-date' },
     { name: 'method', label: 'Method', hideOnMobile: true },
     { name: 'status', label: 'Status', type: 'badge' },
     { name: 'reviewedBy.name', label: 'Verified by', hideOnMobile: true },
-    { name: 'reviewedAt', label: 'Verified on', type: 'date', hideOnMobile: true },
+    { name: 'reviewedAt', label: 'Verified on', type: 'nepali-date', hideOnMobile: true },
     { name: 'reviewNote', label: 'Remarks', type: 'longtext', hideOnMobile: true },
   ];
 

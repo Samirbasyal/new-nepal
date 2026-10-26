@@ -31,7 +31,7 @@ const COLUMNS: ColumnConfig[] = [
   { name: 'title', label: 'Responsibility' },
   { name: 'member.fullName', label: 'Committee member', hideOnMobile: true },
   { name: 'status', label: 'Status', type: 'badge' },
-  { name: 'deadline', label: 'Deadline', type: 'date', hideOnMobile: true },
+  { name: 'deadline', label: 'Deadline', type: 'nepali-date', hideOnMobile: true },
 ];
 
 export default async function AdminDutiesPage() {
@@ -88,7 +88,7 @@ export default async function AdminDutiesPage() {
     {
       name: 'deadline',
       label: 'Deadline',
-      type: 'date',
+      type: 'nepali-date',
       hint: 'Optional.',
       section: 'Progress',
     },

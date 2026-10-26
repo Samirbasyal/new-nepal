@@ -66,14 +66,14 @@ async function getLookups() {
 const ALBUM_COLUMNS: ColumnConfig[] = [
   { name: 'title', label: 'Album' },
   { name: 'category', label: 'Category', hideOnMobile: true },
-  { name: 'eventDate', label: 'Date', type: 'date', hideOnMobile: true },
+  { name: 'eventDate', label: 'Date', type: 'nepali-date', hideOnMobile: true },
   { name: 'isPublished', label: 'Published', toggle: true },
 ];
 
 const ALBUM_FIELDS: FieldConfig[] = [
   { name: 'title', label: 'Album title', type: 'text', required: true, section: 'Album' },
   { name: 'category', label: 'Category', type: 'text', placeholder: 'For example: Health, Education', section: 'Album' },
-  { name: 'eventDate', label: 'Date of the activity', type: 'date', section: 'Album' },
+  { name: 'eventDate', label: 'Date of the activity', type: 'nepali-date', section: 'Album' },
   { name: 'description', label: 'Description', type: 'textarea', section: 'Album' },
   { name: 'coverImageUrl', label: 'Album cover picture', type: 'image', uploadable: true, section: 'Album' },
   { name: 'isPublished', label: 'Published on the website', type: 'checkbox', section: 'Publishing' },
@@ -91,7 +91,7 @@ const PHOTO_COLUMNS: ColumnConfig[] = [
   // page. The two sets are separate on purpose.
   { name: 'placement', label: 'Shown in', hideOnMobile: true },
   { name: 'category', label: 'Category', hideOnMobile: true },
-  { name: 'takenOn', label: 'Date', type: 'date', hideOnMobile: true },
+  { name: 'takenOn', label: 'Date', type: 'nepali-date', hideOnMobile: true },
   { name: 'isPublished', label: 'Visible', toggle: true },
 ];
 
@@ -123,7 +123,7 @@ export default async function AdminGalleryPage({
       section: 'Photo',
     },
     { name: 'category', label: 'Category', type: 'text', section: 'Photo' },
-    { name: 'takenOn', label: 'Date taken', type: 'date', section: 'Photo' },
+    { name: 'takenOn', label: 'Date taken', type: 'nepali-date', section: 'Photo' },
     {
       name: 'albumId',
       label: 'Album',

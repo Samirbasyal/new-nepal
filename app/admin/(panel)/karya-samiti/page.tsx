@@ -151,7 +151,8 @@ export default async function AdminKaryaSamitiPage() {
       hint: 'Private - used for office contact only.',
       section: 'Private information (admin only)',
     },
-    { name: 'email', label: 'Email address', type: 'email', required: true, hint: 'Required. Private - used to give this person a login.', section: 'Private information (admin only)' },
+    { name: 'email', label: 'Email address', type: 'email', required: true, hint:
+        'Required. Private. Type the address this person signs in with: that is how the responsibility above reaches their member panel.', section: 'Private information (admin only)' },
     { name: 'permanentAddress', label: 'Permanent address', type: 'text', hint: 'Private.', section: 'Private information (admin only)' },
     { name: 'dateOfBirth', label: 'Date of birth', type: 'nepali-date', hint: 'Private.', section: 'Private information (admin only)' },
     { name: 'citizenshipNo', label: 'Citizenship number', type: 'text', hint: 'Private. Keep this out of any public document.', section: 'Private information (admin only)' },

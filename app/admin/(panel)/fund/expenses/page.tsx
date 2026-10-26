@@ -55,7 +55,7 @@ export default async function AdminExpensesPage() {
       hint: 'Manage the list in Fund Management -> Categories.',
     },
     { name: 'amount', label: 'Amount (whole rupees)', type: 'number', required: true, span: 1 },
-    { name: 'expenseDate', label: 'Expense date', type: 'date', required: true, span: 1 },
+    { name: 'expenseDate', label: 'Expense date', type: 'nepali-date', required: true, span: 1 },
     {
       name: 'method',
       label: 'Payment method',
@@ -80,7 +80,7 @@ export default async function AdminExpensesPage() {
     { name: 'title', label: 'Expense' },
     { name: 'category.name', label: 'Category', hideOnMobile: true },
     { name: 'amount', label: 'Amount', type: 'number' },
-    { name: 'expenseDate', label: 'Date', type: 'date' },
+    { name: 'expenseDate', label: 'Date', type: 'nepali-date' },
     { name: 'paidTo', label: 'Paid to', hideOnMobile: true },
     { name: 'status', label: 'Status', type: 'badge' },
   ];
