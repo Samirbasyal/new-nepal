@@ -1204,6 +1204,10 @@ model KaryaSamitiMember {
   // Optional link to the posts table (gives the position a sort order).
   postId         String?
   post           KaryaSamitiPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
+  // The member's permanent duty (स्थायी जिम्मेवारी) in the office's own words.
+  // Optional, private, and specific to this member - it never changes the
+  // standard duty stored against the position itself.
+  responsibility String?
   currentAddress String? // e.g. "काठमाडौं, नेपाल"
   photoUrl       String?
   // Lower numbers are shown first on the public page.

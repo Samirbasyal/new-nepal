@@ -93,6 +93,15 @@ export default async function AdminKaryaSamitiPage() {
       section: 'Public information',
     },
     {
+      name: 'responsibility',
+      label: 'Responsibility (स्थायी जिम्मेवारी) - optional',
+      type: 'textarea',
+      placeholder: 'For example: संस्थाका बैठकहरू सञ्चालन गर्ने र आवश्यक निर्णयहरू लिने।',
+      hint:
+        'What this person is permanently responsible for. Optional - leave it blank if nothing is written. PRIVATE: unlike the fields around it, this one is never shown on the public page.',
+      section: 'Public information',
+    },
+    {
       name: 'currentAddress',
       label: 'Current address',
       type: 'text',
@@ -144,12 +153,12 @@ export default async function AdminKaryaSamitiPage() {
     },
     { name: 'email', label: 'Email address', type: 'email', required: true, hint: 'Required. Private - used to give this person a login.', section: 'Private information (admin only)' },
     { name: 'permanentAddress', label: 'Permanent address', type: 'text', hint: 'Private.', section: 'Private information (admin only)' },
-    { name: 'dateOfBirth', label: 'Date of birth', type: 'date', hint: 'Private.', section: 'Private information (admin only)' },
+    { name: 'dateOfBirth', label: 'Date of birth', type: 'nepali-date', hint: 'Private.', section: 'Private information (admin only)' },
     { name: 'citizenshipNo', label: 'Citizenship number', type: 'text', hint: 'Private. Keep this out of any public document.', section: 'Private information (admin only)' },
     { name: 'citizenshipDistrict', label: 'Citizenship issued district', type: 'text', hint: 'Private.', section: 'Private information (admin only)' },
     { name: 'memberCode', label: 'Member number', type: 'text', hint: 'The office number kept for this person. Private.', section: 'Private information (admin only)' },
-    { name: 'joiningDate', label: 'Joined the organization', type: 'date', hint: 'Private.', section: 'Private information (admin only)' },
-    { name: 'committeeJoiningDate', label: 'Joined the committee', type: 'date', hint: 'Private.', section: 'Private information (admin only)' },
+    { name: 'joiningDate', label: 'Joined the organization', type: 'nepali-date', hint: 'Private.', section: 'Private information (admin only)' },
+    { name: 'committeeJoiningDate', label: 'Joined the committee', type: 'nepali-date', hint: 'Private.', section: 'Private information (admin only)' },
     {
       name: 'internalNotes',
       label: 'Internal notes',

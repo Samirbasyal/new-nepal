@@ -19,6 +19,7 @@ import { requireMember } from '@/lib/auth/guards';
 import { isDatabaseConfigured, prisma } from '@/lib/prisma';
 import { SectionHeading } from '@/components/ui/Section';
 import { Alert } from '@/components/ui/Alert';
+import { Icon } from '@/components/ui/Icon';
 import { DutyList, type MemberDuty } from '@/components/member/DutyList';
 import { getMyResponsibilities } from '@/lib/members/service';
 
@@ -39,7 +40,10 @@ export default async function MemberDutiesPage() {
   // The committee row that belongs to this login, if there is one.
   const committeeMember = await prisma.karyaSamitiMember.findFirst({
     where: { userId: user.id, isDeleted: false },
-    select: { id: true, fullName: true, postTitle: true },
+    // responsibility is selected HERE and nowhere public. The public page builds
+    // its query from PUBLIC_FIELDS, which does not include it, so a visitor's
+    // browser never receives this text at all.
+    select: { id: true, fullName: true, postTitle: true, responsibility: true },
   });
 
   const rows = committeeMember
@@ -114,6 +118,39 @@ export default async function MemberDutiesPage() {
             : 'Responsibilities given to you by the office.'
         }
       />
+
+      {/* ---------- the responsibility written on this person's record ---------- */}
+      {/* It is set by the office on the Karya Samiti form and is deliberately not
+          on the public page. This is the only place the member reads it back. */}
+      {committeeMember?.responsibility ? (
+        <section className="mb-8 overflow-hidden rounded-card border border-brand-200 bg-brand-50/40">
+          <div className="flex items-start gap-3 border-b border-brand-200/70 px-5 py-3">
+            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
+              <Icon name="shield-check" className="h-4 w-4" />
+            </span>
+            <div>
+              <h2 className="text-base font-bold text-ink-900">Your permanent responsibility</h2>
+              <p className="text-xs text-ink-600">
+                स्थायी जिम्मेवारी - set by the office for your post as {committeeMember.postTitle}. Private: it
+                is shown here and to the administrators only, never on the public website.
+              </p>
+            </div>
+          </div>
+
+          <ul className="space-y-2 px-5 py-4">
+            {committeeMember.responsibility
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .map((line) => (
+                <li key={line} className="flex gap-2 text-sm leading-relaxed text-ink-800">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600" />
+                  <span>{line}</span>
+                </li>
+              ))}
+          </ul>
+        </section>
+      ) : null}
 
       {assigned.length > 0 ? (
         <section className="mb-8 rounded-card border border-ink-200 bg-white p-5">

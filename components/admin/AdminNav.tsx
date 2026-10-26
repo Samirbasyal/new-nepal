@@ -110,8 +110,9 @@ const NAV_GROUPS: NavGroup[] = [
       // KARYA SAMITI (à¤•à¤¾à¤°à¥à¤¯ à¤¸à¤®à¤¿à¤¤à¤¿)
       // ========================================
       { label: 'Karya Samiti', href: '/admin/karya-samiti', icon: 'users' },
+      // The old "Duties of each post" screen is gone: a person's responsibility
+      // is now written on the person, in the Karya Samiti record itself.
       { label: 'Committee responsibilities', href: '/admin/karya-samiti/duties', icon: 'shield-check' },
-      { label: 'Duties of each post', href: '/admin/karya-samiti/role-duties', icon: 'file-text' },
       { label: 'Committee posts', href: '/admin/karya-samiti/posts', icon: 'file-text' },
       { label: 'Member tasks', href: '/admin/tasks', icon: 'check-circle' },
     ],

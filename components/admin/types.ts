@@ -25,6 +25,11 @@ export type FieldType =
   | 'lines'
   | 'number'
   | 'date'
+  /**
+   * A date chosen from a Bikram Sambat calendar. The value stays a Gregorian
+   * YYYY-MM-DD string - the same as 'date' - so nothing downstream changes.
+   */
+  | 'nepali-date'
   | 'datetime'
   | 'checkbox'
   | 'select'

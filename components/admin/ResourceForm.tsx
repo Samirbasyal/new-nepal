@@ -23,6 +23,7 @@ import { useLang } from '@/components/ui/LangProvider';
 import { Button } from '@/components/ui/Button';
 import { CheckboxField, SelectField, TextField, TextareaField } from '@/components/forms/Field';
 import { Icon } from '@/components/ui/Icon';
+import { NepaliDateField } from '@/components/ui/NepaliDateField';
 import type { AdminRow, FieldConfig } from '@/components/admin/types';
 import { checkImageFile } from '@/lib/upload-limits';
 import { cn, toDateInputValue, toDateTimeInputValue } from '@/lib/utils';
@@ -40,7 +41,9 @@ function toInputValue(field: FieldConfig, row: AdminRow | null): string | boolea
 
   if (raw === null || raw === undefined) return '';
 
-  if (field.type === 'date') return toDateInputValue(raw as string | Date);
+  // A Nepali date field still holds the Gregorian YYYY-MM-DD string in the form
+  // state and in the database; only the way it is chosen and shown is Nepali.
+  if (field.type === 'date' || field.type === 'nepali-date') return toDateInputValue(raw as string | Date);
   if (field.type === 'datetime') return toDateTimeInputValue(raw as string | Date);
 
   return String(raw);
@@ -295,6 +298,26 @@ function FieldRenderer({
   const spanClass = field.span === 1 ? 'sm:col-span-1' : 'sm:col-span-2';
   const type = field.type ?? 'text';
 
+  // ---------- Nepali calendar ----------
+  // The office enters dates in Bikram Sambat. The field hands back the same
+  // Gregorian YYYY-MM-DD string every other date field produces, so validation,
+  // storage and reports are untouched.
+  if (type === 'nepali-date') {
+    return (
+      <div className={spanClass}>
+        <NepaliDateField
+          name={field.name}
+          label={field.label}
+          value={typeof value === 'string' ? value : ''}
+          onChange={(next) => onChange(next)}
+          required={field.required}
+          error={error}
+          hint={field.hint}
+        />
+      </div>
+    );
+  }
+
   // ---------- Radio group ----------
   // Used where "off" is a real, named state rather than an empty field - the
   // donor's Private / Public switch is the first example. The stored value is
@@ -374,7 +397,7 @@ function FieldRenderer({
             : [
                 // An optional drop-down MUST be able to go back to empty,
                 // otherwise a choice made once can never be cleared again.
-                { value: '', label: '— None —' },
+                { value: '', label: 'â€” None â€”' },
                 ...(field.options ?? []),
               ]
         }
@@ -610,7 +633,7 @@ function ImageUploader({ onUploaded }: { onUploaded: (url: string) => void }) {
         )}
       >
         <Icon name="upload" className="h-3.5 w-3.5" />
-        {busy ? (<span className="text-accent-100" role="status">{tr('Please wait…')}</span>) : tr('Upload an image file')}
+        {busy ? (<span className="text-accent-100" role="status">{tr('Please waitâ€¦')}</span>) : tr('Upload an image file')}
 
         <input
           type="file"
@@ -625,3 +648,4 @@ function ImageUploader({ onUploaded }: { onUploaded: (url: string) => void }) {
     </div>
   );
 }
+

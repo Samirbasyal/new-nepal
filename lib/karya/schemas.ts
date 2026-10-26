@@ -93,6 +93,10 @@ export const karyaMemberSchema = z.object({
   // can be typed even before it exists in the posts list.
   postTitle: requiredText('Post / position', 1, 120),
   postId: optionalText(60),
+  // The member's permanent responsibility, in the office's own words. Optional:
+  // many members hold a post without a written duty, and the form must still
+  // save. Private - it is shown to administrators only, never on the public page.
+  responsibility: optionalText(2000),
   currentAddress: optionalText(300),
   photoUrl: optionalText(500),
   displayOrder: intField(0),
