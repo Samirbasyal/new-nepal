@@ -29,6 +29,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { CheckboxField, TextField, TextareaField } from '@/components/forms/Field';
 import { Icon } from '@/components/ui/Icon';
+import { NepaliDateField } from '@/components/ui/NepaliDateField';
 import { membershipRequestSchema, type MembershipRequestInput } from '@/lib/membership/schemas';
 import { checkImageFile, IMAGE_ACCEPT } from '@/lib/upload-limits';
 
@@ -297,13 +298,12 @@ export function MembershipRequestForm({ onSwitchToLogin }: { onSwitchToLogin?: (
 
         {showOptional ? (
         <div className="grid gap-4 sm:grid-cols-2">
-          <TextField
+          <NepaliDateField
             label="Date of birth"
             name="dateOfBirth"
-            type="date"
             hint="Optional"
             value={values.dateOfBirth}
-            onChange={(event) => set('dateOfBirth', event.target.value)}
+            onChange={(next) => set('dateOfBirth', next)}
             error={fieldErrors.dateOfBirth}
           />
 

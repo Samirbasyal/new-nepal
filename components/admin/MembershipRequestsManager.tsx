@@ -31,6 +31,7 @@ import { StatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
+import { NepaliDateField } from '@/components/ui/NepaliDateField';
 import { TextField, TextareaField } from '@/components/forms/Field';
 import { cn } from '@/lib/utils';
 
@@ -1251,12 +1252,11 @@ function EditDialog({
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextField
+            <NepaliDateField
               label="Date of birth"
               name="editDob"
-              type="date"
               value={values.dateOfBirth}
-              onChange={(event) => set('dateOfBirth', event.target.value)}
+              onChange={(next) => set('dateOfBirth', next)}
               error={fieldErrors.dateOfBirth}
             />
             <TextField

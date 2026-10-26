@@ -98,7 +98,7 @@ export default async function AdminKaryaSamitiPage() {
       type: 'textarea',
       placeholder: 'For example: संस्थाका बैठकहरू सञ्चालन गर्ने र आवश्यक निर्णयहरू लिने।',
       hint:
-        'What this person is permanently responsible for. Optional - leave it blank if nothing is written. PRIVATE: unlike the fields around it, this one is never shown on the public page.',
+        'What this person is permanently responsible for. Optional. PRIVATE - never shown on the public page; it appears in the member\'s own panel. It can only be saved when the email below belongs to a member account, so create or invite that account first.',
       section: 'Public information',
     },
     {

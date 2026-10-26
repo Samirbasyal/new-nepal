@@ -25,6 +25,7 @@ import { getLanguage } from '@/lib/i18n-server';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SectionHeading } from '@/components/ui/Section';
+import { DateRangeFilter } from '@/components/admin/DateRangeFilter';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
@@ -184,25 +185,10 @@ export default async function AdminFundDashboardPage({
       <form method="get" className="card flex flex-wrap items-end gap-3 p-4">
         <input type="hidden" name="preset" value="custom" />
 
-        <label className="block">
-          <span className="label">From</span>
-          <input
-            type="date"
-            name="from"
-            defaultValue={range.from ? range.from.toISOString().slice(0, 10) : ''}
-            className="input"
-          />
-        </label>
-
-        <label className="block">
-          <span className="label">To</span>
-          <input
-            type="date"
-            name="to"
-            defaultValue={range.to ? range.to.toISOString().slice(0, 10) : ''}
-            className="input"
-          />
-        </label>
+        <DateRangeFilter
+          from={range.from ? range.from.toISOString().slice(0, 10) : ''}
+          to={range.to ? range.to.toISOString().slice(0, 10) : ''}
+        />
 
         <button type="submit" className="btn btn-primary">
           Apply range

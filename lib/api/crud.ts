@@ -139,6 +139,13 @@ export type ResourceConfig = {
   slugFrom?: string | null;
   /** Remove private fields from the answer (e.g. passwordHash) */
   decorate?: (row: Record<string, unknown>) => Record<string, unknown>;
+  /**
+   * Runs on the SERVER after validation and before the row is written. It may
+   * change the data (for example fill a link) or refuse the save by throwing a
+   * UserFacingError. Used where a rule needs the database and cannot live in a
+   * Zod schema - the Karya Samiti responsibility being the first case.
+   */
+  beforeSave?: (data: Record<string, unknown>, id?: string) => Promise<void>;
   /** Special hand-written behaviour that replaces the generic engine */
   custom?: ResourceCustom;
 };
@@ -341,6 +348,10 @@ export async function createRecord(
   try {
     let row: Record<string, unknown>;
 
+    // A rule that needs the database runs here, inside the try, so its refusal
+    // comes back as a normal 4xx with a readable message.
+    if (config.beforeSave) await config.beforeSave(parsed.data);
+
     if (config.custom?.create) {
       row = await config.custom.create(parsed.data, user);
     } else {
@@ -394,6 +405,10 @@ export async function updateRecord(
     if (!existing) return { ok: false, status: 404, error: 'This item no longer exists.' };
 
     let row: Record<string, unknown>;
+
+    // The row's id is passed so a rule can look at what is already stored - an
+    // edit that does not touch the email still has to be checked against it.
+    if (config.beforeSave) await config.beforeSave(parsed.data, id);
 
     if (config.custom?.update) {
       row = await config.custom.update(id, parsed.data, user);

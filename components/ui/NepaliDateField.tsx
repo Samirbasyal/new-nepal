@@ -126,15 +126,28 @@ export function NepaliDateField({
   required = false,
   error,
   hint,
+  compact = false,
+  submitName,
 }: {
   name: string;
-  label: string;
+  label?: string;
   /** Gregorian ISO date (YYYY-MM-DD) - the same shape the API already expects. */
   value: string | null | undefined;
   onChange: (value: string) => void;
   required?: boolean;
   error?: string;
   hint?: string;
+  /**
+   * For date filters that sit in a row beside other controls: no label above,
+   * no hint, a button the same height as the inputs around it.
+   */
+  compact?: boolean;
+  /**
+   * For plain HTML forms that submit with GET. A hidden input carries the same
+   * Gregorian value the browser used to send, so the page's query string and
+   * every server-side filter keep working untouched.
+   */
+  submitName?: string;
 }) {
   const selected = useMemo(() => partsFromAd(value), [value]);
   const [open, setOpen] = useState(false);
@@ -189,10 +202,14 @@ export function NepaliDateField({
 
   return (
     <div className="relative" ref={boxRef}>
-      <label className="mb-1.5 block text-sm font-medium text-ink-800" htmlFor={`${name}-bs`}>
-        {label} <span className="text-ink-500">(नेपाली मिति / BS)</span>
-        {required ? <span className="ml-0.5 text-red-600">*</span> : null}
-      </label>
+      {label ? (
+        <label className="mb-1.5 block text-sm font-medium text-ink-800" htmlFor={`${name}-bs`}>
+          {label} <span className="text-ink-500">(नेपाली मिति / BS)</span>
+          {required ? <span className="ml-0.5 text-red-600">*</span> : null}
+        </label>
+      ) : null}
+
+      {submitName ? <input type="hidden" name={submitName} value={value ?? ''} /> : null}
 
       <button
         id={`${name}-bs`}
@@ -200,24 +217,25 @@ export function NepaliDateField({
         onClick={() => setOpen((current) => !current)}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={label ? undefined : `${name} - नेपाली मिति`}
         className={`input flex w-full items-center justify-between gap-3 text-left ${
-          error ? 'border-red-400' : ''
-        }`}
+          compact ? 'py-2 text-sm' : ''
+        } ${error ? 'border-red-400' : ''}`}
       >
         <span className="flex min-w-0 items-baseline gap-2">
           {nepaliShown ? (
             <>
-              <span className="font-semibold text-ink-900">{nepaliShown}</span>
-              <span className="truncate text-xs text-ink-500">({english} AD)</span>
+              <span className={`font-semibold text-ink-900 ${compact ? 'text-xs' : ''}`}>{nepaliShown}</span>
+              {compact ? null : <span className="truncate text-xs text-ink-500">({english} AD)</span>}
             </>
           ) : (
-            <span className="text-ink-400">मिति छान्नुहोस् / Choose a date</span>
+            <span className="text-ink-400">{compact ? 'मिति / Date' : 'मिति छान्नुहोस् / Choose a date'}</span>
           )}
         </span>
         <Icon name="calendar" className="h-4 w-4 shrink-0 text-ink-400" />
       </button>
 
-      {value ? (
+      {value && !compact ? (
         <button
           type="button"
           onClick={() => onChange('')}

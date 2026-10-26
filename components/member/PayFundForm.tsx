@@ -24,6 +24,7 @@
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Icon } from '@/components/ui/Icon';
+import { NepaliDateField } from '@/components/ui/NepaliDateField';
 import { Alert } from '@/components/ui/Alert';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
@@ -86,6 +87,8 @@ export function PayFundForm({
   const [selectedBankId, setSelectedBankId] = useState(banks[0]?.id ?? '');
   const [amount, setAmount] = useState(String(monthlyAmount));
   const [receiptUrl, setReceiptUrl] = useState('');
+  // Today, in the office's own calendar as much as in the browser's.
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -332,12 +335,16 @@ export function PayFundForm({
             hint={`The monthly amount is ${monthlyAmount.toLocaleString('en-IN')}.`}
           />
 
-          <TextField
+          {/* The form reads its values with new FormData(...), so the picker
+              writes the same field through a hidden input. handleSubmit and the
+              API receive exactly the YYYY-MM-DD they did before. */}
+          <NepaliDateField
             name="paymentDate"
             label="Date you paid"
-            type="date"
             required
-            defaultValue={new Date().toISOString().slice(0, 10)}
+            submitName="paymentDate"
+            value={paymentDate}
+            onChange={setPaymentDate}
             error={fieldErrors.paymentDate}
           />
 

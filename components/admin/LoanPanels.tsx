@@ -28,6 +28,7 @@ import { useRef, useState } from 'react';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { NepaliDateField } from '@/components/ui/NepaliDateField';
 import { TextField, TextareaField, SelectField } from '@/components/forms/Field';
 import { LOAN_RETURN_METHOD_OPTIONS } from '@/lib/loan/schemas';
 import { formatMoney } from '@/lib/fund/calc';
@@ -234,12 +235,11 @@ export function LoanDecisionPanel({ loanId, status }: { loanId: string; status: 
               {open ? (
                 <div className="mt-3 space-y-3 border-t border-ink-100 pt-3">
                   {decision.needsDate ? (
-                    <TextField
+                    <NepaliDateField
                       label="Date the money was handed over"
                       name="disbursedDate"
-                      type="date"
                       value={disbursedDate}
-                      onChange={(event) => setDisbursedDate(event.target.value)}
+                      onChange={setDisbursedDate}
                     />
                   ) : null}
 
@@ -395,13 +395,12 @@ export function LoanReturnForm({ loanId, remaining }: { loanId: string; remainin
             </button>
           </div>
 
-          <TextField
+          <NepaliDateField
             label="Date received"
             name="returnDate"
-            type="date"
             required
             value={returnDate}
-            onChange={(event) => setReturnDate(event.target.value)}
+            onChange={setReturnDate}
           />
 
           <SelectField

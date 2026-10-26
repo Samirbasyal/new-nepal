@@ -947,6 +947,61 @@ export const RESOURCES: Record<string, ResourceConfig> = {
     statusField: 'status',
     orderBy: [{ displayOrder: 'asc' }, { fullName: 'asc' }],
     include: { post: { select: { id: true, name: true, nameEn: true } } },
+    // ========================================
+    // RESPONSIBILITY NEEDS SOMEBODY TO READ IT
+    // ========================================
+    // The responsibility is written by the office and read by the member in
+    // their own panel. That only works if the email typed here belongs to a real
+    // login - otherwise the text would be stored against nobody and the member
+    // would open an empty page.
+    //
+    // So: a responsibility can only be saved when the email matches an account,
+    // and when it does we link the account (userId) at the same time. The rule
+    // sits on the server, so it holds even if somebody posts to the API directly.
+    async beforeSave(data, id) {
+      const typed = typeof data.responsibility === 'string' ? data.responsibility.trim() : undefined;
+
+      // Editing something else (a phone number, a photo) never trips this rule.
+      if (typed === undefined) return;
+
+      // Nothing written: nothing to check, and an existing link is left alone.
+      if (typed === '') return;
+
+      const email =
+        typeof data.email === 'string' && data.email.trim() !== ''
+          ? data.email.trim()
+          : id
+            ? (
+                await prisma.karyaSamitiMember.findUnique({
+                  where: { id },
+                  select: { email: true },
+                })
+              )?.email ?? ''
+            : '';
+
+      if (!email) {
+        throw new UserFacingError(
+          'Add the member\'s email address first. Their responsibility is shown in their own member panel, so it needs an account to belong to.',
+          422,
+        );
+      }
+
+      const account = await prisma.user.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' }, isActive: true },
+        select: { id: true, role: true },
+      });
+
+      if (!account) {
+        throw new UserFacingError(
+          `No member account uses ${email}. Create or invite the member's account with this address first, then the responsibility can be saved and they will see it in their panel.`,
+          422,
+        );
+      }
+
+      // Linked here so the member panel finds the record even if the address is
+      // typed differently later (capital letters, a changed domain, and so on).
+      data.userId = account.id;
+    },
     custom: {
       // When a row is deleted we first copy the person's name into the activity
       // log, so the audit trail still says who was removed.

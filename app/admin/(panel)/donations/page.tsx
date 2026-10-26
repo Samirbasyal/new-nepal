@@ -31,6 +31,7 @@ import Link from 'next/link';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { SectionHeading } from '@/components/ui/Section';
 import { ResourceManager } from '@/components/admin/ResourceManager';
+import { DateRangeFilter } from '@/components/admin/DateRangeFilter';
 import { DonationDecisionPanel } from '@/components/admin/DonationDecisionPanel';
 import { DonationQuickActions } from '@/components/admin/DonationQuickActions';
 import type { FieldConfig, ColumnConfig } from '@/components/admin/types';
@@ -471,15 +472,7 @@ export default async function AdminDonationsPage({
           <form method="get" className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="year" value={String(year)} />
 
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-ink-700">From</span>
-              <input type="date" name="from" defaultValue={params.from ?? ''} className="input" />
-            </label>
-
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-ink-700">To</span>
-              <input type="date" name="to" defaultValue={params.to ?? ''} className="input" />
-            </label>
+            <DateRangeFilter from={params.from} to={params.to} />
 
             <button type="submit" className="btn btn-outline btn-sm">
               <Icon name="filter" className="h-4 w-4" />

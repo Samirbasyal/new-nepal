@@ -32,6 +32,7 @@ import { useRouter } from 'next/navigation';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { NepaliDateField } from '@/components/ui/NepaliDateField';
 import { TextField, TextareaField, SelectField } from '@/components/forms/Field';
 import { DONATION_METHOD_OPTIONS } from '@/lib/donation/schemas';
 import { DonationPermanentDelete } from '@/components/admin/DonationPermanentDelete';
@@ -273,12 +274,11 @@ export function DonationQuickActions({ donation }: { donation: EditableDonation 
                 onChange={(event) => change('method', event.target.value)}
                 options={DONATION_METHOD_OPTIONS}
               />
-              <TextField
+              <NepaliDateField
                 name="receivedOn"
                 label="Date received"
-                type="date"
                 value={form.receivedOn}
-                onChange={(event) => change('receivedOn', event.target.value)}
+                onChange={(next) => change('receivedOn', next)}
               />
               <TextField
                 name="reference"
