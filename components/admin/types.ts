@@ -66,6 +66,12 @@ export type FieldConfig = {
   span?: 1 | 2;
   /** Only show this field when another field has one of these values. */
   showWhen?: { field: string; values: string[] };
+  /**
+   * Fill this field from another field's choice, when it is still empty.
+   * Used for "choosing a saved position suggests that position's standard
+   * responsibility". It never overwrites text the administrator typed.
+   */
+  deriveFrom?: { field: string; map: Record<string, string> };
   /** Group fields into boxes with a heading. */
   section?: string;
 };

@@ -105,7 +105,25 @@ export function ResourceForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const setValue = (name: string, value: string | boolean) => {
-    setValues((current) => ({ ...current, [name]: value }));
+    setValues((current) => {
+      const next = { ...current, [name]: value };
+
+      // ---------- a stored starting text ----------
+      // Choosing a saved position can fill in that position's standard
+      // responsibility. It is only a starting point: an empty box is filled, a box
+      // the administrator has already written in is never overwritten, and the
+      // text stays editable afterwards. Nothing is saved until Save is pressed.
+      for (const field of fields) {
+        if (field.deriveFrom?.field !== name) continue;
+        const current2 = String(current[field.name] ?? '').trim();
+        if (current2 !== '') continue;
+
+        const derived = field.deriveFrom.map[String(value)] ?? '';
+        if (derived) next[field.name] = derived;
+      }
+
+      return next;
+    });
     // Clear the error on this field as soon as the user changes it.
     setFieldErrors((current) => {
       if (!current[name]) return current;

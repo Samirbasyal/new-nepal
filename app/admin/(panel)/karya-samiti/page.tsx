@@ -58,6 +58,15 @@ export default async function AdminKaryaSamitiPage() {
     label: post.nameEn ? `${post.name} (${post.nameEn})` : post.name,
   }));
 
+  // The standard responsibility stored against each saved position, keyed by the
+  // position's id. Used to prefill the responsibility box when a position is
+  // chosen - see deriveFrom below.
+  const postResponsibilities: Record<string, string> = Object.fromEntries(
+    posts
+      .filter((post) => (post.description ?? '').trim() !== '')
+      .map((post) => [post.id, post.description as string]),
+  );
+
   const FIELDS: FieldConfig[] = [
     // ========================================
     // PUBLIC INFORMATION
@@ -99,6 +108,10 @@ export default async function AdminKaryaSamitiPage() {
       placeholder: 'For example: संस्थाका बैठकहरू सञ्चालन गर्ने र आवश्यक निर्णयहरू लिने।',
       hint:
         'What this person is permanently responsible for. Optional. PRIVATE - never shown on the public page; it appears in the member\'s own panel. It can only be saved when the email below belongs to a member account, so create or invite that account first.',
+      // Choosing a saved position suggests that position's standard duty. It is
+      // only a suggestion: blank boxes get filled, written ones are left alone,
+      // and the administrator can edit or clear the text before saving.
+      deriveFrom: { field: 'postId', map: postResponsibilities },
       section: 'Public information',
     },
     {
