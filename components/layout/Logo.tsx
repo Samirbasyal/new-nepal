@@ -40,13 +40,16 @@ export function LogoMark({
 
   return (
     /* eslint-disable-next-line @next/next/no-img-element --
-       The logo is a small SVG file, so optimisation is not needed. */
+       One small file used everywhere; a picture element would not add anything. */
     <img
       src={src}
       alt={logoConfig.alt}
       width={size}
       height={size}
-      className={cn('shrink-0 object-contain', className)}
+      // The artwork is a circular emblem on a white sheet. Rounding the frame
+      // turns the sheet into a clean white disc, so the same file looks right on
+      // the white navbar and on the dark green footer without a second version.
+      className={cn('shrink-0 rounded-full bg-white object-cover', className)}
       // Makes the logo load immediately instead of lazily.
       loading="eager"
       decoding="async"

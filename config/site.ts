@@ -37,15 +37,17 @@
 // ========================================
 export const logo = {
   // Path of the logo file (inside the "public" folder).
-  src: '/branding/logo.svg',
+  src: '/branding/logo.jpg',
   // Text read out by screen readers and shown when the image cannot load.
   alt: 'Janakalyan Samataa Yuwa Club logo',
-  // Optional second version for dark backgrounds (footer).
-  srcOnDark: '/branding/logo-on-dark.svg',
+  // The same artwork is used on dark backgrounds too: the emblem sits inside a
+  // white disc, which reads correctly on the green footer as well as the white
+  // navbar. A separate dark version is not needed.
+  srcOnDark: '/branding/logo.jpg',
   width: 48,
   height: 48,
-  // Browser tab icon. Replace public/branding/favicon.svg with your own.
-  favicon: '/branding/favicon.svg',
+  // Browser tab icon, made from the same artwork (64x64).
+  favicon: '/branding/favicon.png',
 };
 
 // ========================================
