@@ -70,6 +70,10 @@ function linkFallback(link: string): string {
 
 function signOff(): string {
   const s = emailSettings();
+  // When the sender name IS the club name, printing both looks like a mistake.
+  if (s.fromName.trim().toLowerCase() === organization.name.trim().toLowerCase()) {
+    return organization.name;
+  }
   return `${s.fromName}<br />${organization.name}`;
 }
 
@@ -215,9 +219,8 @@ export function buildMembershipApprovedEmail(input: {
     '',
     `Good news - the committee has approved your request to join ${organization.name}.`,
     '',
-    'To finish, open this link and choose your own password:',
-    input.link,
-    '',
+     'To finish, press the green "Activate my account" button in this email and choose your own password.',
+     '',
     `The link can be used once and stops working after ${days} day(s).`,
     'If it expires, ask the office for a new one - they can create another in a moment.',
     '',
@@ -229,9 +232,12 @@ export function buildMembershipApprovedEmail(input: {
   const html = wrap(
     'Your membership request was approved',
     `Namaste ${input.applicantName}, the committee has approved your request to join ${organization.name}. One step is left: choose your own password.`,
+    // Only the button. The long address used to be printed underneath as a
+    // fallback, but that put the single-use token on screen in plain text - easy
+    // to forward by accident, easy to photograph. A button is enough, and a
+    // member whose mail client refuses it can ask the office for a new link.
     button(input.link, 'Activate my account') +
-      `<p style="margin:0 0 18px;font-size:13px;color:#3d4b47;">The link can be used <strong>once</strong> and stops working after <strong>${days} day(s)</strong>. If it has expired, ask the office for a new one.</p>` +
-      linkFallback(input.link),
+      `<p style="margin:0 0 18px;font-size:13px;color:#3d4b47;">The button works <strong>once</strong> and stops working after <strong>${days} day(s)</strong>. If it has expired, or the button does not open, ask the office for a new link - they can make another in a moment.</p>`,
     `No password is ever sent by email, and nobody at the club can see the password you choose.<br /><br />${signOff()}`,
   );
 
