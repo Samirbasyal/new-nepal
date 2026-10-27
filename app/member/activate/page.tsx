@@ -72,8 +72,9 @@ export default async function ActivatePage({
       'not-found': {
         title: 'This activation link is not valid',
         text:
-          'The link may be incomplete - some email programs break long addresses across two lines. ' +
-          'Please copy the whole address from the email, or ask the office for a new link.',
+          'Only the newest link works: when the office sends a link again, every earlier one stops ' +
+          'working. Please open the most recent email. If this is the newest one, your email program ' +
+          'may have cut the address in half - ask the office for a fresh link and it will work at once.',
       },
     };
 
