@@ -64,3 +64,5 @@ next-env.d.ts
 *.before-phase*
 
 node-compile-cache/
+.vercel
+.env*
